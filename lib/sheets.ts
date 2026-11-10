@@ -7,6 +7,19 @@ export const sheetsEnabled = Boolean(URL && KEY);
 
 type TableName = Exclude<keyof DB, "settings">;
 
+// Apps Script memakai nama tab berhuruf besar.
+const TABEL_SHEET: Record<TableName, string> = {
+  users: "Users",
+  products: "Products",
+  orders: "Orders",
+  orderItems: "OrderItems",
+  couriers: "Couriers",
+  deliveries: "Deliveries",
+  promotions: "Promotions",
+  staff: "Staff",
+  bugs: "Bugs",
+};
+
 async function call(params: Record<string, string>) {
   if (!URL || !KEY) throw new Error("Google Sheets belum dikonfigurasi");
   const qs = new URLSearchParams({ key: KEY, ...params });
@@ -31,7 +44,11 @@ export async function writeRows(table: TableName, rows: unknown[]): Promise<void
   let size = 0;
   const flush = async () => {
     if (!batch.length) return;
-    await call({ action: "upsert", table, rows: JSON.stringify(batch) });
+    await call({
+      action: "upsert",
+      table: TABEL_SHEET[table],
+      rows: JSON.stringify(batch),
+    });
     batch = [];
     size = 0;
   };
@@ -45,7 +62,7 @@ export async function writeRows(table: TableName, rows: unknown[]): Promise<void
 }
 
 export async function deleteRow(table: TableName, id: string): Promise<void> {
-  await call({ action: "delete", table, id });
+  await call({ action: "delete", table: TABEL_SHEET[table], id });
 }
 
 export async function writeSettings(settings: Settings): Promise<void> {
