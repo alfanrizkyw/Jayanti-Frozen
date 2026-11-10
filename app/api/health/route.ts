@@ -25,6 +25,7 @@ export async function GET() {
     authSecret: Boolean(process.env.AUTH_SECRET),
     adminPassword: Boolean(process.env.ADMIN_PASSWORD),
     vercel: Boolean(process.env.VERCEL),
+    blob: Boolean(process.env.BLOB_STORE_ID || process.env.BLOB_READ_WRITE_TOKEN),
     url: infoUrl(process.env.GOOGLE_SHEETS_URL),
     whatsapp: {
       fonnte: Boolean(process.env.FONNTE_TOKEN),

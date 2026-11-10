@@ -792,8 +792,8 @@ const KAMUS: Record<string, string> = {
     "Save the receipt to your gallery or downloads folder",
   "Cara mengaktifkan unggah file (sekali saja)":
     "How to enable file uploads (one time only)",
-  "Unggah file belum aktif karena penyimpanan Vercel Blob belum tersambung. Buka Vercel → Storage → Blob → Connect sekali saja, lalu redeploy. Sementara itu tempel tautan gambar di kolom URL.":
-    "File upload isn't active because Vercel Blob storage isn't connected yet. Open Vercel → Storage → Blob → Connect once, then redeploy. Meanwhile, paste an image link in the URL field.",
+  "Unggah file belum aktif karena Blob belum tersambung ke proyek ini. Buka Vercel → Storage → Blob → Connect to Project pada proyek yang menampilkan toko, lalu redeploy. Sementara itu tempel tautan gambar di kolom URL.":
+    "File upload isn't active because Blob isn't connected to this project. Open Vercel → Storage → Blob → Connect to Project on the project that serves the store, then redeploy. Meanwhile, paste an image link in the URL field.",
 };
 
 const BULAN: Record<string, string> = {

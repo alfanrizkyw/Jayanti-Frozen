@@ -495,15 +495,25 @@ export function DeveloperConsole({
                   Cara mengaktifkan unggah file (sekali saja)
                 </p>
                 <ol className="mt-1.5 list-decimal space-y-1 pl-4">
-                  <li>Buka dashboard Vercel, pilih proyek Jayanti Frozen.</li>
                   <li>
-                    Masuk menu <strong>Storage</strong>, lalu{" "}
-                    <strong>Create Database</strong> dan pilih <strong>Blob</strong>.
+                    Buka Vercel, lalu pilih <strong>proyek yang dipakai toko</strong>{" "}
+                    (yang domainnya dibuka pembeli), bukan proyek lain yang mirip.
                   </li>
                   <li>
-                    Tekan <strong>Connect</strong> ke proyek, lalu redeploy.
+                    Masuk <strong>Storage</strong> → <strong>Create Database</strong> →{" "}
+                    <strong>Blob</strong>. Store lama juga boleh dipakai: buka store
+                    → tab <strong>Projects</strong> → <strong>Connect to Project</strong>.
+                  </li>
+                  <li>
+                    Pilih proyek toko untuk <strong>Production</strong> dan{" "}
+                    <strong>Preview</strong>, lalu{" "}
+                    <strong>Redeploy</strong> deployment terakhir.
                   </li>
                 </ol>
+                <p className="mt-1.5">
+                  Store <strong>Private</strong> maupun <strong>Public</strong> sama-sama
+                  bisa; gambar private ditampilkan lewat halaman toko.
+                </p>
                 <p className="mt-1.5">
                   Sebelum itu, unggah gambar ke Google Drive, pilih{" "}
                   <strong>Bagikan → Siapa saja yang memiliki link</strong>, lalu

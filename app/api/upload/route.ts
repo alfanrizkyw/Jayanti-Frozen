@@ -22,9 +22,10 @@ export async function POST(req: Request) {
   if (file.size > (qris ? 4 : 8) * 1024 * 1024)
     return bad(`Ukuran gambar maksimal ${qris ? 4 : 8} MB.`);
 
+  let gambar: Buffer;
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
-    const gambar = qris
+    gambar = qris
       ? await sharp(buffer)
           .rotate()
           .resize(900, 900, {
@@ -41,33 +42,49 @@ export async function POST(req: Request) {
           })
           .jpeg({ quality: 82, mozjpeg: true })
           .toBuffer();
+  } catch {
+    return bad("Gambar gagal diproses. Coba file lain.", 400);
+  }
 
-    const folder = qris ? "qris" : banner ? "promo" : "produk";
-    const ext = qris ? "png" : "jpg";
-    const contentType = qris ? "image/png" : "image/jpeg";
+  const folder = qris ? "qris" : banner ? "promo" : "produk";
+  const ext = qris ? "png" : "jpg";
+  const contentType = qris ? "image/png" : "image/jpeg";
 
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
+  if (process.env.BLOB_STORE_ID || process.env.BLOB_READ_WRITE_TOKEN) {
+    try {
       const { put } = await import("@vercel/blob");
-      const blob = await put(`${folder}/${Date.now()}.${ext}`, gambar, {
-        access: "public",
-        contentType,
-        addRandomSuffix: true,
-      });
-      return NextResponse.json({ url: blob.url });
+      const pathname = `${folder}/${Date.now()}.${ext}`;
+      const opsi = { contentType, addRandomSuffix: true } as const;
+      let url: string;
+      try {
+        const blob = await put(pathname, gambar, { ...opsi, access: "public" });
+        url = blob.url;
+      } catch (err) {
+        // Toko Blob bisa dibuat private; unggah public akan ditolak di sana.
+        if (!(err instanceof Error) || !/private store/i.test(err.message)) throw err;
+        const blob = await put(pathname, gambar, { ...opsi, access: "private" });
+        url = `/api/gambar?p=${encodeURIComponent(blob.pathname)}`;
+      }
+      return NextResponse.json({ url });
+    } catch (err) {
+      console.error("[jayanti] unggah Blob gagal:", err);
+      return bad("Gambar gagal disimpan. Coba lagi sebentar.", 500);
     }
+  }
 
-    if (process.env.VERCEL)
-      return bad(
-        "Unggah file belum aktif karena penyimpanan Vercel Blob belum tersambung. Buka Vercel → Storage → Blob → Connect sekali saja, lalu redeploy. Sementara itu tempel tautan gambar di kolom URL.",
-        503,
-      );
+  if (process.env.VERCEL)
+    return bad(
+      "Unggah file belum aktif karena Blob belum tersambung ke proyek ini. Buka Vercel → Storage → Blob → Connect to Project pada proyek yang menampilkan toko, lalu redeploy. Sementara itu tempel tautan gambar di kolom URL.",
+      503,
+    );
 
+  try {
     const name = `${folder}-${Date.now()}.${ext}`;
     const dir = path.join(process.cwd(), "public", "uploads");
     await fs.mkdir(dir, { recursive: true });
     await fs.writeFile(path.join(dir, name), gambar);
     return NextResponse.json({ url: `/uploads/${name}` });
   } catch {
-    return bad("Gambar gagal diproses. Coba file lain.", 500);
+    return bad("Gambar gagal disimpan. Coba lagi sebentar.", 500);
   }
 }
