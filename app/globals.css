@@ -621,37 +621,3 @@ html.tema-anim *::after {
     scroll-behavior: auto !important;
   }
 }
-
-.nota-cetak {
-  display: none;
-}
-
-@media print {
-  body {
-    background: #fff !important;
-  }
-
-  body * {
-    visibility: hidden !important;
-  }
-
-  .nota-cetak,
-  .nota-cetak * {
-    visibility: visible !important;
-  }
-
-  .nota-cetak {
-    display: block !important;
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    padding: 0;
-    background: #fff;
-    color: #102b50 !important;
-  }
-
-  @page {
-    margin: 14mm;
-  }
-}

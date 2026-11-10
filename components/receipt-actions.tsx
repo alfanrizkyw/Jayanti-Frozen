@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Download, Loader2, Printer } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import { rupiah, tanggalJam, teleponRapi } from "@/lib/format";
 import {
   PAYMENT_LABEL,
@@ -309,164 +309,12 @@ export function ReceiptActions({
         )}
         {sibuk ? "Menyiapkan…" : "Simpan nota"}
       </button>
-      <button
-        type="button"
-        onClick={() => window.print()}
-        className="btn btn-outline btn-sm"
-      >
-        <Printer size={14} />
-        Cetak
-      </button>
       {pesan && (
         <span role="status" className="self-center text-[11px] font-semibold text-leaf">
           {pesan}
         </span>
       )}
 
-      <div className="nota-cetak" aria-hidden="true">
-        <div style={{ fontFamily: FONT, color: NAVY, maxWidth: 640 }}>
-          <div style={{ textAlign: "center", paddingBottom: 14 }}>
-            <p style={{ margin: 0, fontSize: 24, fontWeight: 800 }}>
-              {settings.namaToko || "Jayanti Frozen"}
-            </p>
-            <p style={{ margin: "4px 0 0", fontSize: 13, color: MUTED }}>
-              {settings.alamat}
-            </p>
-            <p style={{ margin: "2px 0 0", fontSize: 13, color: MUTED }}>
-              {teleponRapi(settings.telepon)}
-            </p>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              borderTop: `1px dashed ${LINE}`,
-              borderBottom: `1px dashed ${LINE}`,
-              padding: "10px 0",
-              fontSize: 12,
-              color: MUTED,
-            }}
-          >
-            <span>NOTA PESANAN</span>
-            <span>{tanggalJam(order.dibuat)}</span>
-          </div>
-          <p style={{ margin: "12px 0 2px", fontSize: 22, fontWeight: 800 }}>
-            {order.kode}
-          </p>
-          <p style={{ margin: 0, fontSize: 13 }}>
-            Penerima: {order.pelanggan} · {teleponRapi(order.telepon)}
-          </p>
-          <p style={{ margin: "2px 0 0", fontSize: 13, color: MUTED }}>
-            {order.metode === "antar" ? "Antar ke rumah" : "Ambil di toko"} ·{" "}
-            {order.jadwal}
-          </p>
-          {order.metode === "antar" && order.alamat && (
-            <p style={{ margin: "2px 0 0", fontSize: 13, color: MUTED }}>
-              Alamat: {order.alamat}
-            </p>
-          )}
-
-          <table
-            style={{
-              width: "100%",
-              marginTop: 14,
-              borderCollapse: "collapse",
-              fontSize: 13,
-            }}
-          >
-            <thead>
-              <tr style={{ color: MUTED, textAlign: "left", fontSize: 11 }}>
-                <th style={{ padding: "6px 0" }}>PRODUK</th>
-                <th style={{ padding: "6px 0", textAlign: "right" }}>JUMLAH</th>
-                <th style={{ padding: "6px 0", textAlign: "right" }}>TOTAL</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => (
-                <tr key={item.id} style={{ borderTop: `1px solid ${LINE}` }}>
-                  <td style={{ padding: "7px 0" }}>
-                    <span style={{ fontWeight: 600 }}>{item.nama}</span>
-                    <br />
-                    <span style={{ fontSize: 11, color: MUTED }}>
-                      {rupiah(item.harga)} · {item.satuan}
-                    </span>
-                  </td>
-                  <td style={{ padding: "7px 0", textAlign: "right" }}>
-                    {item.jumlah}
-                  </td>
-                  <td style={{ padding: "7px 0", textAlign: "right", fontWeight: 600 }}>
-                    {rupiah(item.harga * item.jumlah)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <div
-            style={{
-              marginTop: 12,
-              borderTop: `1px solid ${LINE}`,
-              paddingTop: 10,
-              fontSize: 13,
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: MUTED }}>Subtotal</span>
-              <span>{rupiah(order.subtotal)}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: MUTED }}>
-                Ongkir ({order.metode === "antar" ? "antar kurir" : "ambil sendiri"})
-              </span>
-              <span>{order.ongkir === 0 ? "Gratis" : rupiah(order.ongkir)}</span>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginTop: 6,
-                fontSize: 17,
-                fontWeight: 800,
-              }}
-            >
-              <span>Total</span>
-              <span>{rupiah(order.total)}</span>
-            </div>
-          </div>
-
-          <p style={{ margin: "10px 0 0", fontSize: 12, color: MUTED }}>
-            Pembayaran: {PAYMENT_LABEL[order.pembayaran]} ·{" "}
-            {order.dibayar ? "Lunas" : "Belum dibayar"}
-          </p>
-          {order.catatan && (
-            <p style={{ margin: "4px 0 0", fontSize: 12, color: MUTED }}>
-              Catatan: {order.catatan}
-            </p>
-          )}
-          <p
-            style={{
-              margin: "18px 0 0",
-              paddingTop: 12,
-              borderTop: `1px dashed ${LINE}`,
-              textAlign: "center",
-              fontSize: 13,
-              fontWeight: 700,
-            }}
-          >
-            Terima kasih sudah berbelanja.
-          </p>
-          <p
-            style={{
-              margin: "2px 0 0",
-              textAlign: "center",
-              fontSize: 11,
-              color: MUTED,
-            }}
-          >
-            Simpan nota ini sebagai bukti pesanan.
-          </p>
-        </div>
-      </div>
     </>
   );
 }

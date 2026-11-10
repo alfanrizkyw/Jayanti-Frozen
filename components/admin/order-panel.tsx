@@ -3,7 +3,7 @@
 import { Gambar } from "@/components/gambar";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   AlertCircle,
   ArrowRight,
@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { PaymentBadge } from "@/components/payment-badge";
 import { OrderStatusBadge } from "@/components/status-badge";
+import { BuktiFoto } from "@/components/bukti-foto";
 import { rupiah, salinTeks, tanggalJam, teleponRapi, waLink } from "@/lib/format";
 import {
   PAYMENT_LABEL,
@@ -57,10 +58,33 @@ export function AdminOrderPanel({
   const [tanyaBatal, setTanyaBatal] = useState(false);
   const [kurirPilih, setKurirPilih] = useState(order.kurirId);
   const [tersalin, setTersalin] = useState(false);
+  const [statusOptimis, setStatusOptimis] = useState<OrderStatus | null>(null);
+  const [bayarOptimis, setBayarOptimis] = useState<boolean | null>(null);
+  const sibuk = useRef(false);
 
-  const selesai = order.status === "selesai" || order.status === "batal";
+  // Tampilkan perubahan seketika; data server menyusul saat refresh selesai.
+  const statusTampil = statusOptimis ?? order.status;
+  const dibayarTampil = bayarOptimis ?? order.dibayar;
+
+  useEffect(() => {
+    setStatusOptimis(null);
+    setBayarOptimis(null);
+  }, [order.status, order.dibayar, order.diperbarui]);
+
+  useEffect(() => {
+    // Status dari kurir / pesanan baru harus terlihat tanpa muat ulang manual.
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible" && !sibuk.current) router.refresh();
+    }, 6000);
+    return () => window.clearInterval(timer);
+  }, [router]);
+
+  const selesai = statusTampil === "selesai" || statusTampil === "batal";
 
   async function kirim(patch: Record<string, unknown>, aksi: string) {
+    if (patch.status) setStatusOptimis(patch.status as OrderStatus);
+    if (typeof patch.dibayar === "boolean") setBayarOptimis(patch.dibayar);
+    sibuk.current = true;
     setProses(aksi);
     setError("");
     try {
@@ -74,8 +98,11 @@ export function AdminOrderPanel({
       setTanyaBatal(false);
       router.refresh();
     } catch (err) {
+      setStatusOptimis(null);
+      setBayarOptimis(null);
       setError(err instanceof Error ? err.message : "Gagal memperbarui pesanan.");
     } finally {
+      sibuk.current = false;
       setProses(null);
     }
   }
@@ -89,23 +116,24 @@ export function AdminOrderPanel({
     }
   }
 
-  const aksiUtama: { label: string; status: OrderStatus; icon: typeof Check } | null =    order.status === "baru"
+  const aksiUtama: { label: string; status: OrderStatus; icon: typeof Check } | null =
+    statusTampil === "baru"
       ? { label: "Konfirmasi pesanan", status: "dikonfirmasi", icon: Check }
-      : order.status === "dikonfirmasi"
+      : statusTampil === "dikonfirmasi"
         ? { label: "Mulai siapkan pesanan", status: "disiapkan", icon: Check }
-        : order.status === "disiapkan" && order.metode === "antar"
+        : statusTampil === "disiapkan" && order.metode === "antar"
           ? { label: "Serahkan ke kurir", status: "diantar", icon: Truck }
-          : order.status === "disiapkan"
+          : statusTampil === "disiapkan"
             ? { label: "Tandai siap diambil", status: "siap", icon: Store }
-            : order.status === "siap" && order.metode === "antar"
+            : statusTampil === "siap" && order.metode === "antar"
               ? { label: "Serahkan ke kurir", status: "diantar", icon: Truck }
-              : order.status === "siap"
+              : statusTampil === "siap"
                 ? { label: "Selesaikan pesanan", status: "selesai", icon: CheckCircle2 }
-                : order.status === "diantar"
+                : statusTampil === "diantar"
                   ? { label: "Tandai sudah diterima", status: "selesai", icon: CheckCircle2 }
                   : null;
 
-  const tahap = alur.indexOf(order.status === "diantar" ? "siap" : order.status);
+  const tahap = alur.indexOf(statusTampil === "diantar" ? "siap" : statusTampil);
 
   const infoBayar =
     order.pembayaran === "transfer"
@@ -146,8 +174,8 @@ export function AdminOrderPanel({
               Dibuat {tanggalJam(order.dibuat)} · diperbarui {tanggalJam(order.diperbarui)}
             </p>
             <div className="mt-2.5 flex flex-wrap gap-1.5">
-              <OrderStatusBadge status={order.status} />
-              <PaymentBadge metode={order.pembayaran} dibayar={order.dibayar} lengkap />
+              <OrderStatusBadge status={statusTampil} />
+              <PaymentBadge metode={order.pembayaran} dibayar={dibayarTampil} lengkap />
               <span className="inline-flex items-center gap-1 rounded-full border border-line bg-paper px-2 py-0.5 text-[10px] font-bold text-navy">
                 {order.metode === "antar" ? <Bike size={11} /> : <Store size={11} />}
                 {order.metode === "antar" ? "Antar ke rumah" : "Ambil di toko"}
@@ -171,12 +199,12 @@ export function AdminOrderPanel({
                 {aksiUtama.label}
               </button>
             )}
-            {order.status === "selesai" && (
+            {statusTampil === "selesai" && (
               <p className="inline-flex items-center gap-1.5 rounded-xl bg-leaf-soft px-3 py-2 text-[11.5px] font-bold text-leaf">
                 <CheckCircle2 size={14} /> Pesanan selesai
               </p>
             )}
-            {order.status === "batal" && (
+            {statusTampil === "batal" && (
               <p className="inline-flex items-center gap-1.5 rounded-xl bg-[#EEF2F7] px-3 py-2 text-[11.5px] font-bold text-muted">
                 <X size={14} /> Pesanan dibatalkan
               </p>
@@ -199,12 +227,12 @@ export function AdminOrderPanel({
           </div>
         )}
 
-        {order.status !== "batal" && (
+        {statusTampil !== "batal" && (
           <ol className="mt-4 flex items-center gap-1 overflow-x-auto pt-1">
             {alur.map((s, i) => {
               const lewat = i <= tahap;
               const sekarang =
-                (order.status === "diantar" ? "siap" : order.status) === s;
+                (statusTampil === "diantar" ? "siap" : statusTampil) === s;
               return (
                 <li key={s} className="flex min-w-0 flex-1 items-center gap-1">
                   <span
@@ -370,7 +398,7 @@ export function AdminOrderPanel({
           <section className="card p-4 md:p-5">
             <div className="flex items-start justify-between gap-2">
               <h2 className="text-[15px] font-extrabold text-navy">Pembayaran</h2>
-              <PaymentBadge metode={order.pembayaran} dibayar={order.dibayar} />
+              <PaymentBadge metode={order.pembayaran} dibayar={dibayarTampil} />
             </div>
             <p className="mt-2 text-[12px] text-muted">{PAYMENT_LABEL[order.pembayaran]}</p>
             <p className="mt-2 rounded-xl bg-paper px-3 py-2.5 text-[11.5px] leading-relaxed text-navy">
@@ -381,20 +409,20 @@ export function AdminOrderPanel({
             </p>
             <button
               type="button"
-              onClick={() => kirim({ dibayar: !order.dibayar }, "bayar")}
-              disabled={proses !== null || order.status === "batal"}
+              onClick={() => kirim({ dibayar: !dibayarTampil }, "bayar")}
+              disabled={proses !== null || statusTampil === "batal"}
               className={`btn mt-3 w-full ${
-                order.dibayar ? "btn-outline" : "btn-primary"
+                dibayarTampil ? "btn-outline" : "btn-primary"
               }`}
             >
               {proses === "bayar" ? (
                 <Loader2 size={15} className="animate-spin" />
-              ) : order.dibayar ? (
+              ) : dibayarTampil ? (
                 <X size={15} />
               ) : (
                 <Check size={15} />
               )}
-              {order.dibayar ? "Batalkan status lunas" : "Tandai sudah dibayar"}
+              {dibayarTampil ? "Batalkan status lunas" : "Tandai sudah dibayar"}
             </button>
             <p className="mt-2 text-[10.5px] leading-relaxed text-muted">
               Periksa dana masuk di rekening atau mutasi QRIS sebelum menandai lunas.
@@ -480,7 +508,12 @@ export function AdminOrderPanel({
                     )}
                   </div>
                 )}
-                {order.status === "diantar" && (
+                {delivery?.status === "selesai" && (
+                  <div className="mt-3">
+                    <BuktiFoto orderId={order.id} judul="Foto bukti diterima kurir" />
+                  </div>
+                )}
+                {statusTampil === "diantar" && (
                   <Link
                     href={`/pesanan/${order.kode}`}
                     className="mt-2 flex items-center justify-center gap-1.5 text-[11px] font-bold text-brand hover:text-brand-dark"

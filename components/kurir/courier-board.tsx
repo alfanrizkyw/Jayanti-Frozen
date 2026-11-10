@@ -6,6 +6,7 @@ import {
   AlertCircle,
   Banknote,
   Bike,
+  Camera,
   CheckCircle2,
   Clock3,
   Copy,
@@ -61,6 +62,10 @@ export function CourierBoard({
   const [posisi, setPosisi] = useState<{ lat: number; lng: number; at: number } | null>(
     null,
   );
+  const [foto, setFoto] = useState<string | null>(null);
+  const [unggah, setUnggah] = useState<"idle" | "proses" | "siap" | "gagal">("idle");
+  const [pesanFoto, setPesanFoto] = useState("");
+  const inputFoto = useRef<HTMLInputElement | null>(null);
   const watch = useRef<number | null>(null);
   const kirimTerakhir = useRef(0);
   const kodeAktif = useRef("");
@@ -77,12 +82,59 @@ export function CourierBoard({
   }
 
   useEffect(() => {
-    const timer = window.setInterval(() => router.refresh(), 40000);
+    // Tugas baru dari admin harus terlihat cepat, bukan menunggu 40 detik.
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible" && proses === null) router.refresh();
+    }, 8000);
     return () => {
       window.clearInterval(timer);
       if (watch.current !== null) navigator.geolocation.clearWatch(watch.current);
     };
-  }, [router]);
+  }, [router, proses]);
+
+  const idAktif = aktif?.id;
+  useEffect(() => {
+    setFoto((lama) => {
+      if (lama) URL.revokeObjectURL(lama);
+      return null;
+    });
+    setUnggah("idle");
+    setPesanFoto("");
+  }, [idAktif]);
+
+  async function pilihFoto(file: File | null) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setPesanFoto("Pilih file foto (JPG, PNG, atau WEBP).");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setPesanFoto("Ukuran foto maksimal 10 MB.");
+      return;
+    }
+    if (!aktif) return;
+
+    setFoto((lama) => {
+      if (lama) URL.revokeObjectURL(lama);
+      return URL.createObjectURL(file);
+    });
+    setUnggah("proses");
+    setPesanFoto("Mengunggah foto bukti…");
+
+    const form = new FormData();
+    form.append("file", file);
+    form.append("kode", aktif.kode);
+    try {
+      const res = await fetch("/api/kurir/bukti", { method: "POST", body: form });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error || "Foto gagal diunggah.");
+      setUnggah("siap");
+      setPesanFoto("Foto bukti tersimpan. Pesanan siap ditandai diterima.");
+    } catch (err) {
+      setUnggah("gagal");
+      setPesanFoto(err instanceof Error ? err.message : "Foto gagal diunggah.");
+    }
+  }
 
   function mulaiLacak(kode: string) {
     kodeAktif.current = kode;
@@ -122,6 +174,10 @@ export function CourierBoard({
   }
 
   async function aksiTugas(order: Order, aksi: "mulai" | "selesai") {
+    if (aksi === "selesai" && unggah !== "siap") {
+      setError("Ambil dan unggah foto bukti barang diterima dulu.");
+      return;
+    }
     setProses(`${order.kode}-${aksi}`);
     setError("");
     if (aksi === "mulai") mulaiLacak(order.kode);
@@ -339,10 +395,89 @@ export function CourierBoard({
               onStop={hentikanLacak}
             />
 
+            <div
+              className={`rounded-xl border p-3 ${
+                unggah === "siap"
+                  ? "border-[#C6E7DA] bg-leaf-soft"
+                  : "border-[#F3DFBC] bg-[#FFF9EF]"
+              }`}
+            >
+              <div className="flex items-start gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-muted">
+                    <Camera size={12} /> Foto bukti diterima · wajib
+                  </p>
+                  <p className="mt-1 text-[11px] leading-relaxed text-muted">
+                    Foto barang yang diserahkan ke pelanggan. Pesanan tidak bisa
+                    ditandai selesai tanpa foto ini.
+                  </p>
+                </div>
+                {unggah === "siap" && (
+                  <CheckCircle2 size={18} className="flex-none text-leaf" />
+                )}
+              </div>
+
+              {foto && (
+                <div className="mt-2 overflow-hidden rounded-lg border border-line bg-white">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={foto}
+                    alt="Pratinjau foto bukti pengantaran"
+                    className="h-auto max-h-[240px] w-full object-cover"
+                  />
+                </div>
+              )}
+
+              {pesanFoto && (
+                <p
+                  role="status"
+                  className={`mt-1.5 text-[11px] font-semibold ${
+                    unggah === "gagal"
+                      ? "text-[#8F2E25]"
+                      : unggah === "siap"
+                        ? "text-leaf"
+                        : "text-muted"
+                  }`}
+                >
+                  {pesanFoto}
+                </p>
+              )}
+
+              <input
+                ref={inputFoto}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                aria-label="Pilih foto bukti pengantaran"
+                onChange={(e) => {
+                  void pilihFoto(e.target.files?.[0] ?? null);
+                  e.target.value = "";
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => inputFoto.current?.click()}
+                disabled={unggah === "proses"}
+                className="btn btn-outline mt-2 w-full"
+              >
+                {unggah === "proses" ? (
+                  <Loader2 size={15} className="animate-spin" />
+                ) : (
+                  <Camera size={15} />
+                )}
+                {unggah === "siap"
+                  ? "Ganti foto bukti"
+                  : unggah === "proses"
+                    ? "Mengunggah…"
+                    : "Ambil / pilih foto bukti"}
+              </button>
+            </div>
+
             <button
               type="button"
               onClick={() => aksiTugas(aktif, "selesai")}
-              disabled={proses !== null}
+              disabled={proses !== null || unggah !== "siap"}
               className="btn btn-primary btn-lg w-full"
             >
               {proses === `${aktif.kode}-selesai` ? (
@@ -352,6 +487,11 @@ export function CourierBoard({
               )}
               Pesanan sudah diantar
             </button>
+            {unggah !== "siap" && (
+              <p className="text-center text-[10.5px] text-muted">
+                Ambil foto bukti dulu untuk mengaktifkan tombol ini.
+              </p>
+            )}
           </div>
         </section>
       )}

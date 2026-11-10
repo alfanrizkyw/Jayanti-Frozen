@@ -27,6 +27,7 @@ import {
 import { TrackMap } from "./track-map";
 import { OrderStatusBadge } from "./status-badge";
 import { ReceiptActions } from "./receipt-actions";
+import { BuktiFoto } from "./bukti-foto";
 import {
   inisial,
   relatif,
@@ -334,6 +335,15 @@ export function OrderView({
                         {order.alamat}
                       </p>
                     </div>
+
+                    {order.status === "selesai" && (
+                      <div className="mt-3">
+                        <BuktiFoto
+                          orderId={order.id}
+                          judul="Foto bukti saat pesanan diterima"
+                        />
+                      </div>
+                    )}
                   </>
                 ) : (
                   <>

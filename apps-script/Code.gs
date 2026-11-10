@@ -153,6 +153,12 @@ var NUMERIK_SETTINGS = ["ongkir", "gratisOngkirMin", "estimasiAntar"];
 var BOOLEAN_SETTINGS = ["tokoBuka"];
 var ARRAY_SETTINGS = ["jadwalKirim"];
 
+/** Versi API. Angka 2 menandakan cache + batch tersedia (dipakai aplikasi). */
+var VERSI_API = 2;
+var CACHE_NAMA = "jayanti-snap-v2";
+var CACHE_DETIK = 90;
+var CACHE_BAGIAN = 80000;
+
 function doGet(e) {
   var parameter = (e && e.parameter) || {};
   try {
@@ -160,8 +166,11 @@ function doGet(e) {
       return json({ ok: false, error: "Kunci akses salah." });
     }
     var aksi = String(parameter.action || "read");
-    if (aksi === "read") return json({ ok: true, data: bacaSemua() });
-    if (aksi === "upsert") return json(upsert(parameter.table, parameter.rows));
+    if (aksi === "read")
+      return json({ ok: true, versi: VERSI_API, data: bacaSemua() });
+    if (aksi === "upsert")
+      return json(upsert(parameter.table, parameter.rows, true));
+    if (aksi === "batch") return json(tulisBatch(parameter.data));
     if (aksi === "delete") return json(hapus(parameter.table, parameter.id));
     if (aksi === "settings") return json(tulisSettings(parameter.value));
     if (aksi === "setup") {
@@ -219,13 +228,92 @@ function siapkanSheet(file, nama, header) {
 }
 
 function bacaSemua() {
+  // Membaca 9 sheet sekaligus butuh 4-5 detik. Salinan singkat di cache
+  // membuat permintaan berikutnya hampir instan; setiap penulisan
+  // memperbarui salinan itu langsung.
+  var tersimpan = bacaCache();
+  if (tersimpan) return tersimpan;
   var file = spreadsheet();
   var data = {};
   Object.keys(TABEL).forEach(function (nama) {
     data[dekap(nama)] = bacaTabel(file, nama, TABEL[nama].kolom);
   });
   data.settings = bacaSettings(file);
+  simpanCache(data);
   return data;
+}
+
+function bacaCache() {
+  try {
+    var cache = CacheService.getScriptCache();
+    var jumlah = Number(cache.get(CACHE_NAMA + ":n")) || 0;
+    if (!jumlah || jumlah > 90) return null;
+    var kunci = [];
+    for (var i = 0; i < jumlah; i++) kunci.push(CACHE_NAMA + ":" + i);
+    var isi = cache.getAll(kunci);
+    var teks = "";
+    for (var j = 0; j < jumlah; j++) {
+      var bagian = isi[CACHE_NAMA + ":" + j];
+      if (bagian === null || bagian === undefined) return null;
+      teks += bagian;
+    }
+    var data = JSON.parse(teks);
+    return data && typeof data === "object" ? data : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function simpanCache(data) {
+  try {
+    var teks = JSON.stringify(data);
+    var jumlah = Math.max(1, Math.ceil(teks.length / CACHE_BAGIAN));
+    if (jumlah > 90) return;
+    var isi = {};
+    for (var i = 0; i < jumlah; i++)
+      isi[CACHE_NAMA + ":" + i] = teks.substr(i * CACHE_BAGIAN, CACHE_BAGIAN);
+    var cache = CacheService.getScriptCache();
+    cache.putAll(isi, CACHE_DETIK);
+    cache.put(CACHE_NAMA + ":n", String(jumlah), CACHE_DETIK);
+  } catch (e) {
+    // Cache penuh atau dimatikan: data tetap tersimpan di Spreadsheet.
+  }
+}
+
+/** Gabungkan baris yang baru ditulis ke salinan cache tanpa membaca ulang. */
+function perbaruiCache(nama, rows, fields) {
+  var data = bacaCache();
+  if (!data) return;
+  var daftar = data[nama] || [];
+  var posisi = {};
+  for (var i = 0; i < daftar.length; i++) posisi[String(daftar[i].id)] = i;
+  for (var r = 0; r < rows.length; r++) {
+    var baris = rows[r];
+    var id = String((baris && baris.id) || "");
+    if (!id) continue;
+    if (posisi[id] !== undefined) {
+      if (fields && fields.length) {
+        var lama = daftar[posisi[id]];
+        for (var f = 0; f < fields.length; f++) lama[fields[f]] = baris[fields[f]];
+      } else {
+        daftar[posisi[id]] = baris;
+      }
+    } else {
+      daftar.push(baris);
+      posisi[id] = daftar.length - 1;
+    }
+  }
+  data[nama] = daftar;
+  simpanCache(data);
+}
+
+function hapusDariCache(nama, id) {
+  var data = bacaCache();
+  if (!data) return;
+  data[nama] = (data[nama] || []).filter(function (baris) {
+    return String(baris.id) !== String(id);
+  });
+  simpanCache(data);
 }
 
 function dekap(nama) {
@@ -309,7 +397,7 @@ function bacaSettings(file) {
   return hasil;
 }
 
-function upsert(namaTabel, rowsJson) {
+function upsert(namaTabel, rowsJson, pakaiCache) {
   var def = TABEL[namaTabel];
   if (!def) throw new Error("Tabel tidak dikenal: " + namaTabel);
   var rows = JSON.parse(rowsJson || "[]");
@@ -320,41 +408,98 @@ function upsert(namaTabel, rowsJson) {
   lock.waitLock(20000);
   try {
     var file = spreadsheet();
-    var sheet = siapkanSheet(file, namaTabel, def.kolom.map(function (k) { return k[0]; }));
-    var terakhir = sheet.getLastRow();
-    var kunciKolom = def.kolom.map(function (k) { return k[0]; });
-    var idKolom = kunciKolom.indexOf("id") + 1;
-
-    var indeks = {};
-    if (terakhir >= 2) {
-      var ids = sheet.getRange(2, idKolom, terakhir - 1, 1).getValues();
-      for (var i = 0; i < ids.length; i++) {
-        var id = String(ids[i][0] || "").trim();
-        if (id) indeks[id] = i + 2;
-      }
-    }
-
-    var baru = [];
-    for (var r = 0; r < rows.length; r++) {
-      var baris = konversiTulis(rows[r], def.kolom);
-      var idBaris = String(rows[r].id || "").trim();
-      if (!idBaris) continue;
-      if (indeks[idBaris] > 0) {
-        sheet.getRange(indeks[idBaris], 1, 1, def.kolom.length).setValues([baris]);
-      } else if (!indeks[idBaris]) {
-        baru.push(baris);
-        indeks[idBaris] = -1;
-      }
-    }
-
-    if (baru.length) {
-      sheet
-        .getRange(sheet.getLastRow() + 1, 1, baru.length, def.kolom.length)
-        .setValues(baru);
-    }
+    tulisTabel(file, namaTabel, def, rows, null);
+    if (pakaiCache) perbaruiCache(dekap(namaTabel), rows, null);
     return { ok: true, jumlah: rows.length };
   } finally {
     lock.releaseLock();
+  }
+}
+
+/**
+ * Satu permintaan untuk beberapa tabel sekaligus. Dipakai alur status
+ * pesanan agar satu klik admin cukup satu perjalanan ke Apps Script.
+ * data = { tables: { Orders: { rows: [...], fields: ["status"] }, ... } }
+ */
+function tulisBatch(dataJson) {
+  var paket = JSON.parse(dataJson || "{}");
+  var tables = (paket && paket.tables) || {};
+  var namaTabel = Object.keys(tables);
+  if (!namaTabel.length) return { ok: true, jumlah: 0 };
+
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var file = spreadsheet();
+    var hasil = {};
+    namaTabel.forEach(function (nama) {
+      var def = TABEL[nama];
+      if (!def) return;
+      var kiriman = tables[nama] || {};
+      var rows = kiriman.rows || [];
+      var fields = kiriman.fields || null;
+      if (!rows.length) return;
+      tulisTabel(file, nama, def, rows, fields);
+      perbaruiCache(dekap(nama), rows, fields);
+      hasil[nama] = rows.length;
+    });
+    return { ok: true, jumlah: hasil };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/** Tulis baris; bila fields diisi, hanya kolom itu yang ditimpa (baris lama aman). */
+function tulisTabel(file, namaTabel, def, rows, fields) {
+  var sheet = siapkanSheet(
+    file,
+    namaTabel,
+    def.kolom.map(function (k) {
+      return k[0];
+    }),
+  );
+  var terakhir = sheet.getLastRow();
+  var kunciKolom = def.kolom.map(function (k) {
+    return k[0];
+  });
+  var idKolom = kunciKolom.indexOf("id") + 1;
+  var lebar = def.kolom.length;
+
+  var indeks = {};
+  if (terakhir >= 2) {
+    var ids = sheet.getRange(2, idKolom, terakhir - 1, 1).getValues();
+    for (var i = 0; i < ids.length; i++) {
+      var id = String(ids[i][0] || "").trim();
+      if (id) indeks[id] = i + 2;
+    }
+  }
+
+  var baru = [];
+  var parsial = fields && fields.length > 0;
+  for (var r = 0; r < rows.length; r++) {
+    var baris = rows[r] || {};
+    var idBaris = String(baris.id || "").trim();
+    if (!idBaris) continue;
+    if (indeks[idBaris] > 0) {
+      var posisi = indeks[idBaris];
+      if (parsial) {
+        var lama = sheet.getRange(posisi, 1, 1, lebar).getValues()[0];
+        var gabung = {};
+        for (var j = 0; j < lebar; j++)
+          gabung[kunciKolom[j]] = konversiBaca(lama[j], def.kolom[j][1]);
+        for (var f = 0; f < fields.length; f++) gabung[fields[f]] = baris[fields[f]];
+        sheet.getRange(posisi, 1, 1, lebar).setValues([konversiTulis(gabung, def.kolom)]);
+      } else {
+        sheet.getRange(posisi, 1, 1, lebar).setValues([konversiTulis(baris, def.kolom)]);
+      }
+    } else if (!indeks[idBaris]) {
+      baru.push(konversiTulis(baris, def.kolom));
+      indeks[idBaris] = -1;
+    }
+  }
+
+  if (baru.length) {
+    sheet.getRange(sheet.getLastRow() + 1, 1, baru.length, lebar).setValues(baru);
   }
 }
 
@@ -394,6 +539,7 @@ function hapus(namaTabel, id) {
     for (var i = ids.length - 1; i >= 0; i--) {
       if (String(ids[i][0] || "").trim() === String(id)) {
         sheet.deleteRow(i + 2);
+        hapusDariCache(dekap(namaTabel), id);
         return { ok: true, dihapus: 1 };
       }
     }
@@ -440,6 +586,14 @@ function tulisSettings(valueJson) {
     });
     if (baru.length) {
       sheet.getRange(sheet.getLastRow() + 1, 1, baru.length, 2).setValues(baru);
+    }
+    var tersimpan = bacaCache();
+    if (tersimpan) {
+      tersimpan.settings = tersimpan.settings || {};
+      Object.keys(nilai).forEach(function (kunci) {
+        tersimpan.settings[kunci] = nilai[kunci];
+      });
+      simpanCache(tersimpan);
     }
     return { ok: true };
   } finally {

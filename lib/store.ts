@@ -4,16 +4,21 @@ import type { BankAccount, DB, Settings } from "./types";
 import { createBootstrap, createDefaultSettings, createSeed } from "./seed";
 import { tautanGambar } from "./format";
 import {
+  backendCepat,
   sheetsEnabled,
   readSnapshot,
   writeRows,
+  writeBatch,
   deleteRow,
   writeSettings,
 } from "./sheets";
 
 type RowTable = Exclude<keyof DB, "settings">;
 
-const CACHE_MS = 10_000;
+// Backend versi 2 menyimpan salinan snapshot di Apps Script, jadi halaman
+// boleh membaca ulang lebih sering tanpa membebani Google Sheets.
+const CACHE_CEPAT = 2_000;
+const CACHE_LAMBAT = 7_000;
 const isProduction = process.env.NODE_ENV === "production";
 const onVercel = Boolean(process.env.VERCEL);
 // Demo hanya untuk pengembangan lokal. Produksi selalu kosong kecuali data asli.
@@ -241,7 +246,8 @@ export async function readDB(segar = false): Promise<DB> {
   // Setelah data pernah dibaca, halaman selalu memakai salinan cache dan
   // menyegarkan di latar belakang. Pembeli tidak perlu menunggu Google Sheets.
   if (cache) {
-    if (Date.now() - cache.at >= CACHE_MS && !menyegarkan) {
+    const jeda = backendCepat ? CACHE_CEPAT : CACHE_LAMBAT;
+    if (Date.now() - cache.at >= jeda && !menyegarkan) {
       menyegarkan = bacaDB()
         .catch((err) => {
           console.error("[jayanti] gagal menyegarkan cache:", err);
@@ -321,20 +327,61 @@ function enqueue<T>(fn: () => Promise<T>): Promise<T> {
   return run;
 }
 
-export async function saveRows<T>(table: RowTable, rows: T[]): Promise<void> {
-  if (!rows.length) return;
+interface PerubahanTabel {
+  rows: { id: string }[];
+  /** Kolom yang boleh ditimpa; kolom lain pada baris lama tidak disentuh. */
+  fields?: string[];
+}
+
+/** Tiap tabel memakai tipe barisnya sendiri, jadi tidak ada kolom asal-asalan. */
+export type Perubahan = {
+  [T in RowTable]?: {
+    rows: DB[T][number][];
+    /** Kolom yang boleh ditimpa; kolom lain pada baris lama tidak disentuh. */
+    fields?: string[];
+  };
+};
+
+/** Simpan beberapa tabel sekaligus, satu perjalanan ke Google Sheets. */
+export async function saveAll(perubahan: Perubahan): Promise<void> {
+  const entri = (
+    Object.entries(perubahan) as [RowTable, PerubahanTabel | undefined][]
+  ).filter(
+    (pasangan): pasangan is [RowTable, PerubahanTabel] =>
+      Boolean(pasangan[1]?.rows.length),
+  );
+  if (!entri.length) return;
+
   await enqueue(async () => {
     if (sheetsEnabled) {
-      await writeRows(table, rows);
+      await writeBatch(
+        entri.map(([table, ubah]) => ({
+          table,
+          rows: ubah.rows,
+          fields: ubah.fields,
+        })),
+      );
     } else {
       const db = await readLocal();
-      const byId = new Map((db[table] as { id: string }[]).map((r) => [r.id, r]));
-      for (const row of rows as { id: string }[]) byId.set(row.id, row);
-      (db[table] as unknown[]) = Array.from(byId.values());
+      for (const [table, ubah] of entri) {
+        const byId = new Map(
+          (db[table] as { id: string }[]).map((row) => [row.id, row]),
+        );
+        for (const row of ubah.rows) byId.set(row.id, row);
+        (db[table] as unknown) = Array.from(byId.values());
+      }
       await writeLocal(db);
     }
-    tulisKeCache(table, rows as unknown as { id: string }[]);
+    for (const [table, ubah] of entri) tulisKeCache(table, ubah.rows);
   });
+}
+
+export async function saveRows<T extends { id: string }>(
+  table: RowTable,
+  rows: T[],
+): Promise<void> {
+  if (!rows.length) return;
+  await saveAll({ [table]: { rows } } as Perubahan);
 }
 
 export async function removeRow(table: RowTable, id: string): Promise<void> {
