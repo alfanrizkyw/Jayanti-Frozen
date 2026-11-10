@@ -26,6 +26,14 @@ export async function GET() {
     adminPassword: Boolean(process.env.ADMIN_PASSWORD),
     vercel: Boolean(process.env.VERCEL),
     url: infoUrl(process.env.GOOGLE_SHEETS_URL),
+    whatsapp: {
+      fonnte: Boolean(process.env.FONNTE_TOKEN),
+      cloud: Boolean(
+        process.env.WHATSAPP_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID,
+      ),
+      admin: process.env.WHATSAPP_ADMIN || "",
+      siteUrl: Boolean(process.env.NEXT_PUBLIC_SITE_URL),
+    },
   };
 
   try {
