@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { BankEditor } from "@/components/bank-editor";
-import { relatif, teleponRapi } from "@/lib/format";
+import { relatif, tautanGambar, teleponRapi } from "@/lib/format";
 import type {
   Bug,
   BugStatus,
@@ -86,6 +86,7 @@ export function DeveloperConsole({
   } | null>(null);
 
   const bugBaru = bugs.filter((b) => b.status === "baru").length;
+  const qrisTampil = tautanGambar(qrisGambar);
 
   async function kirim(url: string, body: Record<string, unknown>, label: string) {
     setProses(label);
@@ -392,7 +393,7 @@ export function DeveloperConsole({
                 <div className="flex items-start gap-3">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={qrisGambar}
+                    src={qrisTampil}
                     alt="Pratinjau gambar QRIS toko"
                     className="h-44 w-44 flex-none rounded-xl border border-line bg-white object-contain p-2"
                     loading="lazy"
@@ -467,13 +468,15 @@ export function DeveloperConsole({
                 <button
                   type="button"
                   disabled={Boolean(proses)}
-                  onClick={() =>
+                  onClick={() => {
+                    const url = tautanGambar(qrisGambar);
+                    setQrisGambar(url);
                     kirim(
                       "/api/developer/toko",
-                      { qrisGambar },
+                      { qrisGambar: url },
                       "qris-url",
-                    )
-                  }
+                    );
+                  }}
                   className="btn btn-outline btn-sm flex-none"
                 >
                   {proses === "qris-url" ? (
@@ -483,9 +486,30 @@ export function DeveloperConsole({
                 </button>
               </div>
               <p className="mt-1.5 text-[11px] leading-relaxed text-muted">
-                PNG/JPG/WEBP maksimal 4 MB. Bila unggah belum aktif, tempel URL
-                gambar dari Google Drive atau penyimpanan lain.
+                PNG/JPG/WEBP maksimal 4 MB. Bila unggah belum aktif, tempel
+                tautan gambar dari Google Drive atau penyimpanan lain.
               </p>
+
+              <div className="mt-3 rounded-xl border border-[#C9E1F7] bg-mist/60 px-3.5 py-3 text-[11px] leading-relaxed text-navy/80">
+                <p className="font-bold text-navy">
+                  Cara mengaktifkan unggah file (sekali saja)
+                </p>
+                <ol className="mt-1.5 list-decimal space-y-1 pl-4">
+                  <li>Buka dashboard Vercel, pilih proyek Jayanti Frozen.</li>
+                  <li>
+                    Masuk menu <strong>Storage</strong>, lalu{" "}
+                    <strong>Create Database</strong> dan pilih <strong>Blob</strong>.
+                  </li>
+                  <li>
+                    Tekan <strong>Connect</strong> ke proyek, lalu redeploy.
+                  </li>
+                </ol>
+                <p className="mt-1.5">
+                  Sebelum itu, unggah gambar ke Google Drive, pilih{" "}
+                  <strong>Bagikan → Siapa saja yang memiliki link</strong>, lalu
+                  tempel tautannya di kolom URL.
+                </p>
+              </div>
             </div>
           </div>
         </section>

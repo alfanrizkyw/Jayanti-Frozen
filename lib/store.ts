@@ -2,6 +2,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import type { BankAccount, DB, Settings } from "./types";
 import { createBootstrap, createDefaultSettings, createSeed } from "./seed";
+import { tautanGambar } from "./format";
 import {
   sheetsEnabled,
   readSnapshot,
@@ -12,7 +13,7 @@ import {
 
 type RowTable = Exclude<keyof DB, "settings">;
 
-const CACHE_MS = 2500;
+const CACHE_MS = 10_000;
 const isProduction = process.env.NODE_ENV === "production";
 const onVercel = Boolean(process.env.VERCEL);
 // Demo hanya untuk pengembangan lokal. Produksi selalu kosong kecuali data asli.
@@ -23,7 +24,9 @@ const localFile = path.join(process.cwd(), ".data", "db.json");
 
 let cache: { db: DB; at: number } | null = null;
 let membaca: Promise<DB> | null = null;
+let menyegarkan: Promise<DB> | null = null;
 let seeding: Promise<void> | null = null;
+let versi = 0;
 let queue: Promise<unknown> = Promise.resolve();
 
 function parseJadwal(value: unknown, fallback: string[]): string[] {
@@ -94,7 +97,7 @@ function normalSettings(raw?: Partial<Settings> | null): Settings {
     rekening,
     atasNama,
     qrisNama: String(gabung.qrisNama ?? dasar.qrisNama),
-    qrisGambar: String(gabung.qrisGambar ?? dasar.qrisGambar),
+    qrisGambar: tautanGambar(String(gabung.qrisGambar ?? dasar.qrisGambar)),
     bank: rapikanBank(gabung.bank, [
       {
         bank: rekening.split(" ")[0] || "BCA",
@@ -212,7 +215,21 @@ async function bootstrapAkun(db: DB): Promise<DB> {
 }
 
 export async function readDB(): Promise<DB> {
-  if (cache && Date.now() - cache.at < CACHE_MS) return cache.db;
+  // Setelah data pernah dibaca, halaman selalu memakai salinan cache dan
+  // menyegarkan di latar belakang. Pembeli tidak perlu menunggu Google Sheets.
+  if (cache) {
+    if (Date.now() - cache.at >= CACHE_MS && !menyegarkan) {
+      menyegarkan = bacaDB()
+        .catch((err) => {
+          console.error("[jayanti] gagal menyegarkan cache:", err);
+          return cache!.db;
+        })
+        .finally(() => {
+          menyegarkan = null;
+        });
+    }
+    return cache.db;
+  }
   if (membaca) return membaca;
   membaca = bacaDB().finally(() => {
     membaca = null;
@@ -222,6 +239,7 @@ export async function readDB(): Promise<DB> {
 
 async function bacaDB(): Promise<DB> {
   pastikanPenyimpanan();
+  const versiAwal = versi;
 
   let db: DB;
 
@@ -250,8 +268,28 @@ async function bacaDB(): Promise<DB> {
   }
 
   db = await bootstrapAkun(db);
-  cache = { db, at: Date.now() };
-  return db;
+  if (versiAwal === versi || !cache) cache = { db, at: Date.now() };
+  return cache?.db ?? db;
+}
+
+function tulisKeCache(table: RowTable, rows: { id: string }[]) {
+  if (!cache) return;
+  const peta = new Map(
+    (cache.db[table] as { id: string }[]).map((row) => [row.id, row]),
+  );
+  for (const row of rows) peta.set(row.id, row);
+  (cache.db[table] as unknown) = Array.from(peta.values());
+  cache.at = Date.now();
+  versi += 1;
+}
+
+function hapusDariCache(table: RowTable, id: string) {
+  if (!cache) return;
+  (cache.db[table] as unknown) = (
+    cache.db[table] as { id: string }[]
+  ).filter((row) => row.id !== id);
+  cache.at = Date.now();
+  versi += 1;
 }
 
 function enqueue<T>(fn: () => Promise<T>): Promise<T> {
@@ -272,7 +310,7 @@ export async function saveRows<T>(table: RowTable, rows: T[]): Promise<void> {
       (db[table] as unknown[]) = Array.from(byId.values());
       await writeLocal(db);
     }
-    cache = null;
+    tulisKeCache(table, rows as unknown as { id: string }[]);
   });
 }
 
@@ -287,7 +325,7 @@ export async function removeRow(table: RowTable, id: string): Promise<void> {
       );
       await writeLocal(db);
     }
-    cache = null;
+    hapusDariCache(table, id);
   });
 }
 
@@ -300,7 +338,11 @@ export async function saveSettings(settings: Settings): Promise<void> {
       db.settings = settings;
       await writeLocal(db);
     }
-    cache = null;
+    if (cache) {
+      cache.db.settings = settings;
+      cache.at = Date.now();
+      versi += 1;
+    }
   });
 }
 

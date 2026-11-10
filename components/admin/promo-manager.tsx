@@ -74,7 +74,8 @@ export function PromoManager({ promotions }: { promotions: Promotion[] }) {
             Promo & banner
           </h1>
           <p className="mt-1 text-[12.5px] text-muted">
-            Banner tampil besar di beranda, pengumuman muncul di atas halaman toko.
+            Banner tampil besar di beranda. Pengumuman atas sudah tidak dipakai,
+            jadi promo tidak menumpuk.
           </p>
         </div>
         <button type="button" onClick={() => setEdit("baru")} className="btn btn-primary">
@@ -130,7 +131,7 @@ export function PromoManager({ promotions }: { promotions: Promotion[] }) {
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className="inline-flex items-center gap-1 rounded-full bg-mist px-2 py-0.5 text-[9.5px] font-bold text-brand">
                     {p.tipe === "banner" ? <Sparkles size={10} /> : <Megaphone size={10} />}
-                    {p.tipe === "banner" ? "Banner beranda" : "Pengumuman"}
+                    {p.tipe === "banner" ? "Banner beranda" : "Pengumuman lama"}
                   </span>
                   <span className={`rounded-full px-2 py-0.5 text-[9.5px] font-bold ${st.tone}`}>
                     {st.label}
@@ -143,10 +144,12 @@ export function PromoManager({ promotions }: { promotions: Promotion[] }) {
                 </div>
 
                 {p.tipe === "pengumuman" && (
-                  <div className="mt-2 rounded-xl border border-[#C9E1F7] bg-mist/60 px-3 py-2.5">
-                    <p className="text-[12px] font-bold text-navy">{p.judul}</p>
-                    <p className="mt-0.5 text-[10.5px] leading-relaxed text-muted">
-                      {p.deskripsi || "Tanpa keterangan tambahan."}
+                  <div className="mt-2 rounded-xl border border-[#F0D9A8] bg-[#FEF8E9] px-3 py-2.5">
+                    <p className="text-[11px] font-bold text-[#8A5207]">
+                      Pengumuman lama · sudah tidak tampil di toko
+                    </p>
+                    <p className="mt-0.5 text-[10.5px] leading-relaxed text-[#8A6A28]">
+                      Hapus promo ini bila ingin membersihkan daftar.
                     </p>
                   </div>
                 )}
@@ -184,7 +187,7 @@ export function PromoManager({ promotions }: { promotions: Promotion[] }) {
           <Megaphone size={26} className="text-brand" />
           <p className="mt-3 text-[14px] font-bold text-navy">Belum ada promo</p>
           <p className="mt-1 text-[12px] text-muted">
-            Buat banner atau pengumuman untuk tampil di beranda.
+            Buat banner untuk tampil di beranda.
           </p>
           <button
             type="button"
@@ -247,7 +250,6 @@ function PromoForm({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [tipe, setTipe] = useState<Promotion["tipe"]>(promo?.tipe ?? "pengumuman");
   const [judul, setJudul] = useState(promo?.judul ?? "");
   const [deskripsi, setDeskripsi] = useState(promo?.deskripsi ?? "");
   const [badge, setBadge] = useState(promo?.badge ?? "");
@@ -275,7 +277,7 @@ function PromoForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: promo?.id,
-          tipe,
+          tipe: "banner",
           judul,
           deskripsi,
           badge,
@@ -316,64 +318,41 @@ function PromoForm({
         </div>
 
         <form onSubmit={submit} className="flex-1 overflow-y-auto px-4 py-4 md:px-5">
-          <div className="grid grid-cols-2 gap-1 rounded-xl bg-paper p-1">
-            {(
-              [
-                { key: "pengumuman", label: "Pengumuman atas", icon: Megaphone },
-                { key: "banner", label: "Banner beranda", icon: Sparkles },
-              ] as const
-            ).map(({ key, label, icon: Icon }) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setTipe(key)}
-                className={`flex min-h-11 items-center justify-center gap-1.5 rounded-lg text-[12px] font-bold transition-colors ${
-                  tipe === key ? "bg-white text-navy shadow-sm" : "text-muted"
-                }`}
-                aria-pressed={tipe === key}
-              >
-                <Icon size={14} /> {label}
-              </button>
-            ))}
-          </div>
-
-          {tipe === "banner" && (
-            <div className="mt-4">
-              <span className="label">Foto banner</span>
-              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-line bg-paper">
-                {gambar ? (
-                  <Image
-                    src={gambar}
-                    alt="Foto banner"
-                    fill
-                    sizes="560px"
-                    className="object-cover"
-                  />
-                ) : (
-                  <span className="flex h-full flex-col items-center justify-center gap-1.5 text-muted">
-                    <ImagePlus size={24} />
-                    <span className="text-[10.5px] font-semibold">Belum ada foto</span>
-                  </span>
-                )}
-              </div>
-              <label className="btn btn-outline btn-sm mt-2 w-full cursor-pointer">
-                <Camera size={14} /> Pilih & atur foto banner
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  className="sr-only"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) setCropFile(f);
-                    e.currentTarget.value = "";
-                  }}
+          <div className="mt-4">
+            <span className="label">Foto banner</span>
+            <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-line bg-paper">
+              {gambar ? (
+                <Image
+                  src={gambar}
+                  alt="Foto banner"
+                  fill
+                  sizes="560px"
+                  className="object-cover"
                 />
-              </label>
-              <p className="mt-1.5 text-[10px] text-muted">
-                Otomatis dipotong 16:9 · 1600 × 900 piksel.
-              </p>
+              ) : (
+                <span className="flex h-full flex-col items-center justify-center gap-1.5 text-muted">
+                  <ImagePlus size={24} />
+                  <span className="text-[10.5px] font-semibold">Belum ada foto</span>
+                </span>
+              )}
             </div>
-          )}
+            <label className="btn btn-outline btn-sm mt-2 w-full cursor-pointer">
+              <Camera size={14} /> Pilih & atur foto banner
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="sr-only"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) setCropFile(f);
+                  e.currentTarget.value = "";
+                }}
+              />
+            </label>
+            <p className="mt-1.5 text-[10px] text-muted">
+              Otomatis dipotong 16:9 · 1600 × 900 piksel.
+            </p>
+          </div>
 
           <div className="mt-3 space-y-3">
             <div className="grid gap-3 sm:grid-cols-[1fr_170px]">
@@ -384,9 +363,7 @@ function PromoForm({
                   className="field"
                   value={judul}
                   onChange={(e) => setJudul(e.target.value)}
-                  placeholder={
-                    tipe === "banner" ? "Promo akhir pekan" : "Judul pengumuman"
-                  }
+                  placeholder="Promo akhir pekan"
                   required
                 />
               </div>
@@ -414,21 +391,19 @@ function PromoForm({
               />
             </div>
 
-            {tipe === "banner" && (
-              <div>
-                <label htmlFor="pr-cta" className="label">Tujuan tombol</label>
-                <input
-                  id="pr-cta"
-                  className="field"
-                  value={cta}
-                  onChange={(e) => setCta(e.target.value)}
-                  placeholder="/katalog"
-                />
-                <p className="mt-1 text-[10px] text-muted">
-                  Gunakan alamat halaman, misalnya /katalog atau /produk/chicken-nugget.
-                </p>
-              </div>
-            )}
+            <div>
+              <label htmlFor="pr-cta" className="label">Tujuan tombol</label>
+              <input
+                id="pr-cta"
+                className="field"
+                value={cta}
+                onChange={(e) => setCta(e.target.value)}
+                placeholder="/katalog"
+              />
+              <p className="mt-1 text-[10px] text-muted">
+                Gunakan alamat halaman, misalnya /katalog atau /produk/chicken-nugget.
+              </p>
+            </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div>

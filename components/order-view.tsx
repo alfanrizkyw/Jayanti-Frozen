@@ -26,10 +26,12 @@ import {
 } from "lucide-react";
 import { TrackMap } from "./track-map";
 import { OrderStatusBadge } from "./status-badge";
+import { ReceiptActions } from "./receipt-actions";
 import {
   inisial,
   relatif,
   rupiah,
+  salinTeks,
   tanggalJam,
   teleponRapi,
   waLink,
@@ -162,12 +164,9 @@ export function OrderView({
   const aktifIndex = urutanStatus[order.status] ?? -1;
 
   async function copy(text: string, label: string) {
-    try {
-      await navigator.clipboard.writeText(text);
+    if (await salinTeks(text)) {
       setSalin(label);
       setTimeout(() => setSalin(""), 1800);
-    } catch {
-      setSalin("");
     }
   }
 
@@ -218,6 +217,9 @@ export function OrderView({
             {salin === "kode" ? <Check size={14} /> : <Copy size={14} />}
             {salin === "kode" ? "Tersalin" : "Salin kode"}
           </button>
+          {order.status !== "batal" && (
+            <ReceiptActions order={order} items={items} settings={settings} />
+          )}
           <a
             href={waLink(
               settings.telepon,

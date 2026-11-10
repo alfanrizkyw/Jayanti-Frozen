@@ -10,6 +10,7 @@ import {
   Banknote,
   Check,
   Clock,
+  Copy,
   Landmark,
   Loader2,
   Lock,
@@ -20,7 +21,7 @@ import {
   Truck,
 } from "lucide-react";
 import { useCart } from "@/components/cart-provider";
-import { rupiah } from "@/lib/format";
+import { rupiah, salinTeks } from "@/lib/format";
 import type { PaymentMethod, Settings } from "@/lib/types";
 
 export function CheckoutForm({ settings }: { settings: Settings }) {
@@ -39,6 +40,14 @@ export function CheckoutForm({ settings }: { settings: Settings }) {
   const [jadwal, setJadwal] = useState(opsiJadwal[0] ?? "");
   const [proses, setProses] = useState(false);
   const [error, setError] = useState("");
+  const [salin, setSalin] = useState("");
+
+  async function copy(text: string, label: string) {
+    if (await salinTeks(text)) {
+      setSalin(label);
+      setTimeout(() => setSalin(""), 1800);
+    }
+  }
 
   const ongkir =
     metode === "ambil"
@@ -401,6 +410,23 @@ export function CheckoutForm({ settings }: { settings: Settings }) {
                     {rek.nomor}
                   </p>
                   <p>a.n. {rek.atasNama}</p>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      copy(
+                        `${rek.bank ? `${rek.bank} ` : ""}${rek.nomor} a.n. ${rek.atasNama}`,
+                        `rek-${i}`,
+                      )
+                    }
+                    className="mt-2 inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[#C9E1F7] bg-white px-2.5 text-[11px] font-bold text-brand"
+                  >
+                    {salin === `rek-${i}` ? (
+                      <Check size={12} />
+                    ) : (
+                      <Copy size={12} />
+                    )}
+                    {salin === `rek-${i}` ? "Tersalin" : "Salin rekening"}
+                  </button>
                 </div>
               ))}
               <p className="rounded-xl bg-paper px-3.5 py-3 text-[11px] leading-relaxed text-muted">

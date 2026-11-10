@@ -17,11 +17,10 @@ import {
 } from "lucide-react";
 import { getStorefront } from "@/lib/data";
 import { ProductCard } from "@/components/product-card";
-import { DismissibleNotice } from "@/components/dismissible-notice";
 import { rupiah, waLink } from "@/lib/format";
 
 export default async function BerandaPage() {
-  const { products, banner, pengumuman, settings } = await getStorefront();
+  const { products, banner, settings } = await getStorefront();
   const unggulan = products.filter((p) => p.unggulan).slice(0, 8);
   const tampil = (unggulan.length >= 4 ? unggulan : products).slice(0, 8);
   const kategori = Array.from(new Set(products.map((p) => p.kategori)));
@@ -30,15 +29,10 @@ export default async function BerandaPage() {
     if (!p.hargaPromo) return maks;
     return Math.max(maks, Math.round((1 - p.hargaPromo / p.harga) * 100));
   }, 0);
-  const info = pengumuman[0];
   const gambarHero = promo?.gambar || "/brand/hero-promo.jpg";
 
   return (
     <>
-      {info && (
-        <DismissibleNotice id={info.id} judul={info.judul} teks={info.deskripsi} />
-      )}
-
       <section className="container-page pt-4 md:pt-6">
         <div className="relative overflow-hidden rounded-[24px] bg-navy text-white">
           <div

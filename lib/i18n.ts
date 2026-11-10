@@ -771,6 +771,29 @@ const KAMUS: Record<string, string> = {
   "Berkas gambar tidak ditemukan.": "Image file not found.",
   "Google Sheets belum terhubung. Isi GOOGLE_SHEETS_URL dan GOOGLE_SHEETS_KEY di Environment Variables Vercel, lalu redeploy.":
     "Google Sheets isn't connected. Set GOOGLE_SHEETS_URL and GOOGLE_SHEETS_KEY in Vercel Environment Variables, then redeploy.",
+  "Banner tampil besar di beranda. Pengumuman atas sudah tidak dipakai, jadi promo tidak menumpuk.":
+    "The banner appears large on the homepage. Top announcements are no longer used, so promos don't pile up.",
+  "Buat banner untuk tampil di beranda.":
+    "Create a banner to show on the homepage.",
+  "Pengumuman lama": "Old announcement",
+  "Pengumuman lama · sudah tidak tampil di toko":
+    "Old announcement · no longer shown in the store",
+  "Hapus promo ini bila ingin membersihkan daftar.":
+    "Delete this promo to clean up the list.",
+  "Simpan nota": "Save receipt",
+  "Cetak": "Print",
+  "Menyiapkan…": "Preparing…",
+  "Salin rekening": "Copy account",
+  "Nota gagal dibuat. Coba lagi.": "The receipt couldn't be created. Try again.",
+  "Nota tersimpan di folder unduhan.": "Receipt saved to your downloads folder.",
+  "Pilih Simpan gambar untuk menyimpan ke galeri.":
+    "Choose Save image to keep it in your gallery.",
+  "Simpan nota ke galeri atau folder unduhan":
+    "Save the receipt to your gallery or downloads folder",
+  "Cara mengaktifkan unggah file (sekali saja)":
+    "How to enable file uploads (one time only)",
+  "Unggah file belum aktif karena penyimpanan Vercel Blob belum tersambung. Buka Vercel → Storage → Blob → Connect sekali saja, lalu redeploy. Sementara itu tempel tautan gambar di kolom URL.":
+    "File upload isn't active because Vercel Blob storage isn't connected yet. Open Vercel → Storage → Blob → Connect once, then redeploy. Meanwhile, paste an image link in the URL field.",
 };
 
 const BULAN: Record<string, string> = {

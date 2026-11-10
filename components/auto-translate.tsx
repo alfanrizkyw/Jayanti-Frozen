@@ -117,8 +117,12 @@ export function AutoTranslate() {
   }, [lang, ready]);
 
   useEffect(() => {
-    const pengamat = new MutationObserver((mutasi) => {
+    let antre: MutationRecord[] = [];
+    let frame: number | null = null;
+
+    function proses(mutasi: MutationRecord[]) {
       const aktif = langRef.current;
+      if (aktif === "id") return;
       for (const m of mutasi) {
         if (m.type === "childList") {
           m.addedNodes.forEach((n) => prosesSimpul(n, aktif));
@@ -129,10 +133,6 @@ export function AutoTranslate() {
           if (lewati(t.parentElement)) continue;
           const asli = asliTeks.get(t);
           const kini = t.nodeValue ?? "";
-          if (aktif === "id") {
-            pulihkanTeks(t);
-            continue;
-          }
           if (asli !== undefined && kini === terjemahkan(asli, aktif)) continue;
           asliTeks.set(t, kini);
           const hasil = terjemahkan(kini, aktif);
@@ -149,16 +149,25 @@ export function AutoTranslate() {
           const simpanan = asliAtribut.get(el) ?? new Map<string, string>();
           if (!asliAtribut.has(el)) asliAtribut.set(el, simpanan);
           const asli = simpanan.get(nama);
-          if (aktif === "id") {
-            if (asli !== undefined && kini !== asli) el.setAttribute(nama, asli);
-            continue;
-          }
           if (asli !== undefined && kini === terjemahkan(asli, aktif)) continue;
           simpanan.set(nama, kini);
           const hasil = terjemahkan(kini, aktif);
           if (kini !== hasil) el.setAttribute(nama, hasil);
         }
       }
+    }
+
+    const pengamat = new MutationObserver((mutasi) => {
+      // Bahasa Indonesia adalah teks asli halaman: tidak perlu diproses.
+      if (langRef.current === "id") return;
+      antre.push(...mutasi);
+      if (frame !== null) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+        const daftar = antre;
+        antre = [];
+        proses(daftar);
+      });
     });
 
     pengamat.observe(document.body, {
@@ -168,7 +177,10 @@ export function AutoTranslate() {
       attributes: true,
       attributeFilter: [...ATURAN_ATRIBUT],
     });
-    return () => pengamat.disconnect();
+    return () => {
+      if (frame !== null) window.cancelAnimationFrame(frame);
+      pengamat.disconnect();
+    };
   }, []);
 
   return null;

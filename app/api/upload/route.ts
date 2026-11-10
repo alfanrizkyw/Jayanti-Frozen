@@ -58,8 +58,8 @@ export async function POST(req: Request) {
 
     if (process.env.VERCEL)
       return bad(
-        "Upload butuh Vercel Blob. Atur BLOB_READ_WRITE_TOKEN atau tempel URL gambar.",
-        500,
+        "Unggah file belum aktif karena penyimpanan Vercel Blob belum tersambung. Buka Vercel → Storage → Blob → Connect sekali saja, lalu redeploy. Sementara itu tempel tautan gambar di kolom URL.",
+        503,
       );
 
     const name = `${folder}-${Date.now()}.${ext}`;

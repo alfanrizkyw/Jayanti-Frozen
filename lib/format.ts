@@ -1,5 +1,32 @@
 const TIMEZONE = "Asia/Jakarta";
 
+export async function salinTeks(teks: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(teks);
+      return true;
+    }
+  } catch {
+    // Browser atau WebView bisa menolak Clipboard API; lanjut ke cara lama.
+  }
+  try {
+    const area = document.createElement("textarea");
+    area.value = teks;
+    area.setAttribute("readonly", "");
+    area.style.position = "fixed";
+    area.style.top = "-1000px";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    area.select();
+    area.setSelectionRange(0, teks.length);
+    const berhasil = document.execCommand("copy");
+    document.body.removeChild(area);
+    return berhasil;
+  } catch {
+    return false;
+  }
+}
+
 export function rupiah(n: number): string {
   return "Rp " + new Intl.NumberFormat("id-ID").format(Math.round(n));
 }
@@ -69,6 +96,18 @@ export function waLink(telepon: string, pesan: string): string {
 export function teleponRapi(input: string): string {
   const tel = normalTelepon(input);
   return tel.startsWith("62") ? "0" + tel.slice(2) : tel;
+}
+
+/** Ubah tautan Google Drive biasa menjadi tautan gambar yang bisa ditampilkan. */
+export function tautanGambar(input: string): string {
+  const url = input.trim();
+  if (!url.startsWith("http")) return url;
+  const cocok =
+    url.match(/drive\.google\.com\/file\/d\/([\w-]{10,})/) ||
+    url.match(/drive\.google\.com\/(?:open|uc)\?[^#]*\bid=([\w-]{10,})/) ||
+    url.match(/docs\.google\.com\/[^/]+\/d\/([\w-]{10,})/);
+  if (cocok) return `https://lh3.googleusercontent.com/d/${cocok[1]}=w1000`;
+  return url;
 }
 
 export function slugify(input: string): string {

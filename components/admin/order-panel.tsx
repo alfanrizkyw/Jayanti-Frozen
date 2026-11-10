@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { PaymentBadge } from "@/components/payment-badge";
 import { OrderStatusBadge } from "@/components/status-badge";
-import { rupiah, tanggalJam, teleponRapi, waLink } from "@/lib/format";
+import { rupiah, salinTeks, tanggalJam, teleponRapi, waLink } from "@/lib/format";
 import {
   PAYMENT_LABEL,
   type CourierPublic,
@@ -81,11 +81,10 @@ export function AdminOrderPanel({
   }
 
   async function salin() {
-    try {
-      await navigator.clipboard.writeText(order.kode);
+    if (await salinTeks(order.kode)) {
       setTersalin(true);
       setTimeout(() => setTersalin(false), 1600);
-    } catch {
+    } else {
       setError("Kode tidak bisa disalin otomatis.");
     }
   }

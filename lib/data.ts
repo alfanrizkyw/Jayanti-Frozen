@@ -23,7 +23,7 @@ import type {
   Staff,
   StaffPublic,
 } from "./types";
-import { kodePesanan, normalTelepon, slugify } from "./format";
+import { kodePesanan, normalTelepon, slugify, tautanGambar } from "./format";
 
 export interface OrderDetail {
   order: Order;
@@ -644,7 +644,7 @@ export async function updateSettings(input: Settings) {
       ? `${utama.bank} ${utama.nomor}`.trim()
       : (input.rekening?.trim() ?? ""),
     atasNama: utama ? utama.atasNama : (input.atasNama?.trim() ?? ""),
-    qrisGambar: input.qrisGambar?.trim() ?? lama.qrisGambar ?? "",
+    qrisGambar: tautanGambar(input.qrisGambar?.trim() ?? lama.qrisGambar ?? ""),
     bank,
     tokoBuka: input.tokoBuka !== false,
     tutupCatatan:

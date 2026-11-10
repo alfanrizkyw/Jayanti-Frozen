@@ -24,6 +24,7 @@ import { TrackMap } from "@/components/track-map";
 import {
   jam,
   rupiah,
+  salinTeks,
   tanggalJam,
   tanggalPanjang,
   teleponRapi,
@@ -142,11 +143,10 @@ export function CourierBoard({
   }
 
   async function salin(alamat: string) {
-    try {
-      await navigator.clipboard.writeText(alamat);
+    if (await salinTeks(alamat)) {
       setTersalin(alamat);
       setTimeout(() => setTersalin(""), 1600);
-    } catch {
+    } else {
       setError("Alamat tidak bisa disalin. Silakan salin manual.");
     }
   }
