@@ -1,6 +1,18 @@
 import type { Metadata, Viewport } from "next";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { ErrorReporter } from "@/components/error-reporter";
+import { PreferencesProvider } from "@/components/preferences";
+import { AutoTranslate } from "@/components/auto-translate";
 import "./globals.css";
+
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+  variable: "--font-jakarta",
+});
+
+const skripPreferensi = `(function(){try{var t=localStorage.getItem("jayanti-tema");var s=window.matchMedia("(prefers-color-scheme: dark)").matches;var tema=t==="dark"||t==="light"?t:(s?"dark":"light");document.documentElement.dataset.theme=tema;var b=localStorage.getItem("jayanti-bahasa");document.documentElement.lang=b==="en"?"en":"id";}catch(e){}})();`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -39,10 +51,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id" data-scroll-behavior="smooth">
+    <html
+      lang="id"
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
+      className={jakarta.variable}
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: skripPreferensi }} />
+      </head>
       <body>
-        <ErrorReporter />
-        {children}
+        <PreferencesProvider>
+          <ErrorReporter />
+          <AutoTranslate />
+          {children}
+        </PreferencesProvider>
       </body>
     </html>
   );

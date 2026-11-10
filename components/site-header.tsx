@@ -6,6 +6,7 @@ import { MapPin, Menu, Search, ShoppingBag, X } from "lucide-react";
 import { useState } from "react";
 import { Logo } from "./logo";
 import { useCart } from "./cart-provider";
+import { PreferencesControls } from "./preferences-controls";
 import { rupiah } from "@/lib/format";
 import type { Settings } from "@/lib/types";
 
@@ -86,6 +87,9 @@ export function SiteHeader({ settings }: { settings: Settings }) {
           </nav>
 
           <div className="ml-auto flex flex-none items-center gap-0.5">
+            <div className="hidden md:block">
+              <PreferencesControls />
+            </div>
             <Link href="/katalog" className="icon-btn" aria-label="Cari produk">
               <Search size={20} strokeWidth={2.1} />
             </Link>
@@ -131,7 +135,8 @@ export function SiteHeader({ settings }: { settings: Settings }) {
                   <span aria-hidden="true" className="text-muted">→</span>
                 </Link>
               ))}
-              <div className="flex items-center gap-3 pt-3 text-[11.5px] font-semibold text-muted">
+              <PreferencesControls layout="full" />
+              <div className="mt-2 flex items-center gap-3 border-t border-line/70 pt-4 text-[11.5px] font-semibold text-muted">
                 <span>Halaman staff:</span>
                 <Link href="/admin/masuk" onClick={() => setOpen(false)} className="text-brand">
                   Admin

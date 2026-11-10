@@ -4,6 +4,8 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { MobileNav } from "@/components/mobile-nav";
 import { MiniCart } from "@/components/mini-cart";
+import { WelcomeIntro } from "@/components/welcome-intro";
+import { AutoRefresh } from "@/components/auto-refresh";
 import { getSettings } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +36,8 @@ export default async function StoreLayout({
       <SiteFooter settings={settings} />
       <MobileNav />
       <MiniCart />
+      <WelcomeIntro />
+      <AutoRefresh detik={60} />
     </CartProvider>
   );
 }

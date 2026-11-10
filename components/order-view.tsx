@@ -118,6 +118,11 @@ export function OrderView({
   }, [order.kode, final]);
 
   const jumlah = items.reduce((a, b) => a + b.jumlah, 0);
+  const rekeningTampil = settings.bank?.length
+    ? settings.bank
+    : settings.rekening
+      ? [{ bank: "", nomor: settings.rekening, atasNama: settings.atasNama }]
+      : [];
 
   const { progress, eta } = useMemo(() => {
     if (order.status === "selesai") return { progress: 1, eta: 0 };
@@ -535,27 +540,68 @@ export function OrderView({
                 Pembayaran sudah dikonfirmasi admin. Terima kasih.
               </p>
             ) : order.pembayaran === "transfer" ? (
-              <div className="mt-3 rounded-xl border border-[#C9E1F7] bg-mist px-3.5 py-3 text-[12px] text-navy/80">
-                <p className="font-bold text-navy">{settings.rekening}</p>
-                <p>a.n. {settings.atasNama}</p>
-                <p className="mt-1 text-[10.5px] text-muted">
+              <div className="mt-3 space-y-2">
+                {rekeningTampil.map((rek, i) => (
+                  <div
+                    key={`${rek.bank}-${rek.nomor}-${i}`}
+                    className="rounded-xl border border-[#C9E1F7] bg-mist px-3.5 py-3 text-[12px] text-navy/80"
+                  >
+                    <p className="font-bold text-navy">
+                      {rek.bank ? `${rek.bank} · ` : ""}
+                      {rek.nomor}
+                    </p>
+                    <p>a.n. {rek.atasNama}</p>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        copy(
+                          `${rek.bank ? `${rek.bank} ` : ""}${rek.nomor} a.n. ${rek.atasNama}`,
+                          `rekening-${i}`,
+                        )
+                      }
+                      className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-brand"
+                    >
+                      {salin === `rekening-${i}` ? (
+                        <Check size={12} />
+                      ) : (
+                        <Copy size={12} />
+                      )}
+                      {salin === `rekening-${i}` ? "Tersalin" : "Salin rekening"}
+                    </button>
+                  </div>
+                ))}
+                <p className="text-[10.5px] leading-relaxed text-muted">
                   Cantumkan kode {order.kode} di berita transfer.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => copy(`${settings.rekening} a.n. ${settings.atasNama}`, "rekening")}
-                  className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-brand"
-                >
-                  {salin === "rekening" ? <Check size={12} /> : <Copy size={12} />}
-                  {salin === "rekening" ? "Tersalin" : "Salin rekening"}
-                </button>
               </div>
             ) : order.pembayaran === "qris" ? (
-              <p className="mt-3 flex items-start gap-2 rounded-lg bg-paper px-3 py-2.5 text-[11.5px] leading-relaxed text-muted">
-                <QrCode size={14} className="mt-0.5 flex-none text-brand" />
-                Tunjukkan halaman ini di kasir untuk pembayaran QRIS. Admin akan
-                menandai lunas setelah pembayaran masuk.
-              </p>
+              <div className="mt-3 rounded-xl border border-line bg-white px-3 py-3.5 text-center">
+                {settings.qrisGambar ? (
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={settings.qrisGambar}
+                      alt={`Kode QRIS ${settings.qrisNama}`}
+                      className="mx-auto h-auto w-[220px] max-w-full rounded-lg bg-white object-contain"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    <p className="mt-2 text-[12.5px] font-extrabold text-navy">
+                      {settings.qrisNama} · {rupiah(order.total)}
+                    </p>
+                    <p className="mt-0.5 text-[11px] leading-relaxed text-muted">
+                      Scan dengan aplikasi bank atau e-wallet. Admin menandai
+                      lunas setelah pembayaran masuk.
+                    </p>
+                  </>
+                ) : (
+                  <p className="flex items-start gap-2 text-left text-[11.5px] leading-relaxed text-muted">
+                    <QrCode size={14} className="mt-0.5 flex-none text-brand" />
+                    Gambar QRIS belum diatur toko. Bayar tunai di kasir atau
+                    hubungi admin lewat WhatsApp.
+                  </p>
+                )}
+              </div>
             ) : (
               <p className="mt-3 flex items-start gap-2 rounded-lg bg-paper px-3 py-2.5 text-[11.5px] leading-relaxed text-muted">
                 <Banknote size={14} className="mt-0.5 flex-none text-brand" />

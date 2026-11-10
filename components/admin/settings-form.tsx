@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, CheckCircle2, Loader2, Save } from "lucide-react";
+import { BankEditor } from "@/components/bank-editor";
 import { teleponRapi } from "@/lib/format";
 import type { Settings } from "@/lib/types";
 
@@ -257,28 +258,15 @@ export function SettingsForm({ settings }: { settings: Settings }) {
         <p className="mt-0.5 text-[11.5px] text-muted">
           Data ini muncul sebagai instruksi pembayaran bagi pembeli.
         </p>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="mt-4 space-y-3">
           <div>
-            <label htmlFor="s-rek" className="label">Nomor rekening / e-wallet</label>
-            <input
-              id="s-rek"
-              className="field"
-              value={form.rekening}
-              onChange={(e) => ubah("rekening", e.target.value)}
-              placeholder="BCA 1234567890"
+            <p className="label">Rekening bank untuk transfer</p>
+            <BankEditor
+              value={form.bank ?? []}
+              onChange={(bank) => ubah("bank", bank)}
             />
           </div>
           <div>
-            <label htmlFor="s-an" className="label">Atas nama</label>
-            <input
-              id="s-an"
-              className="field"
-              value={form.atasNama}
-              onChange={(e) => ubah("atasNama", e.target.value)}
-              placeholder="Jayanti Frozen"
-            />
-          </div>
-          <div className="sm:col-span-2">
             <label htmlFor="s-qris" className="label">Nama merchant QRIS</label>
             <input
               id="s-qris"
@@ -287,6 +275,9 @@ export function SettingsForm({ settings }: { settings: Settings }) {
               onChange={(e) => ubah("qrisNama", e.target.value)}
               placeholder="Jayanti Frozen"
             />
+            <p className="mt-1.5 text-[11px] leading-relaxed text-muted">
+              Gambar QRIS diunggah lewat panel developer.
+            </p>
           </div>
         </div>
       </section>

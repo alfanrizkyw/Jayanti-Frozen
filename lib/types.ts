@@ -133,6 +133,12 @@ export interface Promotion {
   selesai: string;
 }
 
+export interface BankAccount {
+  bank: string;
+  nomor: string;
+  atasNama: string;
+}
+
 export interface Settings {
   namaToko: string;
   telepon: string;
@@ -143,6 +149,10 @@ export interface Settings {
   rekening: string;
   atasNama: string;
   qrisNama: string;
+  /** URL gambar QRIS yang tampil saat pembeli memilih QRIS. */
+  qrisGambar: string;
+  /** Rekening bank yang bisa dipakai pembeli untuk transfer. */
+  bank: BankAccount[];
   estimasiAntar: number;
   whatsappAdmin: string;
   /** Admin dapat menutup toko kapan saja. */

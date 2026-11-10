@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
-import type { DB, Settings } from "./types";
+import type { BankAccount, DB, Settings } from "./types";
 import { createBootstrap, createDefaultSettings, createSeed } from "./seed";
 import {
   sheetsEnabled,
@@ -22,6 +22,7 @@ const demoMode = isProduction
 const localFile = path.join(process.cwd(), ".data", "db.json");
 
 let cache: { db: DB; at: number } | null = null;
+let membaca: Promise<DB> | null = null;
 let seeding: Promise<void> | null = null;
 let queue: Promise<unknown> = Promise.resolve();
 
@@ -43,6 +44,29 @@ function parseJadwal(value: unknown, fallback: string[]): string[] {
     .filter(Boolean);
 }
 
+export function rapikanBank(value: unknown, fallback: BankAccount[]): BankAccount[] {
+  let daftar: unknown = value;
+  if (typeof value === "string") {
+    try {
+      daftar = JSON.parse(value);
+    } catch {
+      daftar = [];
+    }
+  }
+  if (!Array.isArray(daftar)) return fallback;
+  const bersih = daftar
+    .filter((b): b is Record<string, unknown> => Boolean(b) && typeof b === "object")
+    .map((b) => ({
+      bank: String(b.bank ?? "").trim(),
+      nomor: String(b.nomor ?? "").trim(),
+      atasNama: String(b.atasNama ?? "").trim(),
+    }))
+    .filter((b) => b.nomor)
+    .slice(0, 8);
+  if (bersih.length) return bersih;
+  return fallback.filter((b) => b.nomor);
+}
+
 function normalSettings(raw?: Partial<Settings> | null): Settings {
   const dasar = createDefaultSettings();
   const gabung = { ...dasar, ...(raw ?? {}) } as Settings &
@@ -54,15 +78,25 @@ function normalSettings(raw?: Partial<Settings> | null): Settings {
   const jadwal = parseJadwal(gabung.jadwalKirim, dasar.jadwalKirim)
     .map((s) => s.trim())
     .filter(Boolean);
+  const rekening = String(gabung.rekening ?? dasar.rekening);
+  const atasNama = String(gabung.atasNama ?? dasar.atasNama);
   return {
     ...gabung,
     namaToko: String(gabung.namaToko || dasar.namaToko),
     telepon,
     alamat: String(gabung.alamat ?? dasar.alamat),
     jamBuka: String(gabung.jamBuka ?? dasar.jamBuka),
-    rekening: String(gabung.rekening ?? dasar.rekening),
-    atasNama: String(gabung.atasNama ?? dasar.atasNama),
+    rekening,
+    atasNama,
     qrisNama: String(gabung.qrisNama ?? dasar.qrisNama),
+    qrisGambar: String(gabung.qrisGambar ?? dasar.qrisGambar),
+    bank: rapikanBank(gabung.bank, [
+      {
+        bank: rekening.split(" ")[0] || "BCA",
+        nomor: rekening.split(" ").slice(1).join(" ") || rekening,
+        atasNama,
+      },
+    ]),
     whatsappAdmin: String(gabung.whatsappAdmin || dasar.whatsappAdmin),
     tokoBuka:
       gabung.tokoBuka === false || String(gabung.tokoBuka) === "false"
@@ -174,6 +208,14 @@ async function bootstrapAkun(db: DB): Promise<DB> {
 
 export async function readDB(): Promise<DB> {
   if (cache && Date.now() - cache.at < CACHE_MS) return cache.db;
+  if (membaca) return membaca;
+  membaca = bacaDB().finally(() => {
+    membaca = null;
+  });
+  return membaca;
+}
+
+async function bacaDB(): Promise<DB> {
   pastikanPenyimpanan();
 
   let db: DB;

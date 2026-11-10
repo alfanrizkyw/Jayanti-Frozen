@@ -21,6 +21,10 @@ export function createDefaultSettings(): Settings {
     rekening: "BCA 1234 5678 90",
     atasNama: "Jayanti Frozen",
     qrisNama: "Jayanti Frozen",
+    qrisGambar: "",
+    bank: [
+      { bank: "BCA", nomor: "1234 5678 90", atasNama: "Jayanti Frozen" },
+    ],
     estimasiAntar: 20,
     whatsappAdmin: "628980440095",
     tokoBuka: true,

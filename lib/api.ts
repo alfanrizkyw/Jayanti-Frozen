@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import { getSession } from "./auth";
 import type { SessionUser } from "./types";
 
-export async function guard(role: SessionUser["role"]) {
+export async function guard(role: SessionUser["role"] | SessionUser["role"][]) {
   const session = await getSession();
-  if (!session || session.role !== role) {
+  const diizinkan = Array.isArray(role) ? role : [role];
+  if (!session || !diizinkan.includes(session.role)) {
     return {
       session: null,
       response: NextResponse.json(

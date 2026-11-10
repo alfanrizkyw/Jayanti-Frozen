@@ -17,6 +17,8 @@ import {
   X,
 } from "lucide-react";
 import { Logo } from "@/components/logo";
+import { PreferencesControls } from "@/components/preferences-controls";
+import { AutoRefresh } from "@/components/auto-refresh";
 
 const NAV = [
   { href: "/admin", label: "Ringkasan", icon: LayoutDashboard, exact: true },
@@ -126,6 +128,9 @@ export function AdminShell({
               <Logo />
             </div>
             <div className="ml-auto flex items-center gap-3">
+              <div className="hidden md:block">
+                <PreferencesControls />
+              </div>
               <Link
                 href="/admin/pesanan?status=baru"
                 className="hidden items-center gap-2 rounded-full border border-line bg-white px-3 py-1.5 text-[11.5px] font-bold text-navy sm:flex"
@@ -150,6 +155,8 @@ export function AdminShell({
         </header>
 
         <main className="flex-1 px-4 pb-16 pt-5 md:px-7 md:pt-7">{children}</main>
+
+        <AutoRefresh detik={30} />
 
         <footer className="border-t border-line px-5 py-5 text-center text-[11px] text-muted md:px-7">
           Jayanti Frozen · Panel admin · Data tersimpan aman
@@ -176,7 +183,10 @@ export function AdminShell({
                 <X size={20} />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-3">{nav}</div>
+            <div className="flex-1 overflow-y-auto p-3">
+              {nav}
+              <PreferencesControls layout="gelap" />
+            </div>
             <div className="border-t border-white/10 p-3">
               <Link
                 href="/"

@@ -81,5 +81,8 @@ export async function deleteRow(table: TableName, id: string): Promise<void> {
 }
 
 export async function writeSettings(settings: Settings): Promise<void> {
-  await call({ action: "settings", value: JSON.stringify(settings) });
+  // Apps Script menyimpan sel sebagai teks, jadi daftar rekening dikirim
+  // sebagai JSON agar tidak menjadi "[object Object]".
+  const kirim = { ...settings, bank: JSON.stringify(settings.bank ?? []) };
+  await call({ action: "settings", value: JSON.stringify(kirim) });
 }

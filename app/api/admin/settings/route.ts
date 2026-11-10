@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { bad, guard } from "@/lib/api";
-import { updateSettings } from "@/lib/data";
+import { getSettings, updateSettings } from "@/lib/data";
 import type { Settings } from "@/lib/types";
 
 export async function POST(req: Request) {
@@ -11,6 +11,7 @@ export async function POST(req: Request) {
   if (!body) return bad("Data pengaturan tidak valid.");
 
   try {
+    const sekarang = await getSettings();
     const settings = await updateSettings({
       namaToko: String(body.namaToko ?? "Jayanti Frozen"),
       telepon: String(body.telepon ?? ""),
@@ -21,6 +22,11 @@ export async function POST(req: Request) {
       rekening: String(body.rekening ?? ""),
       atasNama: String(body.atasNama ?? ""),
       qrisNama: String(body.qrisNama ?? ""),
+      qrisGambar:
+        typeof body.qrisGambar === "string"
+          ? body.qrisGambar
+          : sekarang.qrisGambar,
+      bank: Array.isArray(body.bank) ? body.bank : sekarang.bank,
       estimasiAntar: Number(body.estimasiAntar),
       whatsappAdmin: String(body.whatsappAdmin ?? ""),
       tokoBuka: body.tokoBuka !== false,

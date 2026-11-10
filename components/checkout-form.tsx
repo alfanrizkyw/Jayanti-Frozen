@@ -47,6 +47,11 @@ export function CheckoutForm({ settings }: { settings: Settings }) {
         ? 0
         : settings.ongkir;
   const total = subtotal + ongkir;
+  const rekeningTampil = settings.bank?.length
+    ? settings.bank
+    : settings.rekening
+      ? [{ bank: "", nomor: settings.rekening, atasNama: settings.atasNama }]
+      : [];
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -373,19 +378,52 @@ export function CheckoutForm({ settings }: { settings: Settings }) {
           )}
 
           {pembayaran === "transfer" && !tutup && (
-            <div className="mt-3 rounded-xl border border-[#C9E1F7] bg-mist px-3.5 py-3 text-[12px] leading-relaxed text-navy/80">
-              <p className="font-bold text-navy">{settings.rekening}</p>
-              <p>a.n. {settings.atasNama}</p>
-              <p className="mt-1 text-[11px] text-muted">
+            <div className="mt-3 space-y-2">
+              {rekeningTampil.map((rek, i) => (
+                <div
+                  key={`${rek.bank}-${rek.nomor}-${i}`}
+                  className="rounded-xl border border-[#C9E1F7] bg-mist px-3.5 py-3 text-[12px] leading-relaxed text-navy/80"
+                >
+                  <p className="font-bold text-navy">
+                    {rek.bank ? `${rek.bank} · ` : ""}
+                    {rek.nomor}
+                  </p>
+                  <p>a.n. {rek.atasNama}</p>
+                </div>
+              ))}
+              <p className="rounded-xl bg-paper px-3.5 py-3 text-[11px] leading-relaxed text-muted">
                 Cantumkan kode pesanan di berita transfer. Admin akan memverifikasi.
               </p>
             </div>
           )}
           {pembayaran === "qris" && !tutup && (
-            <p className="mt-3 flex items-start gap-2 rounded-xl bg-paper px-3.5 py-3 text-[11.5px] leading-relaxed text-muted">
-              <QrCode size={14} className="mt-0.5 flex-none text-brand" />
-              Kode QRIS tampil di halaman pesanan setelah pesanan dibuat.
-            </p>
+            <div className="mt-3 rounded-xl border border-line bg-white px-3.5 py-3.5 text-center">
+              {settings.qrisGambar ? (
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={settings.qrisGambar}
+                    alt={`Kode QRIS ${settings.qrisNama}`}
+                    className="mx-auto h-auto w-[220px] max-w-full rounded-lg bg-white object-contain"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <p className="mt-2 text-[12.5px] font-extrabold text-navy">
+                    {settings.qrisNama}
+                  </p>
+                  <p className="mt-0.5 text-[11.5px] leading-relaxed text-muted">
+                    Scan dengan aplikasi bank atau e-wallet, lalu bayar{" "}
+                    <strong className="font-bold text-navy">{rupiah(total)}</strong>.
+                  </p>
+                </>
+              ) : (
+                <p className="flex items-start gap-2 text-left text-[11.5px] leading-relaxed text-muted">
+                  <QrCode size={14} className="mt-0.5 flex-none text-brand" />
+                  Gambar QRIS belum diatur toko. Pilih tunai atau transfer, atau
+                  hubungi admin lewat WhatsApp.
+                </p>
+              )}
+            </div>
           )}
           {pembayaran === "tunai" && (
             <p className="mt-3 flex items-start gap-2 rounded-xl bg-paper px-3.5 py-3 text-[11.5px] leading-relaxed text-muted">

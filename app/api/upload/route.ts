@@ -7,7 +7,7 @@ import { bad, guard } from "@/lib/api";
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
-  const { response } = await guard("admin");
+  const { response } = await guard(["admin", "developer"]);
   if (response) return response;
 
   const form = await req.formData().catch(() => null);
@@ -15,32 +15,44 @@ export async function POST(req: Request) {
   if (!(file instanceof File)) return bad("Berkas gambar tidak ditemukan.");
   if (!["image/jpeg", "image/png", "image/webp"].includes(file.type))
     return bad("Format gambar harus JPG, PNG, atau WEBP.");
-  if (file.size > 8 * 1024 * 1024)
-    return bad("Ukuran gambar maksimal 8 MB.");
+
+  const { searchParams } = new URL(req.url);
+  const qris = searchParams.get("jenis") === "qris";
+  const banner = searchParams.get("rasio") === "banner";
+  if (file.size > (qris ? 4 : 8) * 1024 * 1024)
+    return bad(`Ukuran gambar maksimal ${qris ? 4 : 8} MB.`);
 
   try {
-    const banner =
-      new URL(req.url).searchParams.get("rasio") === "banner";
-    const lebar = banner ? 1600 : 900;
-    const tinggi = banner ? 900 : 675;
     const buffer = Buffer.from(await file.arrayBuffer());
-    const jpeg = await sharp(buffer)
-      .rotate()
-      .resize(lebar, tinggi, { fit: "cover", position: "centre" })
-      .jpeg({ quality: 82, mozjpeg: true })
-      .toBuffer();
+    const gambar = qris
+      ? await sharp(buffer)
+          .rotate()
+          .resize(900, 900, {
+            fit: "contain",
+            background: { r: 255, g: 255, b: 255, alpha: 1 },
+          })
+          .png({ compressionLevel: 9 })
+          .toBuffer()
+      : await sharp(buffer)
+          .rotate()
+          .resize(banner ? 1600 : 900, banner ? 900 : 675, {
+            fit: "cover",
+            position: "centre",
+          })
+          .jpeg({ quality: 82, mozjpeg: true })
+          .toBuffer();
+
+    const folder = qris ? "qris" : banner ? "promo" : "produk";
+    const ext = qris ? "png" : "jpg";
+    const contentType = qris ? "image/png" : "image/jpeg";
 
     if (process.env.BLOB_READ_WRITE_TOKEN) {
       const { put } = await import("@vercel/blob");
-      const blob = await put(
-        `${banner ? "promo" : "produk"}/${Date.now()}.jpg`,
-        jpeg,
-        {
-          access: "public",
-          contentType: "image/jpeg",
-          addRandomSuffix: true,
-        },
-      );
+      const blob = await put(`${folder}/${Date.now()}.${ext}`, gambar, {
+        access: "public",
+        contentType,
+        addRandomSuffix: true,
+      });
       return NextResponse.json({ url: blob.url });
     }
 
@@ -50,10 +62,10 @@ export async function POST(req: Request) {
         500,
       );
 
-    const name = `${banner ? "promo" : "produk"}-${Date.now()}.jpg`;
+    const name = `${folder}-${Date.now()}.${ext}`;
     const dir = path.join(process.cwd(), "public", "uploads");
     await fs.mkdir(dir, { recursive: true });
-    await fs.writeFile(path.join(dir, name), jpeg);
+    await fs.writeFile(path.join(dir, name), gambar);
     return NextResponse.json({ url: `/uploads/${name}` });
   } catch {
     return bad("Gambar gagal diproses. Coba file lain.", 500);

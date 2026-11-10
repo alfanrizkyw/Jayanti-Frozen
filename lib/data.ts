@@ -1,6 +1,12 @@
 import { adminPassword, courierPassword } from "./auth";
 import { hashPassword, sameSecret, verifyPassword } from "./password";
-import { readDB, saveRows, removeRow, saveSettings } from "./store";
+import {
+  readDB,
+  rapikanBank,
+  saveRows,
+  removeRow,
+  saveSettings,
+} from "./store";
 import type {
   Bug,
   BugStatus,
@@ -618,9 +624,12 @@ function rapikanJadwal(value: unknown, fallback: string[]): string[] {
 }
 
 export async function updateSettings(input: Settings) {
+  const lama = (await readDB()).settings;
   const ongkir = Math.round(Number(input.ongkir));
   const gratis = Math.round(Number(input.gratisOngkirMin));
   const estimasi = Math.round(Number(input.estimasiAntar));
+  const bank = rapikanBank(input.bank ?? lama.bank, lama.bank);
+  const utama = bank[0];
   const settings: Settings = {
     ...input,
     namaToko: input.namaToko?.trim() || "Jayanti Frozen",
@@ -631,6 +640,12 @@ export async function updateSettings(input: Settings) {
     gratisOngkirMin: Number.isFinite(gratis) && gratis >= 0 ? gratis : 0,
     estimasiAntar: Number.isFinite(estimasi) && estimasi > 0 ? estimasi : 20,
     whatsappAdmin: normalTelepon(input.whatsappAdmin || "08980440095"),
+    rekening: utama
+      ? `${utama.bank} ${utama.nomor}`.trim()
+      : (input.rekening?.trim() ?? ""),
+    atasNama: utama ? utama.atasNama : (input.atasNama?.trim() ?? ""),
+    qrisGambar: input.qrisGambar?.trim() ?? lama.qrisGambar ?? "",
+    bank,
     tokoBuka: input.tokoBuka !== false,
     tutupCatatan:
       input.tutupCatatan?.trim() ||

@@ -14,14 +14,19 @@ import {
   KeyRound,
   Loader2,
   LogOut,
+  Pencil,
   Plus,
+  QrCode,
   RefreshCw,
   ShieldCheck,
   Trash2,
+  Upload,
   UserRound,
+  X,
 } from "lucide-react";
 import { Logo } from "@/components/logo";
-import { relatif } from "@/lib/format";
+import { BankEditor } from "@/components/bank-editor";
+import { relatif, teleponRapi } from "@/lib/format";
 import type {
   Bug,
   BugStatus,
@@ -64,6 +69,22 @@ export function DeveloperConsole({
   const [sandiBaru, setSandiBaru] = useState<Record<string, string>>({});
   const [filterBug, setFilterBug] = useState<"semua" | BugStatus>("semua");
 
+  const [teleponToko, setTeleponToko] = useState(teleponRapi(settings.telepon));
+  const [qrisNama, setQrisNama] = useState(settings.qrisNama);
+  const [qrisGambar, setQrisGambar] = useState(settings.qrisGambar ?? "");
+  const [bank, setBank] = useState(settings.bank ?? []);
+  const [editStaff, setEditStaff] = useState<{
+    id: string;
+    nama: string;
+    telepon: string;
+  } | null>(null);
+  const [editKurir, setEditKurir] = useState<{
+    id: string;
+    nama: string;
+    telepon: string;
+    kendaraan: string;
+  } | null>(null);
+
   const bugBaru = bugs.filter((b) => b.status === "baru").length;
 
   async function kirim(url: string, body: Record<string, unknown>, label: string) {
@@ -93,6 +114,61 @@ export function DeveloperConsole({
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/developer/masuk");
     router.refresh();
+  }
+
+  async function hapusAkun(
+    url: string,
+    id: string,
+    jenis: "admin" | "kurir",
+    nama: string,
+  ) {
+    if (!confirm(`Hapus akun ${jenis} "${nama}"? Tindakan ini tidak bisa dibatalkan.`))
+      return;
+    await kirim(url, { aksi: "hapus", id }, `hapus-${id}`);
+  }
+
+  async function unggahQris(file: File) {
+    setProses("qris-upload");
+    setError("");
+    setPesan("");
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload?jenis=qris", {
+        method: "POST",
+        body: fd,
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error || "Gagal mengunggah gambar QRIS.");
+      const url = String(json.url ?? "");
+      setQrisGambar(url);
+      const ok = await kirim(
+        "/api/developer/toko",
+        { qrisGambar: url },
+        "qris-simpan",
+      );
+      if (ok) setPesan("Gambar QRIS tersimpan.");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Gagal mengunggah gambar QRIS.",
+      );
+    } finally {
+      setProses("");
+    }
+  }
+
+  async function hapusQris() {
+    if (!confirm("Hapus gambar QRIS? Pembeli tidak akan melihat kode QR lagi."))
+      return;
+    const ok = await kirim(
+      "/api/developer/toko",
+      { qrisGambar: "" },
+      "qris-hapus",
+    );
+    if (ok) {
+      setQrisGambar("");
+      setPesan("Gambar QRIS dihapus.");
+    }
   }
 
   const bugsTampil =
@@ -230,6 +306,190 @@ export function DeveloperConsole({
           </ul>
         </section>
 
+        <section className="card p-4 md:p-5" id="toko-pembayaran">
+          <h2 className="text-[15px] font-extrabold text-navy">Toko & pembayaran</h2>
+          <p className="mt-0.5 text-[11.5px] leading-relaxed text-muted">
+            Ubah nomor toko, gambar QRIS, dan rekening yang tampil saat pembeli
+            memilih QRIS atau transfer.
+          </p>
+
+          <div className="mt-4 grid gap-5 lg:grid-cols-2">
+            <div className="space-y-3">
+              <div>
+                <label htmlFor="d-telp" className="label">Nomor WhatsApp toko</label>
+                <div className="flex gap-2">
+                  <input
+                    id="d-telp"
+                    className="field min-h-11"
+                    value={teleponToko}
+                    onChange={(e) => setTeleponToko(e.target.value)}
+                    inputMode="tel"
+                    placeholder="0898 0440 095"
+                  />
+                  <button
+                    type="button"
+                    disabled={Boolean(proses)}
+                    onClick={() =>
+                      kirim(
+                        "/api/developer/toko",
+                        { telepon: teleponToko },
+                        "toko-telp",
+                      )
+                    }
+                    className="btn btn-primary btn-sm flex-none"
+                  >
+                    {proses === "toko-telp" ? (
+                      <Loader2 size={13} className="animate-spin" />
+                    ) : null}
+                    Simpan
+                  </button>
+                </div>
+                <p className="mt-1.5 text-[11px] leading-relaxed text-muted">
+                  Nomor ini tampil di header, footer, dan tautan WhatsApp toko.
+                </p>
+              </div>
+
+              <div>
+                <label htmlFor="d-qris-nama" className="label">Nama merchant QRIS</label>
+                <input
+                  id="d-qris-nama"
+                  className="field min-h-11"
+                  value={qrisNama}
+                  onChange={(e) => setQrisNama(e.target.value)}
+                  placeholder="Jayanti Frozen"
+                />
+              </div>
+
+              <div>
+                <p className="label">Rekening bank</p>
+                <BankEditor value={bank} onChange={setBank} />
+              </div>
+
+              <button
+                type="button"
+                disabled={Boolean(proses)}
+                onClick={() =>
+                  kirim(
+                    "/api/developer/toko",
+                    { qrisNama, bank },
+                    "toko-bayar",
+                  )
+                }
+                className="btn btn-navy btn-sm"
+              >
+                {proses === "toko-bayar" ? (
+                  <Loader2 size={13} className="animate-spin" />
+                ) : (
+                  <Check size={13} />
+                )}
+                Simpan nama & rekening
+              </button>
+            </div>
+
+            <div>
+              <p className="label">Gambar QRIS</p>
+              {qrisGambar ? (
+                <div className="flex items-start gap-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={qrisGambar}
+                    alt="Pratinjau gambar QRIS toko"
+                    className="h-44 w-44 flex-none rounded-xl border border-line bg-white object-contain p-2"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <div className="flex flex-col gap-2">
+                    <span className="max-w-[150px] break-all text-[10px] leading-relaxed text-muted">
+                      {qrisGambar}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex h-44 w-44 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-line bg-paper text-center text-[11px] font-semibold text-muted">
+                  <QrCode size={26} className="text-brand" />
+                  Belum ada gambar QRIS
+                </div>
+              )}
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                <label
+                  className={`btn btn-outline btn-sm cursor-pointer ${
+                    proses ? "pointer-events-none opacity-50" : ""
+                  }`}
+                >
+                  {proses === "qris-upload" ? (
+                    <Loader2 size={13} className="animate-spin" />
+                  ) : (
+                    <Upload size={13} />
+                  )}
+                  {proses === "qris-upload"
+                    ? "Mengunggah…"
+                    : qrisGambar
+                      ? "Ganti gambar"
+                      : "Unggah gambar"}
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    className="sr-only"
+                    disabled={Boolean(proses)}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) unggahQris(file);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+                {qrisGambar && (
+                  <button
+                    type="button"
+                    disabled={Boolean(proses)}
+                    onClick={hapusQris}
+                    className="btn btn-danger btn-sm"
+                  >
+                    {proses === "qris-hapus" ? (
+                      <Loader2 size={13} className="animate-spin" />
+                    ) : (
+                      <Trash2 size={13} />
+                    )}
+                    Hapus
+                  </button>
+                )}
+              </div>
+
+              <div className="mt-2 flex gap-2">
+                <input
+                  className="field min-h-11"
+                  value={qrisGambar}
+                  onChange={(e) => setQrisGambar(e.target.value)}
+                  placeholder="atau tempel URL gambar QRIS"
+                  aria-label="URL gambar QRIS"
+                />
+                <button
+                  type="button"
+                  disabled={Boolean(proses)}
+                  onClick={() =>
+                    kirim(
+                      "/api/developer/toko",
+                      { qrisGambar },
+                      "qris-url",
+                    )
+                  }
+                  className="btn btn-outline btn-sm flex-none"
+                >
+                  {proses === "qris-url" ? (
+                    <Loader2 size={13} className="animate-spin" />
+                  ) : null}
+                  Simpan URL
+                </button>
+              </div>
+              <p className="mt-1.5 text-[11px] leading-relaxed text-muted">
+                PNG/JPG/WEBP maksimal 4 MB. Bila unggah belum aktif, tempel URL
+                gambar dari Google Drive atau penyimpanan lain.
+              </p>
+            </div>
+          </div>
+        </section>
+
         <section className="card p-4 md:p-5" id="akun-admin">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -287,11 +547,23 @@ export function DeveloperConsole({
                   <button
                     type="button"
                     onClick={() =>
-                      kirim(
-                        "/api/developer/staff",
-                        { aksi: "hapus", id: s.id },
-                        `hapus-${s.id}`,
+                      setEditStaff(
+                        editStaff?.id === s.id
+                          ? null
+                          : { id: s.id, nama: s.nama, telepon: s.telepon },
                       )
+                    }
+                    disabled={Boolean(proses)}
+                    className="btn btn-outline btn-sm"
+                    aria-expanded={editStaff?.id === s.id}
+                  >
+                    <Pencil size={13} />
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      hapusAkun("/api/developer/staff", s.id, "admin", s.nama)
                     }
                     disabled={Boolean(proses)}
                     className="btn btn-danger btn-sm"
@@ -300,6 +572,64 @@ export function DeveloperConsole({
                     <Trash2 size={13} />
                   </button>
                 </div>
+                {editStaff?.id === s.id && (
+                  <div className="mt-2 grid gap-2 rounded-xl border border-[#C9E1F7] bg-paper/60 p-2.5 sm:grid-cols-[1fr_1fr_auto]">
+                    <input
+                      className="field min-h-11"
+                      value={editStaff.nama}
+                      onChange={(e) =>
+                        setEditStaff({ ...editStaff, nama: e.target.value })
+                      }
+                      placeholder="Nama admin"
+                      aria-label="Nama admin"
+                    />
+                    <input
+                      className="field min-h-11"
+                      value={editStaff.telepon}
+                      onChange={(e) =>
+                        setEditStaff({ ...editStaff, telepon: e.target.value })
+                      }
+                      placeholder="Nomor HP (opsional)"
+                      aria-label="Nomor HP admin"
+                      inputMode="tel"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        disabled={Boolean(proses)}
+                        onClick={async () => {
+                          const ok = await kirim(
+                            "/api/developer/staff",
+                            {
+                              id: s.id,
+                              nama: editStaff.nama,
+                              telepon: editStaff.telepon,
+                              aktif: s.aktif,
+                            },
+                            `edit-${s.id}`,
+                          );
+                          if (ok) setEditStaff(null);
+                        }}
+                        className="btn btn-primary btn-sm"
+                      >
+                        {proses === `edit-${s.id}` ? (
+                          <Loader2 size={13} className="animate-spin" />
+                        ) : (
+                          <Check size={13} />
+                        )}
+                        Simpan
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditStaff(null)}
+                        className="btn btn-ghost btn-sm"
+                        aria-label="Batal edit admin"
+                      >
+                        <X size={13} />
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <div className="mt-2 flex flex-wrap items-end gap-2 pl-0 sm:pl-11">
                   <div className="min-w-[180px] flex-1">
                     <label htmlFor={`sandi-${s.id}`} className="label mb-1 text-[11px]">
@@ -469,11 +799,28 @@ export function DeveloperConsole({
                   <button
                     type="button"
                     onClick={() =>
-                      kirim(
-                        "/api/developer/kurir",
-                        { aksi: "hapus", id: c.id },
-                        `hapus-k-${c.id}`,
+                      setEditKurir(
+                        editKurir?.id === c.id
+                          ? null
+                          : {
+                              id: c.id,
+                              nama: c.nama,
+                              telepon: c.telepon,
+                              kendaraan: c.kendaraan,
+                            },
                       )
+                    }
+                    disabled={Boolean(proses)}
+                    className="btn btn-outline btn-sm"
+                    aria-expanded={editKurir?.id === c.id}
+                  >
+                    <Pencil size={13} />
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      hapusAkun("/api/developer/kurir", c.id, "kurir", c.nama)
                     }
                     disabled={Boolean(proses)}
                     className="btn btn-danger btn-sm"
@@ -482,6 +829,74 @@ export function DeveloperConsole({
                     <Trash2 size={13} />
                   </button>
                 </div>
+                {editKurir?.id === c.id && (
+                  <div className="mt-2 grid gap-2 rounded-xl border border-[#C9E1F7] bg-paper/60 p-2.5 sm:grid-cols-[1fr_1fr_1fr_auto]">
+                    <input
+                      className="field min-h-11"
+                      value={editKurir.nama}
+                      onChange={(e) =>
+                        setEditKurir({ ...editKurir, nama: e.target.value })
+                      }
+                      placeholder="Nama kurir"
+                      aria-label="Nama kurir"
+                    />
+                    <input
+                      className="field min-h-11"
+                      value={editKurir.telepon}
+                      onChange={(e) =>
+                        setEditKurir({ ...editKurir, telepon: e.target.value })
+                      }
+                      placeholder="Nomor HP kurir"
+                      aria-label="Nomor HP kurir"
+                      inputMode="tel"
+                    />
+                    <input
+                      className="field min-h-11"
+                      value={editKurir.kendaraan}
+                      onChange={(e) =>
+                        setEditKurir({ ...editKurir, kendaraan: e.target.value })
+                      }
+                      placeholder="Kendaraan & nomor polisi"
+                      aria-label="Kendaraan kurir"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        disabled={Boolean(proses)}
+                        onClick={async () => {
+                          const ok = await kirim(
+                            "/api/developer/kurir",
+                            {
+                              id: c.id,
+                              nama: editKurir.nama,
+                              telepon: editKurir.telepon,
+                              kendaraan: editKurir.kendaraan,
+                              aktif: c.aktif,
+                            },
+                            `edit-k-${c.id}`,
+                          );
+                          if (ok) setEditKurir(null);
+                        }}
+                        className="btn btn-primary btn-sm"
+                      >
+                        {proses === `edit-k-${c.id}` ? (
+                          <Loader2 size={13} className="animate-spin" />
+                        ) : (
+                          <Check size={13} />
+                        )}
+                        Simpan
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditKurir(null)}
+                        className="btn btn-ghost btn-sm"
+                        aria-label="Batal edit kurir"
+                      >
+                        <X size={13} />
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <div className="mt-2 flex flex-wrap items-end gap-2 sm:pl-11">
                   <div className="min-w-[180px] flex-1">
                     <label
