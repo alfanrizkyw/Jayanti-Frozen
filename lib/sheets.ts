@@ -28,7 +28,10 @@ async function call(params: Record<string, string>) {
     cache: "no-store",
     signal: AbortSignal.timeout(12_000),
   });
-  if (!res.ok) throw new Error(`Google Sheets ${res.status}`);
+  if (!res.ok) {
+    const detail = (await res.text().catch(() => "")).slice(0, 160);
+    throw new Error(`Google Sheets ${res.status}${detail ? `: ${detail}` : ""}`);
+  }
   const json = await res.json();
   if (!json?.ok) throw new Error(json?.error || "Respons Google Sheets tidak valid");
   return json;
