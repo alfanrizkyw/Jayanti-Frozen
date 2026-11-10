@@ -14,7 +14,8 @@ export function createDefaultSettings(): Settings {
   return {
     namaToko: "Jayanti Frozen",
     telepon: "628980440095",
-    alamat: "Jl. Melati No. 12, Klojen, Malang",
+    alamat: "Pondok Pabean Indah Blok N No. 10, Dringu, Kota Probolinggo",
+    mapsUrl: "https://share.google/4uDV5gaNjwZEEHhVf",
     jamBuka: "08.00 – 21.00",
     ongkir: 12000,
     gratisOngkirMin: 150000,
@@ -344,7 +345,7 @@ export function createSeed(): DB {
       },
       {
         id: "PR02", tipe: "pengumuman", judul: "Gratis ongkir",
-        deskripsi: "Belanja minimal Rp 150.000 gratis ongkir area Kota Malang.",
+        deskripsi: "Belanja minimal Rp 150.000 gratis ongkir area Kota Probolinggo.",
         badge: "INFO", gambar: "", cta: "",
         aktif: true, mulai: iso(2 * hari), selesai: iso(-30 * hari),
       },

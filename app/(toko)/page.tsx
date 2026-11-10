@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   ChevronRight,
   CreditCard,
+  ExternalLink,
   MapPin,
   MessageCircle,
   Search,
@@ -48,7 +49,7 @@ export default async function BerandaPage() {
             <div className="px-5 pb-5 pt-7 sm:px-8 sm:pb-8 sm:pt-9 lg:py-12 lg:pl-10 lg:pr-6">
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-3 py-1.5 text-[10.5px] font-bold uppercase tracking-[0.14em] text-white/85">
                 <Snowflake size={13} className="text-sky" />
-                Frozen food · Kota Malang
+                Frozen food · Kota Probolinggo
               </span>
 
               <h1 className="mt-4 text-[32px] font-extrabold leading-[1.06] tracking-[-0.035em] sm:text-[42px] lg:text-[48px]">
@@ -318,6 +319,28 @@ export default async function BerandaPage() {
           </div>
         </div>
 
+        <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-line bg-white px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between md:px-5">
+          <div className="flex items-start gap-2.5">
+            <MapPin size={17} className="mt-0.5 flex-none text-brand" />
+            <div>
+              <p className="text-[13px] font-extrabold text-navy">Lokasi toko</p>
+              <p className="mt-0.5 text-[12px] leading-relaxed text-muted">
+                {settings.alamat}
+              </p>
+            </div>
+          </div>
+          {settings.mapsUrl && (
+            <a
+              href={settings.mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-outline btn-sm flex-none"
+            >
+              Buka di Google Maps <ExternalLink size={13} />
+            </a>
+          )}
+        </div>
+
         <div className="mt-5 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[11.5px] text-muted">
           <span className="flex items-center gap-1.5">
             <BadgeCheck size={14} className="text-leaf" /> Produk bersertifikat halal
@@ -326,7 +349,7 @@ export default async function BerandaPage() {
             <CheckCircle2 size={14} className="text-leaf" /> Pembayaran diverifikasi admin
           </span>
           <span className="flex items-center gap-1.5">
-            <Store size={14} className="text-leaf" /> Toko fisik di Malang
+            <Store size={14} className="text-leaf" /> Toko fisik di Probolinggo
           </span>
         </div>
       </section>

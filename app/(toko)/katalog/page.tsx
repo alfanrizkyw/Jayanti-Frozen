@@ -84,7 +84,7 @@ export default async function KatalogPage({
           </p>
         </div>
         <p className="hidden rounded-xl border border-line bg-white px-4 py-3 text-[12px] font-medium text-muted sm:block">
-          Ambil di toko <span className="text-line">·</span> antar kurir area Malang
+          Ambil di toko <span className="text-line">·</span> antar kurir area Probolinggo
         </p>
       </div>
 

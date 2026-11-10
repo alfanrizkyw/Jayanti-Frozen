@@ -14,6 +14,7 @@ const KAMUS: Record<string, string> = {
   Katalog: "Catalog",
   "Katalog produk": "Product catalog",
   "Lacak pesanan": "Track order",
+  Lokasi: "Location",
   Lacak: "Track",
   Keranjang: "Cart",
   "Keranjang belanja": "Shopping cart",
@@ -96,8 +97,8 @@ const KAMUS: Record<string, string> = {
   "Bug & error": "Bugs & errors",
   "Status layanan": "Service status",
   "Selamat datang di Jayanti Frozen": "Welcome to Jayanti Frozen",
-  "Frozen food segar dari Malang. Ambil di toko atau kami antar ke rumah.":
-    "Fresh frozen food from Malang. Pick up at the store or let us deliver.",
+  "Frozen food segar dari Probolinggo. Ambil di toko atau kami antar ke rumah.":
+    "Fresh frozen food from Probolinggo. Pick up at the store or let us deliver.",
   "Mulai belanja": "Start shopping",
   "Lihat-lihat dulu": "Just browsing",
   "Tutup sambutan": "Close welcome",
@@ -213,14 +214,14 @@ const KAMUS: Record<string, string> = {
   "Pembayaran & pengiriman": "Payment & delivery",
   "Tunai": "Cash",
   "Transfer": "Bank transfer",
-  "Malang, Jawa Timur": "Malang, East Java",
+  "Probolinggo, Jawa Timur": "Probolinggo, East Java",
   "Frozen food pilihan untuk keluarga. Segar, praktis, dan siap dimasak kapan saja.":
     "Frozen food for the family. Fresh, practical, ready to cook anytime.",
   "Rantai dingin −18°C terjaga sampai tangan Anda":
     "The −18°C cold chain stays intact until it reaches you",
   "Buka setiap hari": "Open every day",
-  "Ambil di toko atau antar kurir area Malang. Ongkir":
-    "Pick up at the store or courier delivery in Malang. Delivery fee",
+  "Ambil di toko atau antar kurir area Probolinggo. Ongkir":
+    "Pick up at the store or courier delivery in Probolinggo. Delivery fee",
   ", gratis di atas": ", free over",
   "gratis di atas": "free over",
   "Butuh bantuan memilih?": "Need help choosing?",
@@ -228,12 +229,20 @@ const KAMUS: Record<string, string> = {
     "Chat us on WhatsApp, answered directly by the store admin.",
   "Produk bersertifikat halal": "Halal certified products",
   "Pembayaran diverifikasi admin": "Payments verified by admin",
-  "Toko fisik di Malang": "Physical store in Malang",
+  "Toko fisik di Probolinggo": "Physical store in Probolinggo",
+  "Lokasi toko": "Store location",
+  "Buka di Google Maps": "Open in Google Maps",
+  "Buka peta lokasi toko": "Open store location map",
+  "Google Maps": "Google Maps",
+  "Link Google Maps": "Google Maps link",
+  "Dibuka dari menu Lokasi di header dan tautan alamat di footer. Kosongkan bila belum ada peta.":
+    "Opened from the Location menu in the header and the address link in the footer. Leave empty if there is no map yet.",
+  "Nama jalan, kelurahan, kota": "Street, district, city",
   "Butuh bantuan?": "Need help?",
   "Admin siap membantu setiap hari": "The admin is ready to help every day",
 
   // Beranda
-  "Frozen food · Kota Malang": "Frozen food · Malang",
+  "Frozen food · Kota Probolinggo": "Frozen food · Probolinggo",
   "Frozen food segar,": "Fresh frozen food,",
   "siap masak": "ready to cook",
   "kapan saja.": "anytime.",
@@ -282,7 +291,7 @@ const KAMUS: Record<string, string> = {
   // Katalog & produk
   "Semua frozen food yang tersedia di toko. Stok dan harga diperbarui langsung oleh admin.":
     "All frozen food available in the store. Stock and prices are updated directly by the admin.",
-  "antar kurir area Malang": "courier delivery in Malang",
+  "antar kurir area Probolinggo": "courier delivery in Probolinggo",
   "Filter kategori": "Filter category",
   "Hanya yang tersedia": "In stock only",
   "Urutkan produk": "Sort products",

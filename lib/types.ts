@@ -143,6 +143,8 @@ export interface Settings {
   namaToko: string;
   telepon: string;
   alamat: string;
+  /** Tautan Google Maps yang dibuka dari menu Lokasi. */
+  mapsUrl: string;
   jamBuka: string;
   ongkir: number;
   gratisOngkirMin: number;

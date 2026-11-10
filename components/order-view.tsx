@@ -347,7 +347,19 @@ export function OrderView({
                         <MapPin size={14} className="mt-0.5 flex-none text-brand" />
                         <div>
                           <dt className="font-semibold text-navy">Lokasi ambil</dt>
-                          <dd className="text-muted">{settings.alamat}</dd>
+                          <dd className="text-muted">
+                            {settings.alamat}
+                            {settings.mapsUrl && (
+                              <a
+                                href={settings.mapsUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-1 flex items-center gap-1 text-[11.5px] font-semibold text-brand hover:underline"
+                              >
+                                <MapPin size={11} /> Buka di Google Maps
+                              </a>
+                            )}
+                          </dd>
                         </div>
                       </div>
                       <div className="flex items-start gap-2">

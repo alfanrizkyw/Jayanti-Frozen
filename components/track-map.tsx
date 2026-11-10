@@ -78,7 +78,7 @@ export function TrackMap({
         </g>
 
         <text x="110" y="132" fill="#7C97B3" fontSize="7" fontWeight="600">
-          Jl. Melati
+          Jl. Raya Dringu
         </text>
         <text
           x="224"
@@ -88,7 +88,7 @@ export function TrackMap({
           fontWeight="600"
           transform="rotate(90 224 112)"
         >
-          Jl. Soekarno Hatta
+          Jl. Panglima Sudirman
         </text>
 
         <path d={d} fill="none" stroke="#FFFFFF" strokeWidth="9" strokeLinecap="round" />

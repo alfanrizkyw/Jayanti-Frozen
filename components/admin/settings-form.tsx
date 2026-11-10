@@ -107,7 +107,7 @@ export function SettingsForm({ settings }: { settings: Settings }) {
               className="field"
               value={form.alamat}
               onChange={(e) => ubah("alamat", e.target.value)}
-              placeholder="Jl. Melati No. 12, Malang"
+              placeholder="Nama jalan, kelurahan, kota"
               required
             />
           </div>
@@ -120,6 +120,21 @@ export function SettingsForm({ settings }: { settings: Settings }) {
               onChange={(e) => ubah("jamBuka", e.target.value)}
               placeholder="08.00 – 21.00"
             />
+          </div>
+          <div className="sm:col-span-2">
+            <label htmlFor="s-peta" className="label">Link Google Maps</label>
+            <input
+              id="s-peta"
+              className="field"
+              value={form.mapsUrl}
+              onChange={(e) => ubah("mapsUrl", e.target.value)}
+              placeholder="https://share.google/..."
+              inputMode="url"
+            />
+            <p className="mt-1.5 text-[11px] leading-relaxed text-muted">
+              Dibuka dari menu Lokasi di header dan tautan alamat di footer.
+              Kosongkan bila belum ada peta.
+            </p>
           </div>
           <div className="sm:col-span-2">
             <label htmlFor="s-tutup" className="label">

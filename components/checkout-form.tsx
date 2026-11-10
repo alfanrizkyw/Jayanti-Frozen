@@ -292,10 +292,22 @@ export function CheckoutForm({ settings }: { settings: Settings }) {
           {metode === "ambil" && (
             <div className="mt-3 flex items-start gap-2.5 rounded-xl bg-paper p-3.5">
               <Snowflake size={16} className="mt-0.5 flex-none text-brand" />
-              <p className="text-[12px] leading-relaxed text-muted">
-                Ambil di <strong className="font-semibold text-navy">{settings.alamat}</strong>.
-                Buka {settings.jamBuka}. Tunjukkan kode pesanan ke kasir.
-              </p>
+              <div className="text-[12px] leading-relaxed text-muted">
+                <p>
+                  Ambil di <strong className="font-semibold text-navy">{settings.alamat}</strong>.
+                  Buka {settings.jamBuka}. Tunjukkan kode pesanan ke kasir.
+                </p>
+                {settings.mapsUrl && (
+                  <a
+                    href={settings.mapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-1.5 inline-flex items-center gap-1 font-semibold text-brand hover:underline"
+                  >
+                    <MapPin size={12} /> Buka di Google Maps
+                  </a>
+                )}
+              </div>
             </div>
           )}
         </section>

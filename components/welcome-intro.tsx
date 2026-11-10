@@ -90,7 +90,7 @@ export function WelcomeIntro() {
           Selamat datang di Jayanti Frozen
         </h2>
         <p className="mx-auto mt-2.5 max-w-[290px] text-[13px] leading-relaxed text-muted">
-          Frozen food segar dari Malang. Ambil di toko atau kami antar ke rumah.
+          Frozen food segar dari Probolinggo. Ambil di toko atau kami antar ke rumah.
         </p>
 
         <Link

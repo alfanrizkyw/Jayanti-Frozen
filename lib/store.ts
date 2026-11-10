@@ -80,11 +80,16 @@ function normalSettings(raw?: Partial<Settings> | null): Settings {
     .filter(Boolean);
   const rekening = String(gabung.rekening ?? dasar.rekening);
   const atasNama = String(gabung.atasNama ?? dasar.atasNama);
+  const alamat = String(gabung.alamat ?? "").trim();
   return {
     ...gabung,
     namaToko: String(gabung.namaToko || dasar.namaToko),
     telepon,
-    alamat: String(gabung.alamat ?? dasar.alamat),
+    alamat:
+      !alamat || alamat === "Jl. Melati No. 12, Klojen, Malang"
+        ? dasar.alamat
+        : alamat,
+    mapsUrl: String(gabung.mapsUrl || dasar.mapsUrl),
     jamBuka: String(gabung.jamBuka ?? dasar.jamBuka),
     rekening,
     atasNama,

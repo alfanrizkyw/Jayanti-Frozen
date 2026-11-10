@@ -16,6 +16,8 @@ export async function POST(req: Request) {
       namaToko: String(body.namaToko ?? "Jayanti Frozen"),
       telepon: String(body.telepon ?? ""),
       alamat: String(body.alamat ?? ""),
+      mapsUrl:
+        typeof body.mapsUrl === "string" ? body.mapsUrl : sekarang.mapsUrl,
       jamBuka: String(body.jamBuka ?? ""),
       ongkir: Number(body.ongkir),
       gratisOngkirMin: Number(body.gratisOngkirMin),

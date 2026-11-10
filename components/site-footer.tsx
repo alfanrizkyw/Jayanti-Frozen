@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Clock, MapPin, Phone, Snowflake } from "lucide-react";
+import { Clock, ExternalLink, MapPin, Phone, Snowflake } from "lucide-react";
 import { Logo } from "./logo";
 import { rupiah, waLink } from "@/lib/format";
 import type { Settings } from "@/lib/types";
@@ -56,7 +56,21 @@ export function SiteFooter({ settings }: { settings: Settings }) {
               </li>
               <li className="flex items-start gap-2.5">
                 <MapPin size={15} className="mt-0.5 flex-none text-sky" />
-                <span>{settings.alamat}</span>
+                {settings.mapsUrl ? (
+                  <a
+                    href={settings.mapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-white"
+                  >
+                    {settings.alamat}
+                    <span className="mt-0.5 flex items-center gap-1 text-xs text-white/45">
+                      Buka di Google Maps <ExternalLink size={11} />
+                    </span>
+                  </a>
+                ) : (
+                  <span>{settings.alamat}</span>
+                )}
               </li>
               <li className="flex items-start gap-2.5">
                 <Clock size={15} className="mt-0.5 flex-none text-sky" />
@@ -80,7 +94,7 @@ export function SiteFooter({ settings }: { settings: Settings }) {
               ))}
             </div>
             <p className="mt-4 text-sm leading-relaxed text-white/65">
-              Ambil di toko atau antar kurir area Malang. Ongkir{" "}
+              Ambil di toko atau antar kurir area Probolinggo. Ongkir{" "}
               {rupiah(settings.ongkir)}, gratis di atas{" "}
               {rupiah(settings.gratisOngkirMin)}.
             </p>
@@ -90,9 +104,7 @@ export function SiteFooter({ settings }: { settings: Settings }) {
         <div className="mt-10 flex flex-col gap-3 border-t border-white/10 pt-5 text-[11.5px] text-white/45 sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} Jayanti Frozen. Semua hak dilindungi.</p>
           <div className="flex items-center gap-4">
-            <span>Malang, Jawa Timur</span>
-            <Link href="/admin/masuk" className="hover:text-white/80">Admin</Link>
-            <Link href="/kurir/masuk" className="hover:text-white/80">Kurir</Link>
+            <span>Probolinggo, Jawa Timur</span>
           </div>
         </div>
       </div>

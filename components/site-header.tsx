@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MapPin, Menu, Search, ShoppingBag, X } from "lucide-react";
+import { ExternalLink, MapPin, Menu, Search, ShoppingBag, X } from "lucide-react";
 import { useState } from "react";
 import { Logo } from "./logo";
 import { useCart } from "./cart-provider";
@@ -20,6 +20,7 @@ export function SiteHeader({ settings }: { settings: Settings }) {
   const pathname = usePathname();
   const { count } = useCart();
   const [open, setOpen] = useState(false);
+  const peta = settings.mapsUrl?.trim();
 
   return (
     <div className="sticky top-0 z-40">
@@ -39,10 +40,23 @@ export function SiteHeader({ settings }: { settings: Settings }) {
               {settings.jamBuka}
             </span>
           </span>
-          <span className="hidden items-center justify-self-center gap-1.5 text-white/85 md:flex">
-            <MapPin size={12} strokeWidth={2.2} />
-            {settings.alamat}
-          </span>
+          {peta ? (
+            <a
+              href={peta}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Buka peta lokasi toko"
+              className="hidden min-w-0 items-center justify-self-center gap-1.5 text-white/85 md:flex hover:text-white"
+            >
+              <MapPin size={12} strokeWidth={2.2} className="flex-none" />
+              <span className="truncate">{settings.alamat}</span>
+            </a>
+          ) : (
+            <span className="hidden min-w-0 items-center justify-self-center gap-1.5 text-white/85 md:flex">
+              <MapPin size={12} strokeWidth={2.2} className="flex-none" />
+              <span className="truncate">{settings.alamat}</span>
+            </span>
+          )}
           <span className="justify-self-end whitespace-nowrap text-right text-white/85">
             Gratis ongkir<span className="hidden sm:inline"> min.</span>{" "}
             {rupiah(settings.gratisOngkirMin)}
@@ -84,6 +98,17 @@ export function SiteHeader({ settings }: { settings: Settings }) {
                 </Link>
               );
             })}
+            {peta && (
+              <a
+                href={peta}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 rounded-lg px-3 py-2.5 text-[13.5px] font-semibold text-navy/75 transition-colors hover:bg-mist/70 hover:text-navy lg:px-4"
+              >
+                Lokasi
+                <ExternalLink size={12} className="opacity-55" />
+              </a>
+            )}
           </nav>
 
           <div className="ml-auto flex flex-none items-center gap-0.5">
@@ -129,22 +154,27 @@ export function SiteHeader({ settings }: { settings: Settings }) {
                   key={link.href}
                   href={link.href}
                   onClick={() => setOpen(false)}
-                  className="flex min-h-12 items-center justify-between border-b border-line/70 text-[15px] font-semibold text-navy last:border-0"
+                  className="flex min-h-12 items-center justify-between border-b border-line/70 text-[15px] font-semibold text-navy"
                 >
                   {link.label}
                   <span aria-hidden="true" className="text-muted">→</span>
                 </Link>
               ))}
+              {peta && (
+                <a
+                  href={peta}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setOpen(false)}
+                  className="flex min-h-12 items-center justify-between border-b border-line/70 text-[15px] font-semibold text-navy"
+                >
+                  Lokasi
+                  <span className="flex items-center gap-1.5 text-[12px] font-medium text-muted">
+                    Google Maps <ExternalLink size={14} />
+                  </span>
+                </a>
+              )}
               <PreferencesControls layout="full" />
-              <div className="mt-2 flex items-center gap-3 border-t border-line/70 pt-4 text-[11.5px] font-semibold text-muted">
-                <span>Halaman staff:</span>
-                <Link href="/admin/masuk" onClick={() => setOpen(false)} className="text-brand">
-                  Admin
-                </Link>
-                <Link href="/kurir/masuk" onClick={() => setOpen(false)} className="text-brand">
-                  Kurir
-                </Link>
-              </div>
             </nav>
           </div>
         )}
