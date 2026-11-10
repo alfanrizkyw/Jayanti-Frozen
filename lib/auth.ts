@@ -4,19 +4,28 @@ import type { SessionUser } from "./types";
 
 const COOKIE = "jf_session";
 // Kunci acak per proses membuat semua cookie staff tidak valid setiap kali
-// instans server baru dibuat. Di produksi turunkan kunci stabil dari env server.
-function kunciProduksi() {
-  const bahan = process.env.BLOB_READ_WRITE_TOKEN || process.env.FONNTE_TOKEN;
+// instans server baru dibuat. Turunkan kunci stabil dari env server yang
+// selalu ada (kredensial Sheets), dengan AUTH_SECRET sebagai pilihan utama.
+function turunanStabil() {
+  const bahan = [
+    process.env.GOOGLE_SPREADSHEET_ID,
+    process.env.GOOGLE_SHEETS_KEY,
+    process.env.GOOGLE_SHEETS_URL,
+    process.env.BLOB_READ_WRITE_TOKEN,
+    process.env.FONNTE_TOKEN,
+    process.env.WHATSAPP_TOKEN,
+    process.env.DEVELOPER_PASSWORD,
+  ]
+    .filter(Boolean)
+    .join("|");
   if (bahan) {
-    return createHmac("sha256", bahan).update("jf-session").digest("hex");
+    return createHmac("sha256", bahan).update("jf-session-key").digest("hex");
   }
-  return randomBytes(32).toString("hex");
+  return process.env.NODE_ENV === "production"
+    ? randomBytes(32).toString("hex")
+    : "jayanti-frozen-dev-secret";
 }
-const SECRET =
-  process.env.AUTH_SECRET?.trim() ||
-  (process.env.NODE_ENV === "production"
-    ? kunciProduksi()
-    : "jayanti-frozen-dev-secret");
+const SECRET = process.env.AUTH_SECRET?.trim() || turunanStabil();
 const MAX_AGE = 60 * 60 * 24;
 
 function sign(payload: string) {
