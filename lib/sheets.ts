@@ -20,17 +20,29 @@ const TABEL_SHEET: Record<TableName, string> = {
   bugs: "Bugs",
 };
 
+function redact(text: string) {
+  return KEY ? text.split(KEY).join("[disembunyikan]") : text;
+}
+
 async function call(params: Record<string, string>) {
   if (!URL || !KEY) throw new Error("Google Sheets belum dikonfigurasi");
   const qs = new URLSearchParams({ key: KEY, ...params });
-  const res = await fetch(`${URL}?${qs.toString()}`, {
-    method: "GET",
-    cache: "no-store",
-    signal: AbortSignal.timeout(12_000),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${URL}?${qs.toString()}`, {
+      method: "GET",
+      cache: "no-store",
+      signal: AbortSignal.timeout(12_000),
+    });
+  } catch (err) {
+    const pesan = err instanceof Error ? err.message : String(err);
+    throw new Error(`Google Sheets tidak dapat dihubungi: ${redact(pesan)}`);
+  }
   if (!res.ok) {
     const detail = (await res.text().catch(() => "")).slice(0, 160);
-    throw new Error(`Google Sheets ${res.status}${detail ? `: ${detail}` : ""}`);
+    throw new Error(
+      `Google Sheets ${res.status}${detail ? `: ${redact(detail)}` : ""}`,
+    );
   }
   const json = await res.json();
   if (!json?.ok) throw new Error(json?.error || "Respons Google Sheets tidak valid");
