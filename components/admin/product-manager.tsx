@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { Gambar } from "@/components/gambar";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import {
@@ -145,7 +145,7 @@ export function ProductManager({
           <article key={p.id} className="card overflow-hidden">
             <div className="flex gap-3 p-3">
               <div className="relative h-[72px] w-[96px] flex-none overflow-hidden rounded-lg border border-line bg-paper">
-                <Image
+                <Gambar
                   src={p.gambar}
                   alt={p.nama}
                   fill
@@ -393,7 +393,7 @@ function ProductForm({
               <span className="label">Foto produk</span>
               <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-line bg-paper">
                 {gambar ? (
-                  <Image
+                  <Gambar
                     src={gambar}
                     alt="Foto produk"
                     fill

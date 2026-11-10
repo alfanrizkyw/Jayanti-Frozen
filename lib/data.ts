@@ -79,10 +79,18 @@ export async function getProductBySlug(slug: string) {
 }
 
 export async function getOrderDetail(kode: string): Promise<OrderDetail | null> {
-  const db = await readDB();
-  const order = db.orders.find(
-    (o) => o.kode.toLowerCase() === kode.toLowerCase().trim(),
-  );
+  const cari = kode.toLowerCase().trim();
+  const cocok = (db: Awaited<ReturnType<typeof readDB>>) =>
+    db.orders.find((o) => o.kode.toLowerCase() === cari);
+
+  let db = await readDB();
+  let order = cocok(db);
+  if (!order) {
+    // Instance Vercel lain bisa masih memegang cache lama sesaat setelah
+    // checkout. Baca ulang ke Google Sheets sebelum menyatakan tidak ada.
+    db = await readDB(true);
+    order = cocok(db);
+  }
   if (!order) return null;
   const kurir = db.couriers.find((c) => c.id === order.kurirId);
   return {
@@ -560,7 +568,7 @@ export async function saveProduct(input: ProductInput) {
     satuan: input.satuan?.trim() || "pcs",
     stok,
     deskripsi: input.deskripsi?.trim() ?? "",
-    gambar: input.gambar?.trim() || "/produk/nugget.jpg",
+    gambar: tautanGambar(input.gambar?.trim() || "/produk/nugget.jpg"),
     unggulan: Boolean(input.unggulan),
     aktif: input.aktif !== false,
     dibuat: lama?.dibuat ?? new Date().toISOString(),
@@ -596,7 +604,7 @@ export async function savePromotion(input: PromotionInput) {
     judul: input.judul.trim(),
     deskripsi: input.deskripsi?.trim() ?? "",
     badge: input.badge?.trim() ?? "",
-    gambar: input.gambar?.trim() ?? "",
+    gambar: tautanGambar(input.gambar?.trim() ?? ""),
     cta: input.cta?.trim() ?? "",
     aktif: input.aktif !== false,
     mulai: input.mulai || new Date().toISOString(),

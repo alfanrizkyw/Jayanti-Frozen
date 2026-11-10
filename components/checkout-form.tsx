@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { Gambar } from "./gambar";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -495,7 +495,7 @@ export function CheckoutForm({ settings }: { settings: Settings }) {
             {items.map((item) => (
               <li key={item.id} className="flex items-center gap-2.5">
                 <div className="relative h-11 w-11 flex-none overflow-hidden rounded-lg border border-line bg-mist">
-                  <Image src={item.gambar} alt="" fill sizes="44px" className="object-cover" />
+                  <Gambar src={item.gambar} alt="" fill sizes="44px" className="object-cover" />
                   <span className="stat-num absolute bottom-0 right-0 rounded-tl bg-navy/85 px-1 text-[9px] font-bold text-white">
                     {item.jumlah}×
                   </span>

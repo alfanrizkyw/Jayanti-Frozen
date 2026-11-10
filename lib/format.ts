@@ -98,6 +98,26 @@ export function teleponRapi(input: string): string {
   return tel.startsWith("62") ? "0" + tel.slice(2) : tel;
 }
 
+const HOST_GAMBAR = [
+  "images.pexels.com",
+  "public.blob.vercel-storage.com",
+  "googleusercontent.com",
+  "drive.google.com",
+];
+
+/** Hanya host yang terdaftar di next.config yang boleh lewat optimizer gambar. */
+export function gambarTeroptimasi(src: string): boolean {
+  const url = (src ?? "").trim();
+  if (!url) return false;
+  if (url.startsWith("/")) return true;
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return HOST_GAMBAR.some((h) => host === h || host.endsWith(`.${h}`));
+  } catch {
+    return false;
+  }
+}
+
 /** Ubah tautan Google Drive biasa menjadi tautan gambar yang bisa ditampilkan. */
 export function tautanGambar(input: string): string {
   const url = input.trim();

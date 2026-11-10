@@ -50,8 +50,22 @@ async function call(params: Record<string, string>) {
 }
 
 export async function readSnapshot(): Promise<DB> {
-  const json = await call({ action: "read" });
-  return json.data as DB;
+  // Apps Script sesekali lambat atau menolak permintaan saat mulai dingin.
+  // Satu percobaan ulang menjaga halaman toko tidak ikut gagal.
+  let terakhir: unknown;
+  for (let percobaan = 0; percobaan < 2; percobaan++) {
+    try {
+      const json = await call({ action: "read" });
+      return json.data as DB;
+    } catch (err) {
+      terakhir = err;
+      if (percobaan === 0)
+        await new Promise((selesai) => setTimeout(selesai, 400));
+    }
+  }
+  throw terakhir instanceof Error
+    ? terakhir
+    : new Error("Gagal membaca database Google Sheets.");
 }
 
 export async function writeRows(table: TableName, rows: unknown[]): Promise<void> {

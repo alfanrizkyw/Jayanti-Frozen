@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { Gambar } from "@/components/gambar";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -98,7 +98,7 @@ export default async function BerandaPage() {
             </div>
 
             <div className="relative min-h-[240px] sm:min-h-[320px] lg:min-h-[440px]">
-              <Image
+              <Gambar
                 src={gambarHero}
                 alt="Aneka frozen food Jayanti Frozen di atas es"
                 fill

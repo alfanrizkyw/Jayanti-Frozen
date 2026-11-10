@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { Gambar } from "@/components/gambar";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -328,7 +328,7 @@ export function AdminOrderPanel({
             <ul className="divide-y divide-line">
               {items.map((it) => (
                 <li key={it.id} className="flex items-center gap-3 px-4 py-3 md:px-5">
-                  <Image
+                  <Gambar
                     src={it.gambar}
                     alt={it.nama}
                     width={48}

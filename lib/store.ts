@@ -24,6 +24,7 @@ const localFile = path.join(process.cwd(), ".data", "db.json");
 
 let cache: { db: DB; at: number } | null = null;
 let membaca: Promise<DB> | null = null;
+let membacaSegar: Promise<DB> | null = null;
 let menyegarkan: Promise<DB> | null = null;
 let seeding: Promise<void> | null = null;
 let versi = 0;
@@ -128,12 +129,18 @@ function normalize(db: Partial<DB>): DB {
   });
   return {
     users: db.users ?? [],
-    products: db.products ?? [],
+    products: (db.products ?? []).map((p) => ({
+      ...p,
+      gambar: tautanGambar(String(p.gambar ?? "")) || "/produk/nugget.jpg",
+    })),
     orders: db.orders ?? [],
     orderItems: db.orderItems ?? [],
     couriers,
     deliveries: db.deliveries ?? [],
-    promotions: db.promotions ?? [],
+    promotions: (db.promotions ?? []).map((p) => ({
+      ...p,
+      gambar: tautanGambar(String(p.gambar ?? "")),
+    })),
     staff: db.staff ?? [],
     bugs: db.bugs ?? [],
     settings: normalSettings(db.settings),
@@ -214,7 +221,23 @@ async function bootstrapAkun(db: DB): Promise<DB> {
   return berubah ? normalize(db) : db;
 }
 
-export async function readDB(): Promise<DB> {
+export async function readDB(segar = false): Promise<DB> {
+  // Data yang wajib terbaru (mis. pesanan baru dari instance Vercel lain)
+  // membaca ulang langsung, tanpa memakai salinan cache lama.
+  if (segar) {
+    if (!membacaSegar) {
+      membacaSegar = bacaDB()
+        .catch((err) => {
+          console.error("[jayanti] gagal membaca ulang data:", err);
+          if (cache) return cache.db;
+          throw err;
+        })
+        .finally(() => {
+          membacaSegar = null;
+        });
+    }
+    return membacaSegar;
+  }
   // Setelah data pernah dibaca, halaman selalu memakai salinan cache dan
   // menyegarkan di latar belakang. Pembeli tidak perlu menunggu Google Sheets.
   if (cache) {

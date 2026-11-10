@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { Gambar } from "./gambar";
 import Link from "next/link";
 import { ArrowRight, PackageOpen, ShoppingBag, Trash2, Truck } from "lucide-react";
 import { useState } from "react";
@@ -95,7 +95,7 @@ export function CartView({ settings }: { settings: Settings }) {
                 href={`/produk/${item.slug}`}
                 className="relative h-[76px] w-[76px] flex-none overflow-hidden rounded-xl border border-line bg-mist sm:h-[88px] sm:w-[88px]"
               >
-                <Image
+                <Gambar
                   src={item.gambar}
                   alt={item.nama}
                   fill

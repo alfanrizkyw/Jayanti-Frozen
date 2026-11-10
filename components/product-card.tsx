@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { Gambar } from "./gambar";
 import Link from "next/link";
 import { AddToCart } from "./add-to-cart";
 import { rupiah } from "@/lib/format";
@@ -18,7 +18,7 @@ export function ProductCard({ product }: { product: Product }) {
         className="relative block aspect-[4/3] overflow-hidden bg-mist"
         aria-label={`Lihat ${product.nama}`}
       >
-        <Image
+        <Gambar
           src={product.gambar}
           alt={product.nama}
           fill

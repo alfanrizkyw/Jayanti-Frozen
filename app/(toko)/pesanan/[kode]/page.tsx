@@ -3,6 +3,10 @@ import { notFound } from "next/navigation";
 import { getOrderDetail } from "@/lib/data";
 import { OrderView } from "@/components/order-view";
 
+// Status pesanan berubah terus dan pesanan baru harus langsung bisa dibuka.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function generateMetadata({
   params,
 }: {

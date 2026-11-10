@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { Gambar } from "@/components/gambar";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
@@ -100,7 +100,7 @@ export function PromoManager({ promotions }: { promotions: Promotion[] }) {
               {p.tipe === "banner" && (
                 <div className="relative aspect-[16/7] w-full bg-paper">
                   {p.gambar ? (
-                    <Image
+                    <Gambar
                       src={p.gambar}
                       alt={p.judul}
                       fill
@@ -322,7 +322,7 @@ function PromoForm({
             <span className="label">Foto banner</span>
             <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-line bg-paper">
               {gambar ? (
-                <Image
+                <Gambar
                   src={gambar}
                   alt="Foto banner"
                   fill

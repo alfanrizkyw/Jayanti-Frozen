@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import { Gambar } from "@/components/gambar";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -64,7 +64,7 @@ export default async function ProdukPage({
       <div className="mt-4 grid gap-6 lg:grid-cols-[1.04fr_0.96fr] lg:gap-9">
         <div>
           <div className="relative aspect-[4/3] overflow-hidden rounded-[20px] border border-line bg-mist">
-            <Image
+            <Gambar
               src={product.gambar}
               alt={product.nama}
               fill
