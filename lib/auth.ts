@@ -3,13 +3,21 @@ import { cookies } from "next/headers";
 import type { SessionUser } from "./types";
 
 const COOKIE = "jf_session";
-// Di produksi tanpa AUTH_SECRET, kunci acak per proses mencegah sesi palsu.
+// Kunci acak per proses membuat semua cookie staff tidak valid setiap kali
+// instans server baru dibuat. Di produksi turunkan kunci stabil dari env server.
+function kunciProduksi() {
+  const bahan = process.env.BLOB_READ_WRITE_TOKEN || process.env.FONNTE_TOKEN;
+  if (bahan) {
+    return createHmac("sha256", bahan).update("jf-session").digest("hex");
+  }
+  return randomBytes(32).toString("hex");
+}
 const SECRET =
-  process.env.AUTH_SECRET ||
+  process.env.AUTH_SECRET?.trim() ||
   (process.env.NODE_ENV === "production"
-    ? randomBytes(32).toString("hex")
+    ? kunciProduksi()
     : "jayanti-frozen-dev-secret");
-const MAX_AGE = 60 * 60 * 24 * 30;
+const MAX_AGE = 60 * 60 * 24;
 
 function sign(payload: string) {
   return createHmac("sha256", SECRET).update(payload).digest("base64url");
