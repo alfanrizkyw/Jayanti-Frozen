@@ -1,0 +1,12 @@
+node_modules
+.next
+.env
+.env.local
+.data
+public/uploads
+*.tsbuildinfo
+next-env.d.ts
+.vercel
+.dev.log
+.shots
+vibe_images

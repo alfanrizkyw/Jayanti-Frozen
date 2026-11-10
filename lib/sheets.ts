@@ -1,0 +1,53 @@
+import type { DB, Settings } from "./types";
+
+const URL = process.env.GOOGLE_SHEETS_URL;
+const KEY = process.env.GOOGLE_SHEETS_KEY;
+
+export const sheetsEnabled = Boolean(URL && KEY);
+
+type TableName = Exclude<keyof DB, "settings">;
+
+async function call(params: Record<string, string>) {
+  if (!URL || !KEY) throw new Error("Google Sheets belum dikonfigurasi");
+  const qs = new URLSearchParams({ key: KEY, ...params });
+  const res = await fetch(`${URL}?${qs.toString()}`, {
+    method: "GET",
+    cache: "no-store",
+    signal: AbortSignal.timeout(12_000),
+  });
+  if (!res.ok) throw new Error(`Google Sheets ${res.status}`);
+  const json = await res.json();
+  if (!json?.ok) throw new Error(json?.error || "Respons Google Sheets tidak valid");
+  return json;
+}
+
+export async function readSnapshot(): Promise<DB> {
+  const json = await call({ action: "read" });
+  return json.data as DB;
+}
+
+export async function writeRows(table: TableName, rows: unknown[]): Promise<void> {
+  let batch: unknown[] = [];
+  let size = 0;
+  const flush = async () => {
+    if (!batch.length) return;
+    await call({ action: "upsert", table, rows: JSON.stringify(batch) });
+    batch = [];
+    size = 0;
+  };
+  for (const row of rows) {
+    const len = JSON.stringify(row).length * 3;
+    if (size + len > 5000 && batch.length) await flush();
+    batch.push(row);
+    size += len;
+  }
+  await flush();
+}
+
+export async function deleteRow(table: TableName, id: string): Promise<void> {
+  await call({ action: "delete", table, id });
+}
+
+export async function writeSettings(settings: Settings): Promise<void> {
+  await call({ action: "settings", value: JSON.stringify(settings) });
+}

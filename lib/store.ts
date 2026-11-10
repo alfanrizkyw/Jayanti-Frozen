@@ -1,0 +1,264 @@
+import { promises as fs } from "fs";
+import path from "path";
+import type { DB, Settings } from "./types";
+import { createBootstrap, createDefaultSettings, createSeed } from "./seed";
+import {
+  sheetsEnabled,
+  readSnapshot,
+  writeRows,
+  deleteRow,
+  writeSettings,
+} from "./sheets";
+
+type RowTable = Exclude<keyof DB, "settings">;
+
+const CACHE_MS = 2500;
+const isProduction = process.env.NODE_ENV === "production";
+const onVercel = Boolean(process.env.VERCEL);
+// Demo hanya untuk pengembangan lokal. Produksi selalu kosong kecuali data asli.
+const demoMode = isProduction
+  ? false
+  : process.env.SEED_DEMO !== "false" && !onVercel;
+const localFile = path.join(process.cwd(), ".data", "db.json");
+
+let cache: { db: DB; at: number } | null = null;
+let seeding: Promise<void> | null = null;
+let queue: Promise<unknown> = Promise.resolve();
+
+function parseJadwal(value: unknown, fallback: string[]): string[] {
+  if (Array.isArray(value)) return value.map(String);
+  if (typeof value !== "string" || !value.trim()) return fallback;
+  const teks = value.trim();
+  if (teks.startsWith("[")) {
+    try {
+      const parsed = JSON.parse(teks);
+      if (Array.isArray(parsed)) return parsed.map(String);
+    } catch {
+      // Biarkan jatuh ke pemisahan baris di bawah.
+    }
+  }
+  return teks
+    .split(/\r?\n|;|\|/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function normalSettings(raw?: Partial<Settings> | null): Settings {
+  const dasar = createDefaultSettings();
+  const gabung = { ...dasar, ...(raw ?? {}) } as Settings &
+    Record<string, unknown>;
+  const telepon =
+    !gabung.telepon || String(gabung.telepon) === "6281234567890"
+      ? dasar.telepon
+      : String(gabung.telepon);
+  const jadwal = parseJadwal(gabung.jadwalKirim, dasar.jadwalKirim)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return {
+    ...gabung,
+    namaToko: String(gabung.namaToko || dasar.namaToko),
+    telepon,
+    alamat: String(gabung.alamat ?? dasar.alamat),
+    jamBuka: String(gabung.jamBuka ?? dasar.jamBuka),
+    rekening: String(gabung.rekening ?? dasar.rekening),
+    atasNama: String(gabung.atasNama ?? dasar.atasNama),
+    qrisNama: String(gabung.qrisNama ?? dasar.qrisNama),
+    whatsappAdmin: String(gabung.whatsappAdmin || dasar.whatsappAdmin),
+    tokoBuka:
+      gabung.tokoBuka === false || String(gabung.tokoBuka) === "false"
+        ? false
+        : true,
+    tutupCatatan: String(gabung.tutupCatatan ?? dasar.tutupCatatan),
+    jadwalKirim: Array.from(new Set(jadwal)).slice(0, 20),
+  };
+}
+
+function normalize(db: Partial<DB>): DB {
+  const couriers = (db.couriers ?? []).map((raw) => {
+    // Baris lama menyimpan PIN teks biasa. Buang dari memori agar tidak pernah
+    // ikut terkirim ke browser; verifikasi memakai sandi hash.
+    const { pin: _pin, ...sisa } = raw as typeof raw & { pin?: string };
+    return {
+      ...sisa,
+      sandi: typeof sisa.sandi === "string" ? sisa.sandi : "",
+      aktif: sisa.aktif !== false,
+    };
+  });
+  return {
+    users: db.users ?? [],
+    products: db.products ?? [],
+    orders: db.orders ?? [],
+    orderItems: db.orderItems ?? [],
+    couriers,
+    deliveries: db.deliveries ?? [],
+    promotions: db.promotions ?? [],
+    staff: db.staff ?? [],
+    bugs: db.bugs ?? [],
+    settings: normalSettings(db.settings),
+  };
+}
+
+function pastikanPenyimpanan() {
+  if (!sheetsEnabled && isProduction && onVercel) {
+    throw new Error(
+      "Database Google Sheets belum terhubung. Isi GOOGLE_SHEETS_URL dan GOOGLE_SHEETS_KEY di Environment Variables Vercel, lalu redeploy.",
+    );
+  }
+}
+
+async function readLocal(): Promise<DB> {
+  try {
+    const raw = await fs.readFile(localFile, "utf8");
+    return normalize(JSON.parse(raw));
+  } catch {
+    const awal = demoMode ? createSeed() : createBootstrap();
+    await writeLocal(awal);
+    return awal;
+  }
+}
+
+async function writeLocal(db: DB) {
+  await fs.mkdir(path.dirname(localFile), { recursive: true });
+  await fs.writeFile(localFile, JSON.stringify(db, null, 2), "utf8");
+}
+
+async function seedDatabase() {
+  if (seeding) return seeding;
+  seeding = (async () => {
+    const data = demoMode ? createSeed() : createBootstrap();
+    if (sheetsEnabled) {
+      if (demoMode) {
+        await writeRows("users", data.users);
+        await writeRows("products", data.products);
+        await writeRows("promotions", data.promotions);
+        await writeRows("orders", data.orders);
+        await writeRows("orderItems", data.orderItems);
+        await writeRows("deliveries", data.deliveries);
+        await writeRows("bugs", data.bugs);
+      }
+      await writeRows("couriers", data.couriers);
+      await writeRows("staff", data.staff);
+      await writeSettings(data.settings);
+    } else {
+      await writeLocal(data);
+    }
+    cache = { db: data, at: Date.now() };
+  })().finally(() => {
+    seeding = null;
+  });
+  return seeding;
+}
+
+async function bootstrapAkun(db: DB): Promise<DB> {
+  let berubah = false;
+  if (!db.staff.length) {
+    db.staff = createBootstrap().staff;
+    try {
+      await saveRows("staff", db.staff);
+      berubah = true;
+    } catch (err) {
+      console.error("[jayanti] gagal menyiapkan akun admin awal:", err);
+    }
+  }
+  if (!db.couriers.length) {
+    db.couriers = createBootstrap().couriers;
+    try {
+      await saveRows("couriers", db.couriers);
+      berubah = true;
+    } catch (err) {
+      console.error("[jayanti] gagal menyiapkan akun kurir awal:", err);
+    }
+  }
+  return berubah ? normalize(db) : db;
+}
+
+export async function readDB(): Promise<DB> {
+  if (cache && Date.now() - cache.at < CACHE_MS) return cache.db;
+  pastikanPenyimpanan();
+
+  let db: DB;
+
+  if (sheetsEnabled) {
+    try {
+      const mentah = await readSnapshot();
+      db = normalize(mentah);
+      const belumDiisi =
+        !(mentah.staff ?? []).length && !(mentah.couriers ?? []).length;
+      if (belumDiisi) {
+        await seedDatabase();
+        db = normalize(await readSnapshot());
+      }
+    } catch (err) {
+      console.error("[jayanti] gagal membaca Google Sheets:", err);
+      if (cache) {
+        cache.at = Date.now();
+        return cache.db;
+      }
+      throw err instanceof Error
+        ? err
+        : new Error("Gagal membaca database Google Sheets.");
+    }
+  } else {
+    db = await readLocal();
+  }
+
+  db = await bootstrapAkun(db);
+  cache = { db, at: Date.now() };
+  return db;
+}
+
+function enqueue<T>(fn: () => Promise<T>): Promise<T> {
+  const run = queue.then(fn, fn);
+  queue = run.catch(() => undefined);
+  return run;
+}
+
+export async function saveRows<T>(table: RowTable, rows: T[]): Promise<void> {
+  if (!rows.length) return;
+  await enqueue(async () => {
+    if (sheetsEnabled) {
+      await writeRows(table, rows);
+    } else {
+      const db = await readLocal();
+      const byId = new Map((db[table] as { id: string }[]).map((r) => [r.id, r]));
+      for (const row of rows as { id: string }[]) byId.set(row.id, row);
+      (db[table] as unknown[]) = Array.from(byId.values());
+      await writeLocal(db);
+    }
+    cache = null;
+  });
+}
+
+export async function removeRow(table: RowTable, id: string): Promise<void> {
+  await enqueue(async () => {
+    if (sheetsEnabled) {
+      await deleteRow(table, id);
+    } else {
+      const db = await readLocal();
+      (db[table] as unknown[]) = (db[table] as { id: string }[]).filter(
+        (r) => r.id !== id,
+      );
+      await writeLocal(db);
+    }
+    cache = null;
+  });
+}
+
+export async function saveSettings(settings: Settings): Promise<void> {
+  await enqueue(async () => {
+    if (sheetsEnabled) {
+      await writeSettings(settings);
+    } else {
+      const db = await readLocal();
+      db.settings = settings;
+      await writeLocal(db);
+    }
+    cache = null;
+  });
+}
+
+export async function storageMode(): Promise<"sheets" | "lokal" | "belum"> {
+  if (sheetsEnabled) return "sheets";
+  if (isProduction && onVercel) return "belum";
+  return "lokal";
+}
