@@ -282,12 +282,12 @@ export function OrderView({
                         <div>
                           <p className="text-[13px] font-bold text-navy">
                             {kurir
-                              ? "Menunggu kurir mulai mengantar"
+                              ? "Pesanan disiapkan, kurir segera berangkat"
                               : "Kurir belum ditugaskan"}
                           </p>
                           <p className="mt-0.5 text-[11.5px] leading-relaxed text-muted">
                             {kurir
-                              ? `${kurir.nama} akan berangkat setelah pesanan selesai disiapkan.`
+                              ? `${kurir.nama} berangkat setelah admin menyerahkan pesanan. Peta muncul otomatis di sini.`
                               : "Admin menentukan kurir saat pesanan siap. Peta muncul di sini."}
                           </p>
                         </div>

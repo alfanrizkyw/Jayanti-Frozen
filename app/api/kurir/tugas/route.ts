@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { bad, guard } from "@/lib/api";
-import { courierFinish, courierStart } from "@/lib/data";
+import { courierFinish } from "@/lib/data";
 
 export async function POST(req: Request) {
   const { response } = await guard("kurir");
@@ -11,9 +11,9 @@ export async function POST(req: Request) {
   const kode = String(body.kode ?? "");
 
   try {
-    if (aksi === "mulai") await courierStart(kode);
-    else if (aksi === "selesai") await courierFinish(kode);
-    else return bad("Aksi tidak dikenal.");
+    // Admin sudah menyerahkan tugas; kurir cukup menyelesaikan dengan foto.
+    if (aksi !== "selesai") return bad("Aksi tidak dikenal.");
+    await courierFinish(kode);
     return NextResponse.json({ ok: true });
   } catch (err) {
     return bad(err instanceof Error ? err.message : "Gagal memperbarui tugas.");

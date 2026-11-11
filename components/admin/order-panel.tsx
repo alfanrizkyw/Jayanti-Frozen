@@ -129,9 +129,7 @@ export function AdminOrderPanel({
               ? { label: "Serahkan ke kurir", status: "diantar", icon: Truck }
               : statusTampil === "siap"
                 ? { label: "Selesaikan pesanan", status: "selesai", icon: CheckCircle2 }
-                : statusTampil === "diantar"
-                  ? { label: "Tandai sudah diterima", status: "selesai", icon: CheckCircle2 }
-                  : null;
+                : null;
 
   const tahap = alur.indexOf(statusTampil === "diantar" ? "siap" : statusTampil);
 
@@ -187,7 +185,17 @@ export function AdminOrderPanel({
             {aksiUtama && (
               <button
                 type="button"
-                onClick={() => kirim({ status: aksiUtama.status }, "status")}
+                onClick={() =>
+                  kirim(
+                    {
+                      status: aksiUtama.status,
+                      ...(aksiUtama.status === "diantar"
+                        ? { kurirId: kurirPilih || undefined }
+                        : {}),
+                    },
+                    "status",
+                  )
+                }
                 disabled={proses !== null}
                 className="btn btn-primary w-full sm:w-auto"
               >
@@ -198,6 +206,12 @@ export function AdminOrderPanel({
                 )}
                 {aksiUtama.label}
               </button>
+            )}
+            {statusTampil === "diantar" && order.metode === "antar" && (
+              <p className="inline-flex items-center gap-2 rounded-xl bg-mist px-3 py-2 text-[11.5px] font-semibold text-navy">
+                <Truck size={14} className="flex-none text-brand" />
+                Kurir sedang mengantar. Pesanan ditutup kurir dengan foto bukti.
+              </p>
             )}
             {statusTampil === "selesai" && (
               <p className="inline-flex items-center gap-1.5 rounded-xl bg-leaf-soft px-3 py-2 text-[11.5px] font-bold text-leaf">

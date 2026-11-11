@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
-  ArrowRight,
   ChevronRight,
   Clock,
   LifeBuoy,
@@ -101,22 +100,6 @@ export default async function LacakPage({
                 <MapPin size={13} className="text-brand" /> Lokasi kurir saat pengantaran
               </span>
             </div>
-          </div>
-        </div>
-
-        <div className="mt-4 rounded-[18px] border border-[#C9E1F7] bg-mist p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-[12.5px] font-extrabold text-navy">
-                Ingin melihat contoh pelacakan?
-              </p>
-              <p className="mt-0.5 text-[11.5px] text-navy/65">
-                Buka pesanan demo yang sedang diantar kurir.
-              </p>
-            </div>
-            <Link href="/pesanan/JY-DEMO-001" className="btn btn-outline btn-sm bg-white">
-              Lihat demo <ArrowRight size={13} />
-            </Link>
           </div>
         </div>
 

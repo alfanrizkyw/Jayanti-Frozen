@@ -65,13 +65,16 @@ export function CourierBoard({
   const [foto, setFoto] = useState<string | null>(null);
   const [unggah, setUnggah] = useState<"idle" | "proses" | "siap" | "gagal">("idle");
   const [pesanFoto, setPesanFoto] = useState("");
+  const [pilihKode, setPilihKode] = useState("");
   const inputFoto = useRef<HTMLInputElement | null>(null);
   const watch = useRef<number | null>(null);
   const kirimTerakhir = useRef(0);
   const kodeAktif = useRef("");
 
-  const aktif = orders.find((o) => o.status === "diantar") ?? null;
-  const menunggu = orders.filter((o) => o.status !== "diantar");
+  // Semua pesanan di sini sudah diserahkan admin, jadi langsung jadi tugas.
+  const aktif =
+    orders.find((o) => o.kode === pilihKode) ?? orders[0] ?? null;
+  const tugasLain = orders.filter((o) => o.id !== aktif?.id);
 
   function hentikanLacak() {
     if (watch.current !== null) {
@@ -82,12 +85,15 @@ export function CourierBoard({
   }
 
   useEffect(() => {
-    // Tugas baru dari admin harus terlihat cepat, bukan menunggu 40 detik.
-    const timer = window.setInterval(() => {
+    // Tugas yang diserahkan admin harus langsung terlihat di halaman kurir.
+    const muat = () => {
       if (document.visibilityState === "visible" && proses === null) router.refresh();
-    }, 8000);
+    };
+    const timer = window.setInterval(muat, 5000);
+    document.addEventListener("visibilitychange", muat);
     return () => {
       window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", muat);
       if (watch.current !== null) navigator.geolocation.clearWatch(watch.current);
     };
   }, [router, proses]);
@@ -173,23 +179,23 @@ export function CourierBoard({
     );
   }
 
-  async function aksiTugas(order: Order, aksi: "mulai" | "selesai") {
-    if (aksi === "selesai" && unggah !== "siap") {
+  async function aksiTugas(order: Order) {
+    if (unggah !== "siap") {
       setError("Ambil dan unggah foto bukti barang diterima dulu.");
       return;
     }
-    setProses(`${order.kode}-${aksi}`);
+    setProses(`${order.kode}-selesai`);
     setError("");
-    if (aksi === "mulai") mulaiLacak(order.kode);
     try {
       const res = await fetch("/api/kurir/tugas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ aksi, kode: order.kode }),
+        body: JSON.stringify({ aksi: "selesai", kode: order.kode }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error || "Gagal memperbarui tugas.");
-      if (aksi === "selesai") hentikanLacak();
+      hentikanLacak();
+      setPilihKode("");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal memperbarui tugas.");
@@ -476,7 +482,7 @@ export function CourierBoard({
 
             <button
               type="button"
-              onClick={() => aksiTugas(aktif, "selesai")}
+              onClick={() => aksiTugas(aktif)}
               disabled={proses !== null || unggah !== "siap"}
               className="btn btn-primary btn-lg w-full"
             >
@@ -496,110 +502,60 @@ export function CourierBoard({
         </section>
       )}
 
-      {menunggu.length > 0 && (
-        <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-[15px] font-extrabold text-navy">Tugas berikutnya</h2>
-            <button
-              type="button"
-              onClick={() => router.refresh()}
-              className="inline-flex items-center gap-1.5 text-[11px] font-bold text-brand"
-            >
-              <RefreshCw size={12} /> Muat ulang
-            </button>
+      {tugasLain.length > 0 && (
+        <section className="card overflow-hidden">
+          <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-3.5">
+            <h2 className="flex items-center gap-2 text-[14px] font-extrabold text-navy">
+              <Bike size={15} className="text-brand" /> Tugas aktif lain
+            </h2>
+            <span className="text-[11px] font-semibold text-muted">
+              {tugasLain.length} pesanan
+            </span>
           </div>
-          {menunggu.map((o) => {
-            const d = pengantaran(o.id);
-            const isi = itemPesanan(o.id);
-            return (
-              <article key={o.id} className="card p-4">
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div>
-                    <p className="text-[11px] font-bold text-muted">{o.kode}</p>
-                    <p className="mt-0.5 text-[14px] font-extrabold text-navy">
-                      {o.pelanggan}
-                    </p>
-                  </div>
-                  <span
-                    className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-bold ${
-                      o.status === "siap"
-                        ? "border-[#C3E8E2] bg-[#E6F6F4] text-[#12655C]"
-                        : "border-[#C9E1F7] bg-mist text-brand"
-                    }`}
-                  >
-                    {o.status === "siap" ? "Siap diambil kurir" : "Sedang disiapkan"}
-                  </span>
+          <ul className="divide-y divide-line">
+            {tugasLain.map((o) => (
+              <li key={o.id} className="flex items-center gap-3 px-4 py-3">
+                <span className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-mist text-[11px] font-extrabold text-brand">
+                  {o.pelanggan
+                    .split(" ")
+                    .slice(0, 2)
+                    .map((w) => w[0])
+                    .join("")
+                    .toUpperCase()}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[12.5px] font-bold text-navy">
+                    {o.pelanggan}
+                  </p>
+                  <p className="truncate text-[10.5px] text-muted">
+                    {o.kode} · {o.alamat || "Alamat belum diisi"}
+                  </p>
                 </div>
-
-                <p className="mt-2 flex items-start gap-1.5 text-[12px] leading-relaxed text-muted">
-                  <MapPin size={14} className="mt-0.5 flex-none text-brand" />
-                  {o.alamat || "Alamat belum diisi"}
-                </p>
-
-                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted">
-                  <span className="inline-flex items-center gap-1">
-                    <PackageCheck size={12} /> {isi.reduce((n, i) => n + i.jumlah, 0)} item
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <Banknote size={12} /> {rupiah(o.total)}
-                  </span>
-                  <PaymentBadge metode={o.pembayaran} dibayar={o.dibayar} />
-                  {d && (
-                    <span className="inline-flex items-center gap-1">
-                      <Clock3 size={12} /> {d.estimasiMenit} menit
-                    </span>
-                  )}
-                </div>
-
-                <div className="mt-3 flex gap-2">
-                  <a
-                    href={`tel:${o.telepon}`}
-                    className="btn btn-outline flex-none"
-                    aria-label={`Telepon ${o.pelanggan}`}
-                  >
-                    <Phone size={15} />
-                  </a>
-                  <a
-                    href={waLink(
-                      o.telepon,
-                      `Halo ${o.pelanggan}, saya kurir Jayanti Frozen untuk pesanan ${o.kode}.`,
-                    )}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-outline flex-none"
-                    aria-label={`WhatsApp ${o.pelanggan}`}
-                  >
-                    <MessageCircle size={15} />
-                  </a>
-                  <button
-                    type="button"
-                    onClick={() => aksiTugas(o, "mulai")}
-                    disabled={proses !== null}
-                    className="btn btn-primary flex-1"
-                  >
-                    {proses === `${o.kode}-mulai` ? (
-                      <Loader2 size={15} className="animate-spin" />
-                    ) : (
-                      <Bike size={15} />
-                    )}
-                    Mulai antar
-                  </button>
-                </div>
-              </article>
-            );
-          })}
+                <button
+                  type="button"
+                  onClick={() => {
+                    hentikanLacak();
+                    setPilihKode(o.kode);
+                  }}
+                  className="btn btn-sm btn-outline flex-none"
+                >
+                  Buka
+                </button>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 
-      {!aktif && menunggu.length === 0 && (
+      {!aktif && (
         <section className="card flex flex-col items-center px-5 py-12 text-center">
           <span className="flex h-14 w-14 items-center justify-center rounded-full bg-mist text-brand">
             <Bike size={26} />
           </span>
           <p className="mt-3 text-[15px] font-extrabold text-navy">Belum ada tugas antar</p>
-          <p className="mt-1 max-w-[360px] text-[12px] leading-relaxed text-muted">
-            Tugas akan muncul otomatis saat admin mengonfirmasi pesanan antar.
-            Halaman ini memuat ulang setiap 40 detik.
+          <p className="mt-1 max-w-[380px] text-[12px] leading-relaxed text-muted">
+            Pesanan muncul otomatis begitu admin menyerahkannya ke kurir. Tidak
+            perlu konfirmasi, cukup antar lalu unggah foto bukti.
           </p>
           <button
             type="button"

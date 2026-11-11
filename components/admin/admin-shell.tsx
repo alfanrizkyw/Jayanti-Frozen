@@ -156,7 +156,7 @@ export function AdminShell({
 
         <main className="flex-1 px-4 pb-16 pt-5 md:px-7 md:pt-7">{children}</main>
 
-        <AutoRefresh detik={10} />
+        <AutoRefresh detik={8} />
 
         <footer className="border-t border-line px-5 py-5 text-center text-[11px] text-muted md:px-7">
           Jayanti Frozen · Panel admin · Data tersimpan aman

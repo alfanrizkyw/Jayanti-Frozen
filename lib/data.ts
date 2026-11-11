@@ -118,13 +118,18 @@ export async function getCourierData() {
   const courier = tim[0] ?? null;
   // Semua kurir berbagi satu daftar tugas, jadi siapa pun yang masuk bisa
   // mengambil pesanan antar yang belum selesai.
-  const semua = db.orders
-    .filter((o) => o.metode === "antar")
-    .sort((a, b) => b.diperbarui.localeCompare(a.diperbarui));
-  const orders = semua.filter((o) =>
-    ["dikonfirmasi", "disiapkan", "siap", "diantar"].includes(o.status),
-  );
-  const riwayat = semua.filter((o) => o.status === "selesai").slice(0, 8);
+  const semua = db.orders.filter((o) => o.metode === "antar");
+  // Tugas aktif = pesanan yang sudah diserahkan admin. Kurir tidak perlu
+  // menekan tombol konfirmasi apa pun.
+  const mulaiAntar = (order: Order) =>
+    db.deliveries.find((d) => d.orderId === order.id)?.mulai ?? "";
+  const orders = semua
+    .filter((o) => o.status === "diantar")
+    .sort((a, b) => mulaiAntar(a).localeCompare(mulaiAntar(b)));
+  const riwayat = semua
+    .filter((o) => o.status === "selesai")
+    .sort((a, b) => b.diperbarui.localeCompare(a.diperbarui))
+    .slice(0, 8);
   return {
     courier: courier
       ? courierPublic(courier)
@@ -322,8 +327,6 @@ export async function updateOrder(
       )
     )
       throw new Error("Status tidak valid.");
-    if (patch.status === "diantar" && baru.metode === "antar" && !baru.kurirId)
-      throw new Error("Pilih kurir sebelum mengirim pesanan.");
     baru.status = patch.status;
     kolomOrder.add("status");
   }
@@ -334,7 +337,7 @@ export async function updateOrder(
     baru.metode === "antar" &&
     !baru.kurirId &&
     baru.status &&
-    ["dikonfirmasi", "disiapkan", "siap"].includes(baru.status)
+    ["dikonfirmasi", "disiapkan", "siap", "diantar"].includes(baru.status)
   ) {
     const kurirSiap =
       db.couriers.find((c) => c.aktif !== false && c.status === "siap") ??
@@ -344,6 +347,9 @@ export async function updateOrder(
       kolomOrder.add("kurirId");
     }
   }
+
+  if (patch.status === "diantar" && baru.metode === "antar" && !baru.kurirId)
+    throw new Error("Pilih kurir sebelum mengirim pesanan.");
 
   if (baru.metode === "antar" && baru.kurirId) {
     if (!delivery) {
@@ -374,6 +380,12 @@ export async function updateOrder(
       diperbarui: sekarang,
     };
   }
+
+  // Pesanan antar ditutup kurir lewat foto bukti, bukan dari panel admin.
+  if (patch.status === "selesai" && baru.metode === "antar")
+    throw new Error(
+      "Pesanan antar diselesaikan kurir dengan foto bukti. Pantau dari halaman kurir.",
+    );
 
   if (baru.status === "selesai" && delivery) {
     delivery = {
@@ -407,13 +419,24 @@ export async function updateOrder(
     perubahan.products = { rows: produk, fields: ["stok"] };
   }
 
-  if (baru.status === "selesai" && baru.kurirId) {
-    const kurir = db.couriers.find((c) => c.id === baru.kurirId);
-    if (kurir)
-      perubahan.couriers = {
-        rows: [{ ...kurir, status: "siap" }],
-        fields: ["status"],
-      };
+  // Status kurir ikut bergerak: mengantar saat admin menyerahkan pesanan,
+  // kembali siap setelah pesanan selesai atau dibatalkan.
+  if (baru.kurirId) {
+    const barisKurir: Courier[] = [];
+    const tambahKurir = (id: string, ubah: Partial<Courier>) => {
+      if (!id || barisKurir.some((row) => row.id === id)) return;
+      const kurir = db.couriers.find((c) => c.id === id);
+      if (kurir) barisKurir.push({ ...kurir, ...ubah });
+    };
+    if (baru.status === "diantar") {
+      tambahKurir(baru.kurirId, { status: "mengantar", online: true });
+      if (order.kurirId && order.kurirId !== baru.kurirId)
+        tambahKurir(order.kurirId, { status: "siap" });
+    } else if (baru.status === "selesai" || baru.status === "batal") {
+      tambahKurir(baru.kurirId, { status: "siap" });
+    }
+    if (barisKurir.length)
+      perubahan.couriers = { rows: barisKurir, fields: ["status", "online"] };
   }
 
   // Satu permintaan untuk semua tabel: klik admin selesai jauh lebih cepat.
@@ -457,66 +480,7 @@ function pilihTujuan(db: Awaited<ReturnType<typeof readDB>>, kode: string) {
     (o) => o.kode.toLowerCase() === kode.toLowerCase().trim(),
   );
   if (!order) throw new Error("Tugas tidak ditemukan.");
-  const kurirId =
-    order.kurirId || db.couriers.find((c) => c.aktif !== false)?.id || "";
-  return { order, kurirId };
-}
-
-export async function courierStart(kode: string) {
-  const db = await readDB();
-  const { order, kurirId } = pilihTujuan(db, kode);
-  if (order.status === "selesai" || order.status === "batal")
-    throw new Error("Pesanan ini sudah selesai.");
-  const sekarang = new Date().toISOString();
-  const lama = db.deliveries.find((d) => d.orderId === order.id) ?? null;
-  const delivery: Delivery = lama
-    ? {
-        ...lama,
-        kurirId: lama.kurirId || kurirId,
-        status: "aktif",
-        mulai: lama.mulai || sekarang,
-        selesai: "",
-        diperbarui: sekarang,
-      }
-    : {
-        id: `DLV-${order.id}`,
-        orderId: order.id,
-        kurirId,
-        status: "aktif",
-        mulai: sekarang,
-        selesai: "",
-        lat: null,
-        lng: null,
-        diperbarui: sekarang,
-        estimasiMenit: db.settings.estimasiAntar,
-      };
-  const kurir = db.couriers.find((c) => c.id === kurirId);
-
-  await saveAll({
-    orders: {
-      rows: [
-        {
-          ...order,
-          kurirId: order.kurirId || kurirId,
-          status: "diantar",
-          diperbarui: sekarang,
-        },
-      ],
-      fields: ["kurirId", "status", "diperbarui"],
-    },
-    deliveries: {
-      rows: [delivery],
-      fields: lama
-        ? ["kurirId", "status", "mulai", "selesai", "diperbarui"]
-        : undefined,
-    },
-    couriers: kurir
-      ? {
-          rows: [{ ...kurir, status: "mengantar", online: true }],
-          fields: ["status", "online"],
-        }
-      : undefined,
-  });
+  return { order };
 }
 
 export async function courierFinish(kode: string) {

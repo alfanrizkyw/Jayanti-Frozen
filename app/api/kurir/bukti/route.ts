@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   if (file.size > 10 * 1024 * 1024) return bad("Ukuran foto maksimal 10 MB.");
 
   let detail = await getOrderDetail(kode);
-  // Cache instance lain bisa tertinggal sesaat setelah kurir menekan "Mulai antar".
+  // Cache instance lain bisa tertinggal sesaat setelah admin menyerahkan tugas.
   if (detail && detail.order.status !== "diantar") detail = await getOrderDetail(kode, true);
   if (!detail) return bad("Pesanan tidak ditemukan.", 404);
   if (detail.order.metode !== "antar") return bad("Pesanan ini bukan pengantaran.");
