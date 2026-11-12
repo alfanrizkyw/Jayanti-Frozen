@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { Clock, ExternalLink, MapPin, Phone, Snowflake } from "lucide-react";
 import { Logo } from "./logo";
+import { PreferencesControls } from "./preferences-controls";
 import { rupiah, waLink } from "@/lib/format";
 import type { Settings } from "@/lib/types";
 
@@ -8,31 +8,18 @@ export function SiteFooter({ settings }: { settings: Settings }) {
   return (
     <footer className="mt-16 bg-navy-deep pb-28 pt-12 text-white md:pb-8">
       <div className="container-page">
-        <div className="grid gap-10 md:grid-cols-[1.5fr_1fr_1fr_1.2fr]">
+        <div className="grid gap-10 md:grid-cols-[1.6fr_1fr_1.2fr]">
           <div>
             <Logo tone="light" />
             <p className="mt-4 max-w-[290px] text-sm leading-relaxed text-white/65">
-              Frozen food pilihan untuk keluarga. Segar, praktis, dan siap
-              dimasak kapan saja.
+              Frozen food siap masak. Ambil di toko atau minta diantar ke rumah.
             </p>
             <div className="mt-5 flex items-center gap-2 rounded-xl border border-white/12 bg-white/[0.04] px-3.5 py-3">
               <Snowflake size={16} className="text-sky" />
               <span className="text-xs font-medium text-white/75">
-                Rantai dingin −18°C terjaga sampai tangan Anda
+                Produk tetap beku sampai diterima
               </span>
             </div>
-          </div>
-
-          <div>
-            <h3 className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/45">
-              Belanja
-            </h3>
-            <ul className="mt-4 space-y-2.5 text-sm text-white/75">
-              <li><Link href="/" className="hover:text-white">Beranda</Link></li>
-              <li><Link href="/katalog" className="hover:text-white">Semua produk</Link></li>
-              <li><Link href="/keranjang" className="hover:text-white">Keranjang</Link></li>
-              <li><Link href="/lacak" className="hover:text-white">Lacak pesanan</Link></li>
-            </ul>
           </div>
 
           <div>
@@ -42,7 +29,7 @@ export function SiteFooter({ settings }: { settings: Settings }) {
             <ul className="mt-4 space-y-3 text-sm text-white/75">
               <li>
                 <a
-                  href={waLink(settings.telepon, "Halo Jayanti Frozen, saya mau bertanya.")}
+                  href={waLink(settings.telepon, "Halo Yanti Frozen, saya mau bertanya.")}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-start gap-2.5 hover:text-white"
@@ -101,8 +88,12 @@ export function SiteFooter({ settings }: { settings: Settings }) {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col gap-3 border-t border-white/10 pt-5 text-[11.5px] text-white/45 sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} Jayanti Frozen. Semua hak dilindungi.</p>
+        <div className="mt-8 border-t border-white/10 pt-1 md:hidden">
+          <PreferencesControls layout="gelap" />
+        </div>
+
+        <div className="mt-8 flex flex-col gap-3 border-t border-white/10 pt-5 text-[11.5px] text-white/45 sm:flex-row sm:items-center sm:justify-between">
+          <p>© {new Date().getFullYear()} Yanti Frozen. Semua hak dilindungi.</p>
           <div className="flex items-center gap-4">
             <span>Probolinggo, Jawa Timur</span>
           </div>

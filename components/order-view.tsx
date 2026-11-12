@@ -224,7 +224,7 @@ export function OrderView({
           <a
             href={waLink(
               settings.telepon,
-              `Halo Jayanti Frozen, saya mau menanyakan pesanan ${order.kode}.`,
+              `Halo Yanti Frozen, saya mau menanyakan pesanan ${order.kode}.`,
             )}
             target="_blank"
             rel="noopener noreferrer"

@@ -58,7 +58,7 @@ export function Logo({
         }`}
       >
         <span className="text-[19px] font-extrabold tracking-[-0.03em]">
-          Jayanti
+          Yanti
         </span>
         <span className="mt-[3px] text-[9px] font-bold uppercase tracking-[0.32em]">
           Frozen

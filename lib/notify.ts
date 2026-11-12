@@ -33,7 +33,7 @@ function susunPesan(
       : "Ambil di toko";
 
   return [
-    "*PESANAN BARU — Jayanti Frozen*",
+    "*PESANAN BARU — Yanti Frozen*",
     "",
     `Kode: ${order.kode}`,
     `Pelanggan: ${order.pelanggan}`,

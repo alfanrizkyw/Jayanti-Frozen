@@ -12,7 +12,7 @@ function sandiAwal(env: "ADMIN_PASSWORD" | "COURIER_PASSWORD") {
 
 export function createDefaultSettings(): Settings {
   return {
-    namaToko: "Jayanti Frozen",
+    namaToko: "Yanti Frozen",
     telepon: "628980440095",
     alamat: "Pondok Pabean Indah Blok N No. 10, Dringu, Kota Probolinggo",
     mapsUrl: "https://share.google/4uDV5gaNjwZEEHhVf",
@@ -20,11 +20,11 @@ export function createDefaultSettings(): Settings {
     ongkir: 12000,
     gratisOngkirMin: 150000,
     rekening: "BCA 1234 5678 90",
-    atasNama: "Jayanti Frozen",
-    qrisNama: "Jayanti Frozen",
+    atasNama: "Yanti Frozen",
+    qrisNama: "Yanti Frozen",
     qrisGambar: "",
     bank: [
-      { bank: "BCA", nomor: "1234 5678 90", atasNama: "Jayanti Frozen" },
+      { bank: "BCA", nomor: "1234 5678 90", atasNama: "Yanti Frozen" },
     ],
     estimasiAntar: 20,
     whatsappAdmin: "628980440095",
@@ -50,7 +50,7 @@ export function createBootstrap(): DB {
     couriers: [
       {
         id: "K01",
-        nama: "Kurir Jayanti",
+        nama: "Kurir Yanti",
         telepon: "",
         sandi: sandiAwal("COURIER_PASSWORD"),
         kendaraan: "Tim pengantaran",
@@ -207,7 +207,7 @@ export function createSeed(): DB {
     orders: [
       {
         id: "DEMO1",
-        kode: "JY-DEMO-001",
+        kode: "YF-DEMO-001",
         userId: "U01",
         pelanggan: "Rina Kartika",
         telepon: "6281234567001",
@@ -227,7 +227,7 @@ export function createSeed(): DB {
       },
       {
         id: "DEMO2",
-        kode: "JY-DEMO-002",
+        kode: "YF-DEMO-002",
         userId: "U02",
         pelanggan: "Dedi Susanto",
         telepon: "6281234567002",
@@ -247,7 +247,7 @@ export function createSeed(): DB {
       },
       {
         id: "DEMO3",
-        kode: "JY-DEMO-003",
+        kode: "YF-DEMO-003",
         userId: "U01",
         pelanggan: "Rina Kartika",
         telepon: "6281234567001",
@@ -267,7 +267,7 @@ export function createSeed(): DB {
       },
       {
         id: "DEMO4",
-        kode: "JY-DEMO-004",
+        kode: "YF-DEMO-004",
         userId: "U02",
         pelanggan: "Dedi Susanto",
         telepon: "6281234567002",
@@ -353,7 +353,7 @@ export function createSeed(): DB {
     staff: [
       {
         id: "ST01",
-        nama: "Admin Jayanti",
+        nama: "Admin Yanti",
         peran: "admin",
         telepon: "",
         sandi: sandiAwal("ADMIN_PASSWORD"),

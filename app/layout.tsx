@@ -24,15 +24,15 @@ export const metadata: Metadata = {
           : "http://localhost:3000"),
   ),
   title: {
-    default: "Jayanti Frozen — Frozen food segar, praktis, lezat",
-    template: "%s · Jayanti Frozen",
+    default: "Yanti Frozen — Frozen food siap masak",
+    template: "%s · Yanti Frozen",
   },
   description:
-    "Belanja frozen food di Jayanti Frozen. Pilih produk, ambil di toko atau antar kurir, bayar tunai, QRIS, atau transfer. Lacak kurir secara langsung.",
+    "Belanja frozen food di Yanti Frozen. Ambil di toko atau minta diantar, bayar tunai, QRIS, atau transfer. Lacak pesanan dengan kode pesanan.",
   openGraph: {
-    title: "Jayanti Frozen",
+    title: "Yanti Frozen",
     description:
-      "Frozen food pilihan untuk keluarga. Ambil di toko atau antar kurir, dengan pelacakan pesanan langsung.",
+      "Frozen food siap masak. Ambil di toko atau minta diantar, lalu lacak pesanan dengan kode pesanan.",
     images: ["/brand/hero-promo.jpg"],
     locale: "id_ID",
     type: "website",

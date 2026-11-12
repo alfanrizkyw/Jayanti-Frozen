@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ExternalLink, MapPin, Menu, Search, ShoppingBag, X } from "lucide-react";
-import { useState } from "react";
+import { ShoppingBag } from "lucide-react";
 import { Logo } from "./logo";
 import { useCart } from "./cart-provider";
 import { PreferencesControls } from "./preferences-controls";
@@ -19,13 +18,11 @@ const links = [
 export function SiteHeader({ settings }: { settings: Settings }) {
   const pathname = usePathname();
   const { count } = useCart();
-  const [open, setOpen] = useState(false);
-  const peta = settings.mapsUrl?.trim();
 
   return (
     <div className="sticky top-0 z-40">
       <div className="bg-navy text-white">
-        <div className="container-page grid h-9 grid-cols-2 items-center gap-3 text-[10.5px] font-medium tracking-wide sm:text-[11.5px] md:grid-cols-3">
+        <div className="container-page flex h-9 items-center justify-between gap-3 text-[10.5px] font-medium tracking-wide sm:text-[11.5px]">
           <span className="flex min-w-0 items-center gap-1.5 truncate text-white/85">
             <span
               className={`h-1.5 w-1.5 flex-none rounded-full ${
@@ -40,24 +37,7 @@ export function SiteHeader({ settings }: { settings: Settings }) {
               {settings.jamBuka}
             </span>
           </span>
-          {peta ? (
-            <a
-              href={peta}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Buka peta lokasi toko"
-              className="hidden min-w-0 items-center justify-self-center gap-1.5 text-white/85 md:flex hover:text-white"
-            >
-              <MapPin size={12} strokeWidth={2.2} className="flex-none" />
-              <span className="truncate">{settings.alamat}</span>
-            </a>
-          ) : (
-            <span className="hidden min-w-0 items-center justify-self-center gap-1.5 text-white/85 md:flex">
-              <MapPin size={12} strokeWidth={2.2} className="flex-none" />
-              <span className="truncate">{settings.alamat}</span>
-            </span>
-          )}
-          <span className="justify-self-end whitespace-nowrap text-right text-white/85">
+          <span className="whitespace-nowrap text-right text-white/85">
             Gratis ongkir<span className="hidden sm:inline"> min.</span>{" "}
             {rupiah(settings.gratisOngkirMin)}
           </span>
@@ -68,7 +48,7 @@ export function SiteHeader({ settings }: { settings: Settings }) {
         <div className="container-page flex h-16 items-center gap-2 md:h-[72px] md:gap-4">
           <Link
             href="/"
-            aria-label="Jayanti Frozen, ke beranda"
+            aria-label="Yanti Frozen, ke beranda"
             className="flex-none rounded-lg py-1"
           >
             <Logo />
@@ -98,26 +78,10 @@ export function SiteHeader({ settings }: { settings: Settings }) {
                 </Link>
               );
             })}
-            {peta && (
-              <a
-                href={peta}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 rounded-lg px-3 py-2.5 text-[13.5px] font-semibold text-navy/75 transition-colors hover:bg-mist/70 hover:text-navy lg:px-4"
-              >
-                Lokasi
-                <ExternalLink size={12} className="opacity-55" />
-              </a>
-            )}
           </nav>
 
-          <div className="ml-auto flex flex-none items-center gap-0.5">
-            <div className="hidden md:block">
-              <PreferencesControls />
-            </div>
-            <Link href="/katalog" className="icon-btn" aria-label="Cari produk">
-              <Search size={20} strokeWidth={2.1} />
-            </Link>
+          <div className="ml-auto hidden flex-none items-center gap-0.5 md:flex">
+            <PreferencesControls />
             <Link
               href="/keranjang"
               className="icon-btn relative"
@@ -133,51 +97,8 @@ export function SiteHeader({ settings }: { settings: Settings }) {
                 </span>
               )}
             </Link>
-
-            <button
-              type="button"
-              onClick={() => setOpen((v) => !v)}
-              className="icon-btn md:hidden"
-              aria-expanded={open}
-              aria-label={open ? "Tutup menu" : "Buka menu"}
-            >
-              {open ? <X size={21} /> : <Menu size={21} />}
-            </button>
           </div>
         </div>
-
-        {open && (
-          <div className="border-t border-line bg-white md:hidden">
-            <nav className="container-page flex flex-col py-2" aria-label="Navigasi seluler">
-              {links.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setOpen(false)}
-                  className="flex min-h-12 items-center justify-between border-b border-line/70 text-[15px] font-semibold text-navy"
-                >
-                  {link.label}
-                  <span aria-hidden="true" className="text-muted">→</span>
-                </Link>
-              ))}
-              {peta && (
-                <a
-                  href={peta}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => setOpen(false)}
-                  className="flex min-h-12 items-center justify-between border-b border-line/70 text-[15px] font-semibold text-navy"
-                >
-                  Lokasi
-                  <span className="flex items-center gap-1.5 text-[12px] font-medium text-muted">
-                    Google Maps <ExternalLink size={14} />
-                  </span>
-                </a>
-              )}
-              <PreferencesControls layout="full" />
-            </nav>
-          </div>
-        )}
       </header>
     </div>
   );

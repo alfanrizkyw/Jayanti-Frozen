@@ -1,5 +1,5 @@
 /**
- * Jayanti Frozen — backend Google Sheets (JSON API lewat GET).
+ * Yanti Frozen — backend Google Sheets (JSON API lewat GET).
  *
  * Cara pakai singkat:
  * 1. Buat Google Spreadsheet baru.

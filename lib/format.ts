@@ -150,7 +150,7 @@ export function kodePesanan(): string {
   }).formatToParts(now);
   const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "00";
   const acak = Math.floor(1000 + Math.random() * 9000);
-  return `JY${get("year")}${get("month")}${get("day")}-${acak}`;
+  return `YF${get("year")}${get("month")}${get("day")}-${acak}`;
 }
 
 export function hariPendek(iso: string): string {

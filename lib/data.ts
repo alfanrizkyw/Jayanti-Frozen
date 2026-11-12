@@ -135,7 +135,7 @@ export async function getCourierData() {
       ? courierPublic(courier)
       : {
           id: "tim",
-          nama: "Tim Kurir Jayanti",
+          nama: "Tim Kurir Yanti",
           telepon: "",
           kendaraan: "Tim pengantaran",
           status: "siap" as const,
@@ -455,7 +455,7 @@ export async function verifyAdmin(
       return { nama: staff.nama, id: staff.id };
   }
   const dariEnv = adminPassword();
-  if (dariEnv && sameSecret(sandi, dariEnv)) return { nama: "Admin Jayanti" };
+  if (dariEnv && sameSecret(sandi, dariEnv)) return { nama: "Admin Yanti" };
   return null;
 }
 
@@ -467,11 +467,11 @@ export async function verifyCourier(
   for (const kurir of db.couriers) {
     if (kurir.aktif === false) continue;
     if (kurir.sandi && verifyPassword(sandi, kurir.sandi))
-      return { nama: "Tim Kurir Jayanti" };
+      return { nama: "Tim Kurir Yanti" };
   }
   const dariEnv = courierPassword();
   if (dariEnv && sameSecret(sandi, dariEnv))
-    return { nama: "Tim Kurir Jayanti" };
+    return { nama: "Tim Kurir Yanti" };
   return null;
 }
 
@@ -681,7 +681,7 @@ export async function updateSettings(input: Settings) {
   const utama = bank[0];
   const settings: Settings = {
     ...input,
-    namaToko: input.namaToko?.trim() || "Jayanti Frozen",
+    namaToko: input.namaToko?.trim() || "Yanti Frozen",
     telepon: normalTelepon(input.telepon || "08980440095"),
     alamat: input.alamat?.trim() ?? "",
     jamBuka: input.jamBuka?.trim() ?? "",

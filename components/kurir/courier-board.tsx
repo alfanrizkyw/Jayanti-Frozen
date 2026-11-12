@@ -277,7 +277,7 @@ export function CourierBoard({
                 <a
                   href={waLink(
                     aktif.telepon,
-                    `Halo ${aktif.pelanggan}, saya kurir Jayanti Frozen, pesanan ${aktif.kode} sedang saya antar.`,
+                    `Halo ${aktif.pelanggan}, saya kurir Yanti Frozen, pesanan ${aktif.kode} sedang saya antar.`,
                   )}
                   target="_blank"
                   rel="noopener noreferrer"

@@ -36,8 +36,7 @@ export function CartView({ settings }: { settings: Settings }) {
           Keranjang masih kosong
         </h2>
         <p className="mt-1.5 max-w-[340px] text-[13px] leading-relaxed text-muted">
-          Yuk mulai dari produk favorit keluarga. Semua produk beku dan siap
-          dimasak kapan saja.
+          Belum ada produk dipilih. Buka katalog, lalu tekan Tambah.
         </p>
         <Link href="/katalog" className="btn btn-primary mt-5">
           Mulai belanja <ArrowRight size={16} />

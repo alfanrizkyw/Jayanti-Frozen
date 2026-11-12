@@ -53,6 +53,7 @@ const KAMUS: Record<string, string> = {
   "Tutup menu admin": "Close admin menu",
   "Buka navigasi": "Open navigation",
   "Navigasi utama": "Main navigation",
+  "Navigasi bawah": "Bottom navigation",
   "Navigasi seluler": "Mobile navigation",
   "Navigasi cepat": "Quick navigation",
   "Navigasi admin": "Admin navigation",
@@ -96,9 +97,9 @@ const KAMUS: Record<string, string> = {
   "Bug baru": "New bugs",
   "Bug & error": "Bugs & errors",
   "Status layanan": "Service status",
-  "Selamat datang di Jayanti Frozen": "Welcome to Jayanti Frozen",
-  "Frozen food segar dari Probolinggo. Ambil di toko atau kami antar ke rumah.":
-    "Fresh frozen food from Probolinggo. Pick up at the store or let us deliver.",
+  "Selamat datang di Yanti Frozen": "Welcome to Yanti Frozen",
+  "Frozen food dari Probolinggo. Ambil di toko atau kami antar ke rumah.":
+    "Frozen food from Probolinggo. Pick up at the store or we deliver.",
   "Mulai belanja": "Start shopping",
   "Lihat-lihat dulu": "Just browsing",
   "Tutup sambutan": "Close welcome",
@@ -155,10 +156,10 @@ const KAMUS: Record<string, string> = {
     "Want to see a tracking example?",
   "Isi data penerima dan pilih cara terima. Pesanan langsung masuk ke admin setelah Anda menekan buat pesanan.":
     "Fill in the recipient details and choose how to receive. The order goes straight to the admin after you place it.",
-  "Jayanti Frozen · Aplikasi kurir": "Jayanti Frozen · Courier app",
-  "Jayanti Frozen · Panel admin · Data tersimpan aman":
-    "Jayanti Frozen · Admin panel · Data stored safely",
-  "Jayanti Frozen, ke beranda": "Jayanti Frozen, go to home",
+  "Yanti Frozen · Aplikasi kurir": "Yanti Frozen · Courier app",
+  "Yanti Frozen · Panel admin · Data tersimpan aman":
+    "Yanti Frozen · Admin panel · Data stored safely",
+  "Yanti Frozen, ke beranda": "Yanti Frozen, go to home",
   "Keterangan": "Details",
   "Konfirmasi pesanan": "Confirm order",
   "Nama A–Z": "Name A–Z",
@@ -215,18 +216,17 @@ const KAMUS: Record<string, string> = {
   "Tunai": "Cash",
   "Transfer": "Bank transfer",
   "Probolinggo, Jawa Timur": "Probolinggo, East Java",
-  "Frozen food pilihan untuk keluarga. Segar, praktis, dan siap dimasak kapan saja.":
-    "Frozen food for the family. Fresh, practical, ready to cook anytime.",
-  "Rantai dingin −18°C terjaga sampai tangan Anda":
-    "The −18°C cold chain stays intact until it reaches you",
+  "Frozen food siap masak. Ambil di toko atau minta diantar ke rumah.":
+    "Frozen food ready to cook. Pick up at the store or have it delivered.",
+  "Produk tetap beku sampai diterima": "Stays frozen until it arrives",
   "Buka setiap hari": "Open every day",
   "Ambil di toko atau antar kurir area Probolinggo. Ongkir":
     "Pick up at the store or courier delivery in Probolinggo. Delivery fee",
   ", gratis di atas": ", free over",
   "gratis di atas": "free over",
-  "Butuh bantuan memilih?": "Need help choosing?",
-  "Chat kami di WhatsApp, dibalas langsung oleh admin toko.":
-    "Chat us on WhatsApp, answered directly by the store admin.",
+  "Butuh bantuan?": "Need help?",
+  "Chat WhatsApp toko. Dibalas langsung oleh admin.":
+    "Chat the store on WhatsApp. Answered directly by the admin.",
   "Produk bersertifikat halal": "Halal certified products",
   "Pembayaran diverifikasi admin": "Payments verified by admin",
   "Toko fisik di Probolinggo": "Physical store in Probolinggo",
@@ -235,34 +235,33 @@ const KAMUS: Record<string, string> = {
   "Buka peta lokasi toko": "Open store location map",
   "Google Maps": "Google Maps",
   "Link Google Maps": "Google Maps link",
-  "Dibuka dari menu Lokasi di header dan tautan alamat di footer. Kosongkan bila belum ada peta.":
-    "Opened from the Location menu in the header and the address link in the footer. Leave empty if there is no map yet.",
+  "Dibuka dari kartu lokasi di beranda dan tautan alamat di footer. Kosongkan bila belum ada peta.":
+    "Opened from the location card on the home page and the address link in the footer. Leave empty if there is no map yet.",
   "Nama jalan, kelurahan, kota": "Street, district, city",
-  "Butuh bantuan?": "Need help?",
   "Admin siap membantu setiap hari": "The admin is ready to help every day",
 
   // Beranda
   "Frozen food · Kota Probolinggo": "Frozen food · Probolinggo",
-  "Frozen food segar,": "Fresh frozen food,",
+  "Frozen food,": "Frozen food,",
   "siap masak": "ready to cook",
   "kapan saja.": "anytime.",
-  "Pilih produk, ambil di toko atau kami antar ke rumah. Bayar tunai, QRIS, atau transfer — semuanya tanpa ribet.":
-    "Choose products, pick up at the store or we deliver to your home. Pay cash, QRIS, or transfer — all hassle-free.",
+  "Pilih produk, lalu ambil di toko atau minta diantar. Bayar tunai, QRIS, atau transfer.":
+    "Choose products, pick up at the store or have them delivered. Pay cash, QRIS, or transfer.",
   "Selalu beku −18°C": "Always frozen at −18°C",
-  "Rantai dingin terjaga sampai tangan Anda.":
-    "The cold chain stays intact until it reaches you.",
+  "Produk tetap beku sampai diterima.":
+    "Stays frozen until you receive it.",
   "Ambil atau diantar": "Pickup or delivery",
   "Ongkir jelas, gratis di atas": "Clear delivery fee, free over",
-  "Bayar dengan tenang": "Pay with ease",
+  "Tiga cara bayar": "Three ways to pay",
   "Tunai, QRIS, atau transfer bank.": "Cash, QRIS, or bank transfer.",
   "Kategori": "Categories",
-  "Belanja sesuai kebutuhan": "Shop by need",
+  "Pilih kategori": "Choose a category",
   "Paling dicari": "Most popular",
   "Produk unggulan": "Featured products",
   "Cara pesan": "How to order",
-  "Empat langkah, pesanan siap": "Four steps, order ready",
-  "Tidak perlu membuat akun rumit. Cukup nama dan nomor HP saat checkout.":
-    "No complicated account needed. Just your name and phone number at checkout.",
+  "Pesan dalam 4 langkah": "Order in 4 steps",
+  "Tidak perlu daftar akun. Cukup nama dan nomor HP saat checkout.":
+    "No account needed. Just your name and phone number at checkout.",
   "Pilih produk": "Choose products",
   "Cari atau telusuri kategori, lalu masukkan ke keranjang.":
     "Search or browse categories, then add to cart.",
@@ -274,16 +273,16 @@ const KAMUS: Record<string, string> = {
   "Terima pesanan": "Receive order",
   "Ambil sendiri atau ikuti kurir lewat halaman lacak.":
     "Pick it up yourself or follow the courier on the tracking page.",
-  "Yuk mulai dari produk favorit keluarga. Semua produk beku dan siap dimasak kapan saja.":
-    "Start with the family's favorite products. All frozen and ready to cook anytime.",
+  "Belum ada produk dipilih. Buka katalog, lalu tekan Tambah.":
+    "No products picked yet. Open the catalog, then tap Add.",
   "Ada di keranjang": "Already in cart",
   "Stok habis": "Out of stock",
   "Stok menipis": "Low stock",
   "produk ditemukan": "products found",
   "UNGGULAN": "FEATURED",
   "Promo": "Promo",
-  "Aneka frozen food Jayanti Frozen di atas es":
-    "Jayanti Frozen's frozen food assortment on ice",
+  "Aneka frozen food Yanti Frozen di atas es":
+    "Yanti Frozen's frozen food assortment on ice",
   "Contoh: Chicken Nugget": "Example: Chicken Nugget",
   "Contoh: Hemat 30%": "Example: Save 30%",
   "Contoh: Siti Aisyah": "Example: Siti Aisyah",
@@ -345,8 +344,8 @@ const KAMUS: Record<string, string> = {
   "Simpan kode": "Save code",
   "Simpan kode pesanan Anda. Tanpa akun, kode ini yang dipakai untuk membuka status dan posisi kurir kapan saja.":
     "Save your order code. Without an account, this code lets you open the status and courier position anytime.",
-  "Masukkan kode pesanan yang tertera saat checkout. Contoh: JY261110-4821.":
-    "Enter the order code shown at checkout. Example: JY261110-4821.",
+  "Masukkan kode pesanan yang tertera saat checkout. Contoh: YF261110-4821.":
+    "Enter the order code shown at checkout. Example: YF261110-4821.",
   "Pesanan tidak ditemukan": "Order not found",
   "Pesanan dengan kode itu tidak ditemukan. Periksa kembali huruf dan angkanya, atau hubungi toko.":
     "No order found with that code. Check the letters and numbers again, or contact the store.",
@@ -525,8 +524,8 @@ const KAMUS: Record<string, string> = {
 
   // Login
   "Masukkan kata sandi": "Enter password",
-  "Halaman ini khusus staff Jayanti Frozen. Pembeli tidak perlu membuat akun.":
-    "This page is for Jayanti Frozen staff only. Buyers don't need an account.",
+  "Halaman ini khusus staff Yanti Frozen. Pembeli tidak perlu membuat akun.":
+    "This page is for Yanti Frozen staff only. Buyers don't need an account.",
   "Kata sandi": "Password",
   "Sandi": "Password",
 
@@ -844,8 +843,8 @@ function aturan(teks: string): string | undefined {
   if (m) return `Clear delivery fee, free over ${m[1]}.`;
   m = teks.match(/^, gratis di atas (.+)\.$/);
   if (m) return `, free over ${m[1]}.`;
-  m = teks.match(/^Jayanti Frozen\. Semua hak dilindungi\.$/);
-  if (m) return "Jayanti Frozen. All rights reserved.";
+  m = teks.match(/^Yanti Frozen\. Semua hak dilindungi\.$/);
+  if (m) return "Yanti Frozen. All rights reserved.";
   m = teks.match(/^(\d+) produk$/);
   if (m) return `${m[1]} ${m[1] === "1" ? "product" : "products"}`;
   m = teks.match(/^(\d+) pesanan baru$/);

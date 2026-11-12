@@ -13,7 +13,7 @@ export function MiniCart() {
   if (pathname.startsWith("/keranjang") || pathname.startsWith("/checkout")) return null;
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-[76px] z-40 px-3 md:bottom-5 md:px-6">
+    <div className="pointer-events-none fixed inset-x-0 bottom-5 z-40 hidden px-6 md:block">
       <div className="pointer-events-auto mx-auto flex max-w-3xl items-center gap-3 rounded-2xl border border-navy/10 bg-navy px-3 py-2.5 text-white shadow-lift">
         <span className="relative flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-white/10 text-sky">
           <ShoppingBag size={18} />

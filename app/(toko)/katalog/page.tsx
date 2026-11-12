@@ -8,7 +8,7 @@ import { KatalogToolbar } from "@/components/katalog-toolbar";
 export const metadata: Metadata = {
   title: "Katalog produk",
   description:
-    "Telusuri nugget, sosis, bakso, kentang, seafood, dan daging beku Jayanti Frozen. Harga jelas dan stok selalu diperbarui.",
+    "Telusuri nugget, sosis, bakso, kentang, seafood, dan daging beku Yanti Frozen. Harga jelas dan stok selalu diperbarui.",
 };
 
 const urutLabel: Record<string, string> = {

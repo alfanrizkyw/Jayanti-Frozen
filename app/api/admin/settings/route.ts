@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   try {
     const sekarang = await getSettings();
     const settings = await updateSettings({
-      namaToko: String(body.namaToko ?? "Jayanti Frozen"),
+      namaToko: String(body.namaToko ?? "Yanti Frozen"),
       telepon: String(body.telepon ?? ""),
       alamat: String(body.alamat ?? ""),
       mapsUrl:

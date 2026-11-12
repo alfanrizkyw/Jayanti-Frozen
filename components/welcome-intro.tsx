@@ -81,16 +81,16 @@ export function WelcomeIntro() {
         </div>
 
         <p className="mt-5 text-[10.5px] font-extrabold uppercase tracking-[0.18em] text-brand">
-          Jayanti Frozen
+          Yanti Frozen
         </p>
         <h2
           id="sambutan-judul"
           className="mt-2 text-[22px] font-extrabold leading-tight text-navy"
         >
-          Selamat datang di Jayanti Frozen
+          Selamat datang di Yanti Frozen
         </h2>
         <p className="mx-auto mt-2.5 max-w-[290px] text-[13px] leading-relaxed text-muted">
-          Frozen food segar dari Probolinggo. Ambil di toko atau kami antar ke rumah.
+          Frozen food dari Probolinggo. Ambil di toko atau kami antar ke rumah.
         </p>
 
         <Link

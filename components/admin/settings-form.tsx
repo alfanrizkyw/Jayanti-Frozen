@@ -132,7 +132,7 @@ export function SettingsForm({ settings }: { settings: Settings }) {
               inputMode="url"
             />
             <p className="mt-1.5 text-[11px] leading-relaxed text-muted">
-              Dibuka dari menu Lokasi di header dan tautan alamat di footer.
+              Dibuka dari kartu lokasi di beranda dan tautan alamat di footer.
               Kosongkan bila belum ada peta.
             </p>
           </div>
@@ -288,7 +288,7 @@ export function SettingsForm({ settings }: { settings: Settings }) {
               className="field"
               value={form.qrisNama}
               onChange={(e) => ubah("qrisNama", e.target.value)}
-              placeholder="Jayanti Frozen"
+              placeholder="Yanti Frozen"
             />
             <p className="mt-1.5 text-[11px] leading-relaxed text-muted">
               Gambar QRIS diunggah lewat panel developer.

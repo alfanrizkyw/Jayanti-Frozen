@@ -1,4 +1,4 @@
-# Jayanti Frozen
+# Yanti Frozen
 
 Toko frozen food online: katalog, keranjang, checkout, pembayaran, pengambilan
 di toko atau pengantaran kurir, pelacakan kurir langsung, dashboard admin,

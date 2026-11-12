@@ -179,7 +179,7 @@ export function DeveloperConsole({
     <div className="min-h-svh bg-paper">
       <header className="bg-navy-deep text-white">
         <div className="mx-auto flex w-full max-w-[1120px] flex-wrap items-center gap-3 px-4 py-3 md:px-6">
-          <Link href="/" aria-label="Jayanti Frozen, ke beranda">
+          <Link href="/" aria-label="Yanti Frozen, ke beranda">
             <Logo tone="light" size={38} />
           </Link>
           <span className="rounded-full border border-white/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-sky">
@@ -357,7 +357,7 @@ export function DeveloperConsole({
                   className="field min-h-11"
                   value={qrisNama}
                   onChange={(e) => setQrisNama(e.target.value)}
-                  placeholder="Jayanti Frozen"
+                  placeholder="Yanti Frozen"
                 />
               </div>
 

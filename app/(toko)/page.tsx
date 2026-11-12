@@ -47,13 +47,13 @@ export default async function BerandaPage() {
               </span>
 
               <h1 className="mt-4 text-[32px] font-extrabold leading-[1.06] tracking-[-0.035em] sm:text-[42px] lg:text-[48px]">
-                Frozen food segar,
+                Frozen food,
                 <br />
                 <span className="text-sky">siap masak</span> kapan saja.
               </h1>
               <p className="mt-3.5 max-w-[430px] text-[14px] leading-relaxed text-white/72 sm:text-[15px]">
-                Pilih produk, ambil di toko atau kami antar ke rumah. Bayar
-                tunai, QRIS, atau transfer — semuanya tanpa ribet.
+                Pilih produk, lalu ambil di toko atau minta diantar. Bayar
+                tunai, QRIS, atau transfer.
               </p>
 
               <form
@@ -100,7 +100,7 @@ export default async function BerandaPage() {
             <div className="relative min-h-[240px] sm:min-h-[320px] lg:min-h-[440px]">
               <Gambar
                 src={gambarHero}
-                alt="Aneka frozen food Jayanti Frozen di atas es"
+                alt="Aneka frozen food Yanti Frozen di atas es"
                 fill
                 priority
                 sizes="(max-width: 1024px) 100vw, 560px"
@@ -142,7 +142,7 @@ export default async function BerandaPage() {
             {
               icon: Snowflake,
               judul: "Selalu beku −18°C",
-              teks: "Rantai dingin terjaga sampai tangan Anda.",
+              teks: "Produk tetap beku sampai diterima.",
             },
             {
               icon: Truck,
@@ -151,7 +151,7 @@ export default async function BerandaPage() {
             },
             {
               icon: CreditCard,
-              judul: "Bayar dengan tenang",
+              judul: "Tiga cara bayar",
               teks: "Tunai, QRIS, atau transfer bank.",
             },
           ].map(({ icon: Icon, judul, teks }) => (
@@ -173,7 +173,7 @@ export default async function BerandaPage() {
           <div>
             <p className="eyebrow">Kategori</p>
             <h2 className="mt-1.5 text-[23px] font-extrabold text-navy md:text-[28px]">
-              Belanja sesuai kebutuhan
+              Pilih kategori
             </h2>
           </div>
           <Link
@@ -233,12 +233,11 @@ export default async function BerandaPage() {
             <div>
               <p className="eyebrow">Cara pesan</p>
               <h2 className="mt-1.5 text-[22px] font-extrabold text-navy md:text-[26px]">
-                Empat langkah, pesanan siap
+                Pesan dalam 4 langkah
               </h2>
             </div>
             <p className="max-w-[330px] text-[12.5px] leading-relaxed text-muted">
-              Tidak perlu membuat akun rumit. Cukup nama dan nomor HP saat
-              checkout.
+              Tidak perlu daftar akun. Cukup nama dan nomor HP saat checkout.
             </p>
           </div>
 
@@ -291,16 +290,16 @@ export default async function BerandaPage() {
             </span>
             <div>
               <p className="text-[15px] font-extrabold text-navy">
-                Butuh bantuan memilih?
+                Butuh bantuan?
               </p>
               <p className="mt-0.5 text-[12.5px] text-navy/70">
-                Chat kami di WhatsApp, dibalas langsung oleh admin toko.
+                Chat WhatsApp toko. Dibalas langsung oleh admin.
               </p>
             </div>
           </div>
           <div className="flex w-full gap-2 sm:w-auto">
             <a
-              href={waLink(settings.telepon, "Halo Jayanti Frozen, saya mau bertanya produk.")}
+              href={waLink(settings.telepon, "Halo Yanti Frozen, saya mau bertanya produk.")}
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-primary flex-1 sm:flex-none"

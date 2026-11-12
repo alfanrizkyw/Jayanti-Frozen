@@ -90,7 +90,7 @@ export function StaffLogin({ peran }: { peran: Peran }) {
     <div className="flex min-h-svh flex-col bg-paper">
       <header className="border-b border-line bg-white">
         <div className="mx-auto flex h-16 w-full max-w-[1080px] items-center justify-between px-4 md:px-6">
-          <Link href="/" aria-label="Jayanti Frozen, ke beranda">
+          <Link href="/" aria-label="Yanti Frozen, ke beranda">
             <Logo />
           </Link>
           <Link
@@ -165,7 +165,7 @@ export function StaffLogin({ peran }: { peran: Peran }) {
               </button>
 
               <p className="text-center text-[11px] leading-relaxed text-muted">
-                Halaman ini khusus staff Jayanti Frozen. Pembeli tidak perlu
+                Halaman ini khusus staff Yanti Frozen. Pembeli tidak perlu
                 membuat akun.
               </p>
             </form>

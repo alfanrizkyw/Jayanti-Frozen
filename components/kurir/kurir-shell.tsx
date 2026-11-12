@@ -62,7 +62,7 @@ export function KurirShell({
       <main className="mx-auto w-full max-w-[880px] px-4 pb-16 pt-5">{children}</main>
 
       <footer className="mx-auto flex w-full max-w-[880px] items-center justify-between gap-3 px-4 pb-8 text-[11px] text-muted">
-        <span>Jayanti Frozen · Aplikasi kurir</span>
+        <span>Yanti Frozen · Aplikasi kurir</span>
         <Link href="/" className="inline-flex items-center gap-1 font-bold text-brand">
           <ArrowLeft size={12} /> Kembali ke toko
         </Link>

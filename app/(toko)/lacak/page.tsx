@@ -14,7 +14,7 @@ import { getOrderDetail } from "@/lib/data";
 export const metadata: Metadata = {
   title: "Lacak pesanan",
   description:
-    "Masukkan kode pesanan Jayanti Frozen untuk melihat status dan posisi kurir.",
+    "Masukkan kode pesanan Yanti Frozen untuk melihat status dan posisi kurir.",
 };
 
 export default async function LacakPage({
@@ -53,7 +53,7 @@ export default async function LacakPage({
             </h1>
             <p className="relative mt-1 max-w-[420px] text-[12.5px] leading-relaxed text-white/70">
               Masukkan kode pesanan yang tertera saat checkout. Contoh:
-              JY261110-4821.
+              YF261110-4821.
             </p>
           </div>
 
@@ -72,7 +72,7 @@ export default async function LacakPage({
                     id="kode"
                     name="kode"
                     defaultValue={kode}
-                    placeholder="JY261110-4821"
+                    placeholder="YF261110-4821"
                     className="field pl-10 uppercase placeholder:normal-case"
                     autoComplete="off"
                     required

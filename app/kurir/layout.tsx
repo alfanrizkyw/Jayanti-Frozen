@@ -13,7 +13,7 @@ export default async function KurirLayout({
   if (!session || session.role !== "kurir") redirect("/kurir/masuk");
 
   return (
-    <KurirShell nama={session.nama ?? "Tim Kurir Jayanti"} kendaraan="Tim pengantaran">
+    <KurirShell nama={session.nama ?? "Tim Kurir Yanti"} kendaraan="Tim pengantaran">
       {children}
     </KurirShell>
   );

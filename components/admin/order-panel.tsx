@@ -314,7 +314,7 @@ export function AdminOrderPanel({
                 <a
                   href={waLink(
                     order.telepon,
-                    `Halo ${order.pelanggan}, kami dari Jayanti Frozen mengenai pesanan ${order.kode}.`,
+                    `Halo ${order.pelanggan}, kami dari Yanti Frozen mengenai pesanan ${order.kode}.`,
                   )}
                   target="_blank"
                   rel="noopener noreferrer"

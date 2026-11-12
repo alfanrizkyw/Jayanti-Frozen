@@ -66,7 +66,7 @@ async function buatNota(
   ctx.textAlign = "center";
   ctx.fillStyle = NAVY;
   ctx.font = `800 30px ${FONT}`;
-  ctx.fillText(settings.namaToko || "Jayanti Frozen", tengah, y);
+  ctx.fillText(settings.namaToko || "Yanti Frozen", tengah, y);
   y += 26;
   ctx.fillStyle = MUTED;
   ctx.font = `400 15px ${FONT}`;

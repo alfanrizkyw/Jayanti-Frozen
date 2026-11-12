@@ -159,7 +159,7 @@ export function AdminShell({
         <AutoRefresh detik={8} />
 
         <footer className="border-t border-line px-5 py-5 text-center text-[11px] text-muted md:px-7">
-          Jayanti Frozen · Panel admin · Data tersimpan aman
+          Yanti Frozen · Panel admin · Data tersimpan aman
         </footer>
       </div>
 
