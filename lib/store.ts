@@ -76,6 +76,13 @@ export function rapikanBank(value: unknown, fallback: BankAccount[]): BankAccoun
   return fallback.filter((b) => b.nomor);
 }
 
+const NAMA_LAMA = "Jayanti Frozen";
+
+/** Baris toko di Sheet masih menyimpan nama lama; tampilkan nama baru tanpa perlu ubah Sheet. */
+function namaBaru(nama: string): string {
+  return nama === NAMA_LAMA ? "Yanti Frozen" : nama;
+}
+
 function normalSettings(raw?: Partial<Settings> | null): Settings {
   const dasar = createDefaultSettings();
   const gabung = { ...dasar, ...(raw ?? {}) } as Settings &
@@ -92,7 +99,7 @@ function normalSettings(raw?: Partial<Settings> | null): Settings {
   const alamat = String(gabung.alamat ?? "").trim();
   return {
     ...gabung,
-    namaToko: String(gabung.namaToko || dasar.namaToko),
+    namaToko: namaBaru(String(gabung.namaToko || dasar.namaToko)),
     telepon,
     alamat:
       !alamat || alamat === "Jl. Melati No. 12, Klojen, Malang"
@@ -101,16 +108,16 @@ function normalSettings(raw?: Partial<Settings> | null): Settings {
     mapsUrl: String(gabung.mapsUrl || dasar.mapsUrl),
     jamBuka: String(gabung.jamBuka ?? dasar.jamBuka),
     rekening,
-    atasNama,
-    qrisNama: String(gabung.qrisNama ?? dasar.qrisNama),
+    atasNama: namaBaru(atasNama),
+    qrisNama: namaBaru(String(gabung.qrisNama ?? dasar.qrisNama)),
     qrisGambar: tautanGambar(String(gabung.qrisGambar ?? dasar.qrisGambar)),
     bank: rapikanBank(gabung.bank, [
       {
         bank: rekening.split(" ")[0] || "BCA",
         nomor: rekening.split(" ").slice(1).join(" ") || rekening,
-        atasNama,
+        atasNama: namaBaru(atasNama),
       },
-    ]),
+    ]).map((b) => ({ ...b, atasNama: namaBaru(b.atasNama) })),
     whatsappAdmin: String(gabung.whatsappAdmin || dasar.whatsappAdmin),
     tokoBuka:
       gabung.tokoBuka === false || String(gabung.tokoBuka) === "false"
