@@ -135,7 +135,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       {children}
       <div
         aria-live="polite"
-        className="pointer-events-none fixed inset-x-0 bottom-[168px] z-[70] flex justify-center px-4 md:bottom-28"
+        className="pointer-events-none fixed inset-x-0 bottom-6 z-[70] flex justify-center px-4 md:bottom-28"
       >
         {toast && (
           <div className="rise flex items-center gap-2.5 rounded-full bg-navy px-5 py-3 text-sm font-semibold text-white shadow-lift">

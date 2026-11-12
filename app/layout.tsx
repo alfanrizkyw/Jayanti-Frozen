@@ -12,7 +12,7 @@ const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
 });
 
-const skripPreferensi = `(function(){try{var t=localStorage.getItem("jayanti-tema");var s=window.matchMedia("(prefers-color-scheme: dark)").matches;var tema=t==="dark"||t==="light"?t:(s?"dark":"light");document.documentElement.dataset.theme=tema;var b=localStorage.getItem("jayanti-bahasa");document.documentElement.lang=b==="en"?"en":"id";}catch(e){}})();`;
+const skripPreferensi = `(function(){try{var t=localStorage.getItem("jayanti-tema");var tema=t==="dark"||t==="light"?t:"light";document.documentElement.dataset.theme=tema;var b=localStorage.getItem("jayanti-bahasa");document.documentElement.lang=b==="en"?"en":"id";}catch(e){}})();`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(

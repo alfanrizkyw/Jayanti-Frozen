@@ -1,12 +1,11 @@
 import { Clock, ExternalLink, MapPin, Phone, Snowflake } from "lucide-react";
 import { Logo } from "./logo";
-import { PreferencesControls } from "./preferences-controls";
 import { rupiah, waLink } from "@/lib/format";
 import type { Settings } from "@/lib/types";
 
 export function SiteFooter({ settings }: { settings: Settings }) {
   return (
-    <footer className="mt-16 bg-navy-deep pb-28 pt-12 text-white md:pb-8">
+    <footer className="mt-16 bg-navy-deep pb-10 pt-12 text-white">
       <div className="container-page">
         <div className="grid gap-10 md:grid-cols-[1.6fr_1fr_1.2fr]">
           <div>
@@ -86,10 +85,6 @@ export function SiteFooter({ settings }: { settings: Settings }) {
               {rupiah(settings.gratisOngkirMin)}.
             </p>
           </div>
-        </div>
-
-        <div className="mt-8 border-t border-white/10 pt-1 md:hidden">
-          <PreferencesControls layout="gelap" />
         </div>
 
         <div className="mt-8 flex flex-col gap-3 border-t border-white/10 pt-5 text-[11.5px] text-white/45 sm:flex-row sm:items-center sm:justify-between">

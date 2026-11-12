@@ -2,7 +2,6 @@ import { AlertCircle } from "lucide-react";
 import { CartProvider } from "@/components/cart-provider";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
-import { MobileNav } from "@/components/mobile-nav";
 import { MiniCart } from "@/components/mini-cart";
 import { WelcomeIntro } from "@/components/welcome-intro";
 import { AutoRefresh } from "@/components/auto-refresh";
@@ -34,10 +33,9 @@ export default async function StoreLayout({
       )}
       <main>{children}</main>
       <SiteFooter settings={settings} />
-      <MobileNav />
       <MiniCart />
       <WelcomeIntro />
-      <AutoRefresh detik={60} />
+      <AutoRefresh detik={20} />
     </CartProvider>
   );
 }

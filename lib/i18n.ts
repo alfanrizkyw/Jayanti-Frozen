@@ -53,7 +53,6 @@ const KAMUS: Record<string, string> = {
   "Tutup menu admin": "Close admin menu",
   "Buka navigasi": "Open navigation",
   "Navigasi utama": "Main navigation",
-  "Navigasi bawah": "Bottom navigation",
   "Navigasi seluler": "Mobile navigation",
   "Navigasi cepat": "Quick navigation",
   "Navigasi admin": "Admin navigation",
