@@ -454,6 +454,14 @@ const KAMUS: Record<string, string> = {
   "Antar ke rumah": "Deliver to home",
   "Gratis · siap setelah admin konfirmasi": "Free · ready after admin confirmation",
   "Alamat pengantaran": "Delivery address",
+  "Detail alamat": "Address details",
+  "Pilih lokasi saya": "Use my location",
+  "Tekan Pilih lokasi saya, atau ketuk peta untuk menandai titik.":
+    "Press Use my location, or tap the map to drop a pin.",
+  "Tekan Pilih lokasi saya saat berada di rumah. Kalau titiknya belum tepat, ketuk atau geser pin di peta.":
+    "Press Use my location while you are at home. If the pin is not exact, tap or drag it on the map.",
+  "Titik sudah diatur. Geser pin bila belum tepat.":
+    "The point is set. Drag the pin if it is not exact.",
   "Nama jalan, nomor rumah, kelurahan, kecamatan, patokan…":
     "Street name, house number, village, district, landmark…",
   "Kurir akan menghubungi nomor HP saat tiba.":

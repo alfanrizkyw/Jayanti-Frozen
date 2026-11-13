@@ -440,7 +440,6 @@ export function OrderView({
                         {ubahTitik && (
                           <>
                             <PilihTitik
-                              alamat={order.alamat}
                               nilai={drafTitik ?? titikPelanggan}
                               onPilih={setDrafTitik}
                             />

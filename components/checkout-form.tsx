@@ -294,7 +294,7 @@ export function CheckoutForm({ settings }: { settings: Settings }) {
 
           {metode === "antar" && (
             <div className="mt-4">
-              <label htmlFor="alamat" className="label">Alamat pengantaran</label>
+              <label htmlFor="alamat" className="label">Detail alamat</label>
               <textarea
                 id="alamat"
                 className="field"
@@ -315,10 +315,10 @@ export function CheckoutForm({ settings }: { settings: Settings }) {
                   <MapPin size={12} className="text-brand" /> Titik lokasi antar · wajib
                 </p>
                 <p className="mt-1 text-[11.5px] leading-relaxed text-muted">
-                  Tandai titik rumah Anda di peta supaya kurir sampai ke tempat
-                  yang benar, bukan hanya dari nama jalan.
+                  Tekan Pilih lokasi saya saat berada di rumah. Kalau titiknya
+                  belum tepat, ketuk atau geser pin di peta.
                 </p>
-                <PilihTitik alamat={alamat} nilai={titik} onPilih={setTitik} />
+                <PilihTitik nilai={titik} onPilih={setTitik} />
               </div>
             </div>
           )}

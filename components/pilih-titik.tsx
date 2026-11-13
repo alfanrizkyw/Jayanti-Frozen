@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle, Crosshair, Loader2, Search } from "lucide-react";
+import { AlertCircle, Crosshair, Loader2 } from "lucide-react";
 import { PetaPengantaran } from "./peta-pengantaran";
 
 export interface TitikPilihan {
@@ -11,22 +11,19 @@ export interface TitikPilihan {
 }
 
 /**
- * Pemilih titik antar. Tiga cara: pakai GPS HP, cocokkan alamat tertulis, atau
- * geser pin langsung. Titik akhir selalu ditentukan pembeli sendiri.
+ * Pemilih titik antar: satu klik pakai GPS HP, atau ketuk dan geser pin bila
+ * lokasi HP kurang tepat. Titik akhir selalu ditentukan pembeli sendiri.
  */
 export function PilihTitik({
-  alamat,
   nilai,
   onPilih,
   tinggi,
 }: {
-  alamat: string;
   nilai: TitikPilihan | null;
   onPilih: (t: TitikPilihan) => void;
   tinggi?: string;
 }) {
   const [gps, setGps] = useState<"idle" | "cari">("idle");
-  const [cocok, setCocok] = useState<"idle" | "cari">("idle");
   const [pesan, setPesan] = useState("");
   const [gagal, setGagal] = useState(false);
 
@@ -67,49 +64,13 @@ export function PilihTitik({
     );
   }
 
-  async function cocokkanAlamat() {
-    if (alamat.trim().length < 8) {
-      setGagal(true);
-      setPesan("Tulis alamat lengkap dulu, lalu tekan cocokkan.");
-      return;
-    }
-    setCocok("cari");
-    setGagal(false);
-    setPesan("");
-    try {
-      const res = await fetch("/api/titik/cari", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ alamat }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok)
-        throw new Error(json?.error || "Alamat belum ditemukan di peta.");
-      const lat = Number(json?.titik?.lat);
-      const lng = Number(json?.titik?.lng);
-      if (!Number.isFinite(lat) || !Number.isFinite(lng))
-        throw new Error("Alamat belum ditemukan di peta.");
-      onPilih({ lat, lng });
-      setPesan(
-        "Titik dicocokkan dari alamat. Geser pin bila belum tepat di rumah Anda.",
-      );
-    } catch (err) {
-      setGagal(true);
-      setPesan(
-        err instanceof Error ? err.message : "Alamat belum ditemukan di peta.",
-      );
-    } finally {
-      setCocok("idle");
-    }
-  }
-
   const info = pesan
     ? pesan
     : nilai
       ? nilai.akurasi != null && nilai.akurasi > 0
         ? `Titik dari GPS · akurasi ±${Math.max(1, Math.round(nilai.akurasi))} m. Geser pin bila perlu.`
         : "Titik sudah diatur. Geser pin bila belum tepat."
-      : "Pakai lokasi HP, cocokkan alamat, atau ketuk peta.";
+      : "Tekan Pilih lokasi saya, atau ketuk peta untuk menandai titik.";
 
   return (
     <div className="mt-2.5">
@@ -119,32 +80,19 @@ export function PilihTitik({
         tinggi={tinggi ?? "h-[210px] sm:h-[260px]"}
       />
 
-      <div className="mt-2 grid gap-2 sm:grid-cols-2">
+      <div className="mt-2">
         <button
           type="button"
           onClick={pakaiLokasiSaya}
           disabled={gps === "cari"}
-          className="btn btn-outline min-h-11 justify-center"
+          className="btn btn-primary min-h-11 w-full justify-center"
         >
           {gps === "cari" ? (
             <Loader2 size={16} className="animate-spin" />
           ) : (
             <Crosshair size={16} />
           )}
-          {gps === "cari" ? "Mencari lokasi…" : "Pakai lokasi saya"}
-        </button>
-        <button
-          type="button"
-          onClick={cocokkanAlamat}
-          disabled={cocok === "cari"}
-          className="btn btn-outline min-h-11 justify-center"
-        >
-          {cocok === "cari" ? (
-            <Loader2 size={16} className="animate-spin" />
-          ) : (
-            <Search size={16} />
-          )}
-          {cocok === "cari" ? "Mencocokkan…" : "Cocokkan dengan alamat"}
+          {gps === "cari" ? "Mencari lokasi…" : "Pilih lokasi saya"}
         </button>
       </div>
 
