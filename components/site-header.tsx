@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { ShoppingBag } from "lucide-react";
 import { Logo } from "./logo";
 import { useCart } from "./cart-provider";
@@ -32,13 +33,61 @@ const tabs = [
   },
 ];
 
+const AMBANG_ATAS = 96;
+const AMBANG_GESER = 4;
+
 export function SiteHeader() {
   const pathname = usePathname();
   const { count } = useCart();
   const aktifIndex = tabs.findIndex((tab) => tab.cocok(pathname));
+  const [sembunyi, setSembunyi] = useState(false);
+  const [bergulir, setBergulir] = useState(false);
+  const posisiTerakhir = useRef(0);
+
+  useEffect(() => {
+    setSembunyi(false);
+    setBergulir(false);
+    posisiTerakhir.current = window.scrollY;
+  }, [pathname]);
+
+  useEffect(() => {
+    let frame = 0;
+    posisiTerakhir.current = window.scrollY;
+
+    const periksa = () => {
+      frame = 0;
+      const y = window.scrollY;
+      const geser = y - posisiTerakhir.current;
+      setBergulir(y > 8);
+      if (y <= AMBANG_ATAS) {
+        setSembunyi(false);
+      } else if (geser > AMBANG_GESER) {
+        setSembunyi(true);
+      } else if (geser < -AMBANG_GESER) {
+        setSembunyi(false);
+      }
+      posisiTerakhir.current = y;
+    };
+
+    const onScroll = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(periksa);
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, []);
 
   return (
-    <div className="sticky top-0 z-40 border-b border-line/80 bg-paper/85 backdrop-blur-md">
+    <div
+      onFocusCapture={() => setSembunyi(false)}
+      className={`sticky top-0 z-40 border-b border-line/80 bg-paper/85 backdrop-blur-md transition-transform duration-300 ease-out motion-reduce:transition-none ${
+        sembunyi ? "-translate-y-full" : "translate-y-0"
+      } ${bergulir && !sembunyi ? "shadow-[0_10px_24px_rgba(16,43,80,0.08)]" : ""}`}
+    >
       <header className="container-page">
         <div className="flex h-14 items-center gap-2 md:h-[72px] md:gap-3">
           <Link
