@@ -468,19 +468,25 @@
 
 @keyframes demo-terbang {
   0% {
-    transform: translate(0, 0) scale(0.9);
+    left: 18%;
+    top: 34%;
+    transform: scale(0.9);
     opacity: 0;
   }
-  12% {
-    transform: translate(0, 0) scale(1);
+  10% {
+    transform: scale(1);
     opacity: 1;
   }
-  48% {
-    transform: translate(46px, -34px) scale(0.8);
+  42% {
+    left: 22%;
+    top: 26%;
+    transform: scale(0.9);
     opacity: 1;
   }
   100% {
-    transform: translate(180px, -96px) scale(0.3);
+    left: 86%;
+    top: 4%;
+    transform: scale(0.32);
     opacity: 0;
   }
 }

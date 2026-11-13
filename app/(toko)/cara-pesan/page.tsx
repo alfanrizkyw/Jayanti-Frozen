@@ -15,7 +15,7 @@ import { CaraPesanDemo } from "@/components/cara-pesan-demo";
 export const metadata: Metadata = {
   title: "Cara pesan",
   description:
-    "Empat langkah memesan di Yanti Frozen: pilih produk, isi nama dan HP, pilih pembayaran, lalu terima pesanan. Tanpa daftar akun.",
+    "Lima langkah memesan di Yanti Frozen: pilih produk, isi nama dan HP, atur pengantaran, pilih pembayaran, lalu terima pesanan. Tanpa daftar akun.",
 };
 
 const LANGKAH = [
@@ -25,15 +25,19 @@ const LANGKAH = [
   },
   {
     judul: "Isi nama dan HP",
-    teks: "Cukup nama dan nomor HP. Pilih antar ke alamat atau ambil sendiri di toko.",
+    teks: "Cukup nama dan nomor HP. Nomor ini dipakai admin untuk mengonfirmasi pesanan.",
+  },
+  {
+    judul: "Atur pengantaran",
+    teks: "Pilih antar ke rumah atau ambil di toko. Untuk antar, isi alamat lengkap dan pilih jadwal; ongkir muncul di ringkasan.",
   },
   {
     judul: "Pilih pembayaran",
-    teks: "Tunai, QRIS, atau transfer. Pesanan langsung masuk ke toko setelah dikonfirmasi.",
+    teks: "Tunai, QRIS, atau transfer. Pesanan masuk ke toko setelah dikonfirmasi admin.",
   },
   {
     judul: "Terima pesanan",
-    teks: "Ambil di toko atau tunggu kurir. Posisi dan status kurir tampil di menu Riwayat.",
+    teks: "Kurir mengantar sesuai alamat, atau ambil sendiri di toko. Posisi kurir dan status pesanan tampil di Riwayat.",
   },
 ];
 
@@ -58,8 +62,8 @@ export default async function CaraPesanPage() {
           Cara pesan
         </h1>
         <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted md:text-[14px]">
-          Empat langkah, tanpa daftar akun. Contoh di bawah berjalan sendiri dan
-          berulang, jadi bisa diikuti pelan-pelan.
+          Tanpa daftar akun. Contoh di bawah meniru tampilan toko dan berjalan
+          sendiri, jadi bisa diikuti pelan-pelan.
         </p>
       </div>
 
