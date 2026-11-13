@@ -28,6 +28,11 @@ function turunanStabil() {
 const SECRET = process.env.AUTH_SECRET?.trim() || turunanStabil();
 const MAX_AGE = 60 * 60 * 24;
 
+/** Kunci stabil untuk menandatangani tautan tugas kurir. */
+export function kunciServer(): string {
+  return SECRET;
+}
+
 function sign(payload: string) {
   return createHmac("sha256", SECRET).update(payload).digest("base64url");
 }

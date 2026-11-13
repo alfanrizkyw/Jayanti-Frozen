@@ -1,24 +1,15 @@
 import { getSettings } from "./data";
-import { normalTelepon, rupiah, tanggalJam } from "./format";
+import { normalTelepon, rupiah } from "./format";
+import { situsUrl } from "./situs";
+import { tautanTugas } from "./tugas-kurir";
 import { PAYMENT_LABEL, type Order, type OrderItem } from "./types";
-
-export function situsUrl(origin?: string): string {
-  const url =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    (process.env.VERCEL_PROJECT_PRODUCTION_URL
-      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-      : "") ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
-    origin ||
-    "http://localhost:3000";
-  return url.replace(/\/+$/, "");
-}
 
 function susunPesan(
   order: Order,
   items: OrderItem[],
   nomorToko: string,
-  tautan: string,
+  tautanAdmin: string,
+  tautanKurir: string,
 ) {
   const isi = items
     .slice(0, 6)
@@ -26,35 +17,32 @@ function susunPesan(
     .join(", ");
   const lebih = items.length > 6 ? `, +${items.length - 6} item lain` : "";
   const bayar = PAYMENT_LABEL[order.pembayaran] ?? order.pembayaran;
-  const statusBayar = order.dibayar ? "Lunas" : "Belum lunas";
-  const terima =
-    order.metode === "antar"
-      ? `Antar — ${order.alamat || "alamat belum diisi"}`
-      : "Ambil di toko";
+  const statusBayar = order.dibayar ? "lunas" : "belum lunas";
 
-  return [
+  const baris: (string | null)[] = [
     "*PESANAN BARU — Yanti Frozen*",
     "",
-    `Kode: ${order.kode}`,
-    `Pelanggan: ${order.pelanggan}`,
-    `No HP: ${order.telepon}`,
-    `Total: ${rupiah(order.total)}`,
-    `Pembayaran: ${bayar} (${statusBayar})`,
-    `Terima: ${terima}`,
+    `${order.kode} · ${order.pelanggan}`,
+    `HP ${order.telepon}`,
+    `Total ${rupiah(order.total)} · ${bayar} (${statusBayar})`,
+    order.metode === "antar"
+      ? `Antar: ${order.alamat || "alamat belum diisi"}`
+      : "Ambil di toko",
     `Jadwal: ${order.jadwal}`,
-    `Waktu: ${tanggalJam(order.dibuat)}`,
     "",
     `Isi: ${isi}${lebih}`,
     order.catatan ? `Catatan: ${order.catatan}` : null,
     "",
-    "Buka dan konfirmasi pesanan:",
-    tautan,
-    "",
-    "Setelah dikonfirmasi, pesanan antar otomatis masuk ke halaman kurir.",
-    `Toko: wa.me/${normalTelepon(nomorToko)}`,
-  ]
-    .filter((baris) => baris !== null)
-    .join("\n");
+    "Buka pesanan:",
+    tautanAdmin,
+  ];
+
+  if (tautanKurir) {
+    baris.push("", "Link untuk kurir (kirim ke kurir):", tautanKurir);
+  }
+
+  baris.push("", `Toko: wa.me/${normalTelepon(nomorToko)}`);
+  return baris.filter((b) => b !== null).join("\n");
 }
 
 async function kirimFonnte(token: string, target: string, pesan: string) {
@@ -118,7 +106,8 @@ export async function kirimNotifPesanan(
     if (!target) return { terkirim: false, alasan: "Nomor admin belum diisi." };
 
     const tautan = `${situsUrl(origin)}/admin/pesanan/${encodeURIComponent(order.kode)}`;
-    const pesan = susunPesan(order, items, settings.telepon, tautan);
+    const tautanKurir = order.metode === "antar" ? tautanTugas(order, origin) : "";
+    const pesan = susunPesan(order, items, settings.telepon, tautan, tautanKurir);
 
     if (process.env.FONNTE_TOKEN) {
       await kirimFonnte(process.env.FONNTE_TOKEN, target, pesan);

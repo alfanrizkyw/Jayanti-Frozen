@@ -11,10 +11,16 @@ export function SiteFooter({ settings }: { settings: Settings }) {
         aria-hidden="true"
         viewBox="0 0 1440 80"
         preserveAspectRatio="none"
-        className="block h-10 w-full md:h-16"
+        className="-mb-px block h-10 w-full md:h-16"
         fill="currentColor"
       >
-        <path d="M0 52c210 34 380-30 640-8 260 22 470 52 800 2v34H0V52Z" />
+        <path
+          d="M0 52c210 34 380-30 640-8 260 22 470 52 800 2v34H0V52Z"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+          vectorEffect="non-scaling-stroke"
+        />
       </svg>
 
       <footer className="relative overflow-hidden bg-navy-deep pb-9 pt-6 text-white md:pt-8">

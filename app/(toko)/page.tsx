@@ -39,10 +39,10 @@ export default async function BerandaPage() {
         {/* Tepi bawah hero melebur ke warna halaman, jadi peralihan ke kartu bantuan terasa halus. */}
         <div
           aria-hidden="true"
-          className="hero-fade pointer-events-none absolute inset-x-0 bottom-0 h-[200px] sm:h-[230px] lg:h-[260px]"
+          className="hero-fade pointer-events-none absolute inset-x-0 bottom-0 h-[140px] sm:h-[165px] lg:h-[190px]"
         />
 
-        <div className="container-page relative flex min-h-[400px] flex-col justify-center pb-[120px] pt-6 sm:min-h-[440px] sm:pb-[132px] lg:min-h-[500px] lg:pb-[150px] lg:pt-10">
+        <div className="container-page relative flex min-h-[340px] flex-col justify-center pb-[76px] pt-5 sm:min-h-[380px] sm:pb-[88px] lg:min-h-[430px] lg:pb-[104px] lg:pt-8">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 text-[11.5px] font-semibold text-white/85 backdrop-blur">
               <Sun size={13} className={settings.tokoBuka ? "text-[#8ee0a8]" : "text-[#ffd48a]"} />

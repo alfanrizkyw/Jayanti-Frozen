@@ -13,6 +13,7 @@ import {
   Copy,
   ExternalLink,
   Landmark,
+  Link2,
   Loader2,
   MapPin,
   MessageCircle,
@@ -47,6 +48,7 @@ export function AdminOrderPanel({
   kurir,
   couriers,
   settings,
+  tautanKurir,
 }: {
   order: Order;
   items: OrderItem[];
@@ -54,6 +56,7 @@ export function AdminOrderPanel({
   kurir: CourierPublic | null;
   couriers: CourierPublic[];
   settings: Settings;
+  tautanKurir: string;
 }) {
   const router = useRouter();
   const [proses, setProses] = useState<string | null>(null);
@@ -61,6 +64,7 @@ export function AdminOrderPanel({
   const [tanyaBatal, setTanyaBatal] = useState(false);
   const [kurirPilih, setKurirPilih] = useState(order.kurirId);
   const [tersalin, setTersalin] = useState(false);
+  const [tautanTersalin, setTautanTersalin] = useState(false);
   const [statusOptimis, setStatusOptimis] = useState<OrderStatus | null>(null);
   const [bayarOptimis, setBayarOptimis] = useState<boolean | null>(null);
   const sibuk = useRef(false);
@@ -123,6 +127,15 @@ export function AdminOrderPanel({
       setTimeout(() => setTersalin(false), 1600);
     } else {
       setError("Kode tidak bisa disalin otomatis.");
+    }
+  }
+
+  async function salinTautan() {
+    if (await salinTeks(tautanKurir)) {
+      setTautanTersalin(true);
+      setTimeout(() => setTautanTersalin(false), 1600);
+    } else {
+      setError("Link tugas tidak bisa disalin otomatis.");
     }
   }
 
@@ -614,6 +627,50 @@ export function AdminOrderPanel({
                     )}
                   </div>
                 )}
+
+                {!selesai && tautanKurir && (
+                  <div className="mt-3 rounded-xl border border-line bg-paper/70 p-3">
+                    <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-muted">
+                      <Link2 size={12} /> Link tugas kurir
+                    </p>
+                    <p className="mt-1 text-[11px] leading-relaxed text-muted">
+                      Kirim link ini ke kurir. Link hanya untuk pesanan ini dan
+                      mati setelah pesanan selesai.
+                    </p>
+                    <p className="mt-1.5 break-all rounded-lg border border-line bg-white px-2.5 py-2 text-[10.5px] font-semibold text-brand">
+                      {tautanKurir}
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={salinTautan}
+                        className="btn btn-sm btn-outline"
+                      >
+                        {tautanTersalin ? <Check size={13} /> : <Copy size={13} />}
+                        {tautanTersalin ? "Tersalin" : "Salin link"}
+                      </button>
+                      {kurir?.telepon && (
+                        <a
+                          href={waLink(
+                            kurir.telepon,
+                            `Halo, ini link tugas antar pesanan ${order.kode}. Buka: ${tautanKurir}`,
+                          )}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-sm btn-primary"
+                        >
+                          <MessageCircle size={13} /> Kirim ke kurir
+                        </a>
+                      )}
+                    </div>
+                    {statusTampil !== "diantar" && (
+                      <p className="mt-1.5 text-[10.5px] leading-relaxed text-muted">
+                        Link aktif otomatis setelah pesanan diserahkan ke kurir.
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {delivery?.status === "selesai" && (
                   <div className="mt-3">
                     <BuktiFoto orderId={order.id} judul="Foto bukti diterima kurir" />

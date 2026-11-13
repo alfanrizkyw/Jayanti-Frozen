@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { AdminOrderPanel } from "@/components/admin/order-panel";
 import { courierPublic, getAdminData } from "@/lib/data";
+import { tautanTugas } from "@/lib/tugas-kurir";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +37,7 @@ export default async function AdminOrderDetail({
       })()}
       couriers={db.couriers.map(courierPublic)}
       settings={db.settings}
+      tautanKurir={order.metode === "antar" ? tautanTugas(order) : ""}
     />
   );
 }
