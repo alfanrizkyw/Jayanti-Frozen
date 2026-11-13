@@ -32,11 +32,6 @@ export function ProductCard({ product }: { product: Product }) {
             −{diskon}%
           </span>
         )}
-        {habis && (
-          <span className="absolute inset-x-2.5 bottom-2.5 rounded-md bg-navy/90 px-2 py-1.5 text-center text-[11px] font-bold text-white">
-            Stok habis
-          </span>
-        )}
       </Link>
 
       <div className="flex flex-1 flex-col p-3 md:p-3.5">

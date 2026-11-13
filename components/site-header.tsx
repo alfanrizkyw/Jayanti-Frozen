@@ -40,7 +40,7 @@ export function SiteHeader() {
   return (
     <div className="sticky top-0 z-40 border-b border-line/80 bg-paper/85 backdrop-blur-md">
       <header className="container-page">
-        <div className="flex h-16 items-center gap-2 md:h-[72px] md:gap-3">
+        <div className="flex h-14 items-center gap-2 md:h-[72px] md:gap-3">
           <Link
             href="/"
             aria-label="Yanti Frozen, ke beranda"
@@ -92,7 +92,7 @@ export function SiteHeader() {
           </div>
         </div>
 
-        <nav aria-label="Navigasi utama" className="pb-2 pt-1 md:hidden">
+        <nav aria-label="Navigasi utama" className="pb-2 md:hidden">
           <div className="relative grid grid-cols-4 rounded-2xl border border-line/70 bg-white/65 p-1">
             <span
               aria-hidden="true"

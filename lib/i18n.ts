@@ -77,6 +77,7 @@ const KAMUS: Record<string, string> = {
   "Cari kode pesanan, nama, atau nomor HP": "Search order code, name, or phone number",
   "Cari produk, kategori, atau kebutuhan…": "Search products, categories, or needs…",
   "Cari nugget, bakso, kentang…": "Search nuggets, meatballs, potatoes…",
+  "Cari nugget, bakso…": "Search nuggets, meatballs…",
   Semua: "All",
   "Semua produk": "All products",
   "Semua kategori": "All categories",
@@ -318,6 +319,15 @@ const KAMUS: Record<string, string> = {
   "Paling dicari": "Most popular",
   "Produk unggulan": "Featured products",
   "Cara pesan": "How to order",
+  "Produk": "Products",
+  "Peta": "Map",
+  "Chat langsung ke admin.": "Chat the admin directly.",
+  "Tanpa daftar akun, cukup nama dan nomor HP.":
+    "No account needed, just your name and phone number.",
+  "Masukkan ke keranjang.": "Add to the cart.",
+  "Nama dan nomor HP.": "Name and phone number.",
+  "Tunai, QRIS, atau transfer.": "Cash, QRIS, or transfer.",
+  "Ambil sendiri atau diantar.": "Pick up yourself or have it delivered.",
   "Pesan dalam 4 langkah": "Order in 4 steps",
   "Tidak perlu daftar akun. Cukup nama dan nomor HP saat checkout.":
     "No account needed. Just your name and phone number at checkout.",
