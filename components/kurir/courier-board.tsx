@@ -74,6 +74,7 @@ export function CourierBoard({
   const [posisi, setPosisi] = useState<{ lat: number; lng: number; at: number } | null>(
     null,
   );
+  const [akurasi, setAkurasi] = useState<number | null>(null);
   const [foto, setFoto] = useState<string | null>(null);
   const [unggah, setUnggah] = useState<"idle" | "proses" | "siap" | "gagal">("idle");
   const [pesanFoto, setPesanFoto] = useState("");
@@ -128,6 +129,7 @@ export function CourierBoard({
       watch.current = null;
     }
     setGeo("idle");
+    setAkurasi(null);
   }, []);
 
   const mulaiLacak = useCallback(() => {
@@ -140,9 +142,13 @@ export function CourierBoard({
     watch.current = navigator.geolocation.watchPosition(
       (p) => {
         const at = Date.now();
+        const ketelitian = Number(p.coords.accuracy);
         setPosisi({ lat: p.coords.latitude, lng: p.coords.longitude, at });
+        setAkurasi(Number.isFinite(ketelitian) ? ketelitian : null);
         setGeo("aktif");
-        if (at - kirimTerakhir.current > 5000 && kodeAktif.current) {
+        // Titik yang masih kasar jangan dikirim ke pembeli; tunggu GPS mengunci.
+        const layak = !Number.isFinite(ketelitian) || ketelitian <= 250;
+        if (layak && at - kirimTerakhir.current > 5000 && kodeAktif.current) {
           kirimTerakhir.current = at;
           fetch("/api/kurir/lokasi", {
             method: "POST",
@@ -162,7 +168,7 @@ export function CourierBoard({
         }
         setGeo(err.code === 1 ? "ditolak" : "gagal");
       },
-      { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 },
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
     );
   }, []);
 
@@ -306,6 +312,33 @@ export function CourierBoard({
         </div>
       )}
 
+      {aktif && geo !== "aktif" && (
+        <div
+          role="alert"
+          className="flex items-start gap-2.5 rounded-xl border border-[#F3DFBC] bg-[#FFF4E3] px-3.5 py-3"
+        >
+          <span className="mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-full bg-white text-[#8A520B]">
+            <MapPin size={16} />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[12.5px] font-extrabold text-[#8A520B]">
+              {geo === "ditolak"
+                ? "Izin lokasi diblokir"
+                : geo === "gagal"
+                  ? "GPS belum dapat sinyal"
+                  : "Wajib bagikan lokasi"}
+            </p>
+            <p className="mt-0.5 text-[11px] leading-relaxed text-[#8A520B]/85">
+              {geo === "ditolak"
+                ? "Buka ikon gembok di bilah alamat, izinkan Lokasi untuk situs ini. Pelacakan menyala sendiri, tidak perlu menekan tombol."
+                : geo === "gagal"
+                  ? "Pindah ke area terbuka. Sistem menyambung ulang sendiri dan langsung mengirim posisi tanpa klik."
+                  : "Peramban meminta izin lokasi sekali. Pilih Izinkan; setelah itu posisi terkirim otomatis tanpa menekan tombol."}
+            </p>
+          </div>
+        </div>
+      )}
+
       {aktif && (
         <section className="overflow-hidden rounded-[18px] border border-brand/25 bg-white shadow-lift">
           <div className="flex flex-wrap items-center gap-2 bg-navy px-4 py-3 text-white">
@@ -434,6 +467,7 @@ export function CourierBoard({
                 return Math.max(0, Math.ceil((d.estimasiMenit || 20) - menit));
               })()}
               gpsAktif={geo === "aktif"}
+              akurasi={akurasi}
               labelTujuan="Alamat pelanggan"
             />
 
@@ -460,7 +494,7 @@ export function CourierBoard({
               )}
             </div>
 
-            <StatusLokasi state={geo} posisi={posisi} />
+            <StatusLokasi state={geo} posisi={posisi} akurasi={akurasi} />
 
             <div
               className={`rounded-xl border p-3 ${
@@ -663,9 +697,11 @@ export function CourierBoard({
 function StatusLokasi({
   state,
   posisi,
+  akurasi,
 }: {
   state: GeoState;
   posisi: { lat: number; lng: number; at: number } | null;
+  akurasi: number | null;
 }) {
   if (state === "aktif") {
     return (
@@ -680,7 +716,7 @@ function StatusLokasi({
           {posisi
             ? `Koordinat ${posisi.lat.toFixed(5)}, ${posisi.lng.toFixed(5)} · diperbarui ${jam(
                 new Date(posisi.at).toISOString(),
-              )}`
+              )}${akurasi ? ` · akurasi ±${Math.max(1, Math.round(akurasi))} m` : ""}`
             : "Menunggu sinyal GPS pertama…"}
         </p>
       </div>

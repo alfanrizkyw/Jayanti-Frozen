@@ -10,27 +10,70 @@ type Posisi = { lat: number; lng: number } | null;
 type LModule = typeof import("leaflet");
 
 const PENGUIN = `
-<svg viewBox="0 0 84 84" width="80" height="80" aria-hidden="true">
+<svg viewBox="0 0 64 64" width="54" height="54" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="pgBadan" x1="20" y1="10" x2="42" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4E81B0"/><stop offset="0.55" stop-color="#22476F"/><stop offset="1" stop-color="#0D2139"/>
+    </linearGradient>
+    <linearGradient id="pgPerut" x1="27" y1="23" x2="37" y2="41" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#CFE2F2"/>
+    </linearGradient>
+    <linearGradient id="pgParuh" x1="38" y1="17" x2="44" y2="21" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFD274"/><stop offset="1" stop-color="#E4851F"/>
+    </linearGradient>
+    <linearGradient id="pgMotor" x1="14" y1="27" x2="52" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3E74A6"/><stop offset="0.55" stop-color="#1F4A75"/><stop offset="1" stop-color="#0C1F35"/>
+    </linearGradient>
+    <linearGradient id="pgKotak" x1="4" y1="26" x2="20" y2="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#E6AD6D"/><stop offset="1" stop-color="#A5682E"/>
+    </linearGradient>
+    <radialGradient id="pgBan" cx="0.36" cy="0.32" r="0.74">
+      <stop offset="0" stop-color="#5E7388"/><stop offset="0.62" stop-color="#2A3A4C"/><stop offset="1" stop-color="#0F1924"/>
+    </radialGradient>
+    <radialGradient id="pgKilau" cx="0.36" cy="0.26" r="0.72">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.45"/>
+      <stop offset="0.55" stop-color="#FFFFFF" stop-opacity="0.07"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
   <g class="peta-pinguin">
-    <ellipse cx="44" cy="77" rx="27" ry="3.6" fill="#0F2440" opacity="0.16"/>
-    <path d="M24 66h16l14-14" fill="none" stroke="#1D4E86" stroke-width="7" stroke-linecap="round"/>
-    <path d="M58 51 64 66" fill="none" stroke="#16304F" stroke-width="5" stroke-linecap="round"/>
-    <path d="M55 45h12" fill="none" stroke="#16304F" stroke-width="5" stroke-linecap="round"/>
-    <circle cx="24" cy="68" r="9.6" fill="#16304F"/>
-    <circle cx="24" cy="68" r="3.8" fill="#B9CFE3"/>
-    <circle cx="64" cy="68" r="9.6" fill="#16304F"/>
-    <circle cx="64" cy="68" r="3.8" fill="#B9CFE3"/>
-    <rect x="15" y="40" width="17" height="15" rx="3.2" fill="#C98A4B" stroke="#FFFFFF" stroke-width="1.6"/>
-    <path d="M15 45h17M22 40v15" stroke="#F3E3CE" stroke-width="1.4"/>
-    <ellipse cx="38" cy="43" rx="13" ry="16" fill="#122A4A" stroke="#FFFFFF" stroke-width="1.8"/>
-    <ellipse cx="40" cy="46" rx="7.6" ry="11" fill="#F4F9FF"/>
-    <circle cx="36" cy="24" r="10.5" fill="#122A4A" stroke="#FFFFFF" stroke-width="1.8"/>
-    <ellipse cx="39" cy="25.5" rx="6.2" ry="7" fill="#F4F9FF"/>
-    <circle cx="40.2" cy="24.4" r="1.5" fill="#122A4A"/>
-    <path d="M46 27l7 2.4-7 3.2z" fill="#F2A93B"/>
-    <path d="M47 41l9 6" fill="none" stroke="#122A4A" stroke-width="5.4" stroke-linecap="round"/>
-    <path d="M32 58l-3 7" fill="none" stroke="#F2A93B" stroke-width="3.4" stroke-linecap="round"/>
-    <path d="M41 58l-1 7" fill="none" stroke="#F2A93B" stroke-width="3.4" stroke-linecap="round"/>
+    <ellipse cx="32.5" cy="57.6" rx="22.5" ry="3" fill="#0F2440" opacity="0.2"/>
+
+    <path d="M5.5 40.4h12.5" stroke="url(#pgMotor)" stroke-width="3.4" stroke-linecap="round"/>
+
+    <rect x="3.5" y="25.5" width="16" height="14" rx="2.4" fill="url(#pgKotak)" stroke="#FFFFFF" stroke-width="1.2"/>
+    <path d="M3.5 30.8h16M11.5 25.5v14" stroke="#F7E9D5" stroke-width="1.3" opacity="0.92"/>
+    <rect x="3.5" y="25.5" width="16" height="4.2" rx="2.1" fill="#FFFFFF" opacity="0.16"/>
+
+    <circle cx="17" cy="47" r="7.4" fill="url(#pgBan)"/>
+    <circle cx="17" cy="47" r="2.9" fill="#C9DCEC"/>
+    <circle cx="17" cy="47" r="1.1" fill="#7F98AE"/>
+
+    <path d="M14 40.5h27.6l5.8-13.2" fill="none" stroke="url(#pgMotor)" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M44.8 27.4c3.2 1.6 4.9 4.7 5.2 9l.6 6.9" fill="none" stroke="url(#pgMotor)" stroke-width="3.4" stroke-linecap="round"/>
+    <path d="M45.6 26.2h7.8" stroke="#14304F" stroke-width="3.2" stroke-linecap="round"/>
+    <circle cx="54.4" cy="26.2" r="1.5" fill="#F1A93D"/>
+
+    <circle cx="50.5" cy="47" r="7.4" fill="url(#pgBan)"/>
+    <circle cx="50.5" cy="47" r="2.9" fill="#C9DCEC"/>
+    <circle cx="50.5" cy="47" r="1.1" fill="#7F98AE"/>
+    <path d="M43.8 39.4c2.6-2.3 5.4-2.3 7.8 0" fill="none" stroke="#2B5F92" stroke-width="2.4" stroke-linecap="round"/>
+
+    <path d="M27.6 41.6l-1.4 4" stroke="#F2A93B" stroke-width="3" stroke-linecap="round"/>
+    <path d="M33.6 41.6l-.7 4" stroke="#F2A93B" stroke-width="3" stroke-linecap="round"/>
+
+    <ellipse cx="30.2" cy="30.4" rx="9.6" ry="11.8" fill="url(#pgBadan)"/>
+    <ellipse cx="32.2" cy="32.4" rx="5.8" ry="8.1" fill="url(#pgPerut)"/>
+    <ellipse cx="27" cy="24.6" rx="4.2" ry="6.2" fill="url(#pgKilau)"/>
+
+    <circle cx="31.4" cy="16.4" r="8" fill="url(#pgBadan)"/>
+    <ellipse cx="34.1" cy="17.2" rx="4.8" ry="5.3" fill="url(#pgPerut)"/>
+    <circle cx="35.6" cy="16" r="1.4" fill="#10263F"/>
+    <circle cx="36.05" cy="15.55" r="0.48" fill="#FFFFFF"/>
+    <path d="M38.4 17.4l5.4 1.9-5.2 2z" fill="url(#pgParuh)"/>
+    <path d="M43.8 19.3l-3.4.1" stroke="#C46C15" stroke-width="0.7" stroke-linecap="round" opacity="0.7"/>
+
+    <path d="M33.4 25.8l11 1.9" stroke="#1B3E63" stroke-width="4.2" stroke-linecap="round"/>
   </g>
 </svg>`;
 
@@ -86,6 +129,7 @@ export function PetaPengantaran({
   aktif,
   etaMenit,
   gpsAktif,
+  akurasi = null,
   labelTujuan = "Alamat Anda",
 }: {
   kode: string;
@@ -94,6 +138,7 @@ export function PetaPengantaran({
   aktif: boolean;
   etaMenit: number;
   gpsAktif: boolean;
+  akurasi?: number | null;
   labelTujuan?: string;
 }) {
   const [rute, setRute] = useState<HasilRute | null>(null);
@@ -141,9 +186,11 @@ export function PetaPengantaran({
         zoomControl: false,
         attributionControl: true,
         scrollWheelZoom: false,
-        doubleClickZoom: false,
+        doubleClickZoom: true,
         keyboard: false,
+        touchZoom: true,
       });
+      L.control.zoom({ position: "bottomright", zoomInTitle: "Perbesar peta", zoomOutTitle: "Perkecil peta" }).addTo(map);
 
       L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
@@ -186,8 +233,8 @@ export function PetaPengantaran({
         icon: L.divIcon({
           className: "peta-kurir-ikon",
           html: `<div class="peta-kurir">${PENGUIN}</div>`,
-          iconSize: [80, 80],
-          iconAnchor: [40, 73],
+          iconSize: [54, 54],
+          iconAnchor: [27, 48],
         }),
         interactive: false,
         zIndexOffset: 1000,
@@ -240,7 +287,9 @@ export function PetaPengantaran({
       : rute.presisi !== "alamat"
         ? "Titik alamat diperkirakan dari nama jalan/wilayah"
         : gpsAktif
-          ? "Posisi GPS kurir diterima"
+          ? akurasi != null && akurasi > 0
+            ? `Posisi GPS kurir · akurasi ±${Math.max(1, Math.round(akurasi))} m`
+            : "Posisi GPS kurir diterima"
           : "Posisi diperkirakan dari waktu tempuh";
 
   if (status === "gagal") {
@@ -260,7 +309,7 @@ export function PetaPengantaran({
       <div
         ref={wadah}
         className="h-[240px] w-full sm:h-[290px]"
-        role="img"
+        role="region"
         aria-label={
           aktif
             ? `Peta perjalanan kurir dari toko menuju ${labelTujuan.toLowerCase()}`
@@ -298,7 +347,7 @@ export function PetaPengantaran({
       </div>
 
       {catatan && (
-        <p className="pointer-events-none absolute bottom-2.5 left-3 rounded-md bg-white/90 px-2 py-1 text-[8px] font-semibold text-muted backdrop-blur sm:text-[9px]">
+        <p className="pointer-events-none absolute bottom-2.5 left-3 max-w-[calc(100%-68px)] rounded-md bg-white/90 px-2 py-1 text-[8px] font-semibold text-muted backdrop-blur sm:text-[9px]">
           {catatan}
         </p>
       )}

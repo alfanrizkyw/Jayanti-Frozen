@@ -799,6 +799,37 @@ html.tema-anim *::after {
   transform-origin: 50% 80%;
 }
 
+.leaflet-control-zoom {
+  border: 0 !important;
+  border-radius: 10px !important;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(15, 36, 64, 0.2);
+}
+
+.leaflet-control-zoom a,
+.leaflet-touch .leaflet-control-zoom a {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 44px !important;
+  height: 44px !important;
+  line-height: 1 !important;
+  color: #133a63 !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-color: #e2ebf3 !important;
+  font-size: 19px !important;
+  font-weight: 700;
+}
+
+.leaflet-control-zoom a:hover {
+  background: #eef5fb !important;
+}
+
+.leaflet-control-zoom a.leaflet-disabled {
+  color: #9db1c5 !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+}
+
 @keyframes peta-bob {
   0%,
   100% {
