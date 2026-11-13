@@ -38,7 +38,7 @@ export function BuyBox({ product }: { product: Product }) {
         <button
           type="button"
           disabled={habis}
-          onClick={() => add(product, jumlah)}
+          onClick={(e) => add(product, jumlah, e.currentTarget)}
           className="btn btn-primary flex-1"
         >
           <ShoppingBag size={17} /> Tambah ke keranjang

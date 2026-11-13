@@ -54,7 +54,7 @@ export function AddToCart({
           </span>
           <button
             type="button"
-            onClick={() => add(product, 1)}
+            onClick={(e) => add(product, 1, e.currentTarget)}
             disabled={qty >= product.stok}
             className="flex h-11 w-11 flex-none items-center justify-center rounded-lg text-brand hover:bg-white disabled:opacity-40"
             aria-label={`Tambah ${product.nama}`}
@@ -72,7 +72,7 @@ export function AddToCart({
   return (
     <button
       type="button"
-      onClick={() => add(product, jumlah)}
+      onClick={(e) => add(product, jumlah, e.currentTarget)}
       className={`btn btn-sm w-full border border-[#C9E1F7] bg-mist text-brand hover:border-brand hover:bg-[#DCEEFF] ${className}`}
       aria-label={`Tambah ${product.nama} ke keranjang`}
     >

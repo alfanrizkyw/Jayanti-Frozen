@@ -16,7 +16,6 @@ export function SiteHeader() {
   const { count } = useCart();
   const [sembunyi, setSembunyi] = useState(false);
   const [bergulir, setBergulir] = useState(false);
-  const [hash, setHash] = useState("");
   const posisiTerakhir = useRef(0);
 
   useEffect(() => {
@@ -24,22 +23,6 @@ export function SiteHeader() {
     setBergulir(false);
     posisiTerakhir.current = window.scrollY;
   }, [pathname]);
-
-  useEffect(() => {
-    const baca = () => setHash(window.location.hash);
-    baca();
-    window.addEventListener("hashchange", baca);
-    window.addEventListener("popstate", baca);
-    return () => {
-      window.removeEventListener("hashchange", baca);
-      window.removeEventListener("popstate", baca);
-    };
-  }, [pathname]);
-
-  const klikTab = (href: string) => {
-    const [jalur, bagian] = href.split("#");
-    if (jalur === pathname) setHash(bagian ? `#${bagian}` : "");
-  };
 
   useEffect(() => {
     let frame = 0;
@@ -94,13 +77,13 @@ export function SiteHeader() {
             aria-label="Navigasi utama"
           >
             {NAV_TABS.map((tab) => {
-              const active = tab.cocok(pathname, hash);
+              const active = tab.cocok(pathname);
               const keranjang = tab.href === "/keranjang";
               return (
                 <Link
                   key={tab.href}
                   href={tab.href}
-                  onClick={() => klikTab(tab.href)}
+                  data-keranjang-target={keranjang ? "" : undefined}
                   aria-current={active ? "page" : undefined}
                   aria-label={keranjang ? `Keranjang, ${count} produk` : undefined}
                   className={`press inline-flex items-center gap-1.5 rounded-full px-3 py-2.5 text-[13.5px] font-semibold transition-colors lg:px-4 ${

@@ -157,10 +157,7 @@ export default async function BerandaPage() {
         </div>
       </section>
 
-      <section
-        id="cara-pesan"
-        className="container-page mt-7 scroll-mt-24 md:mt-10"
-      >
+      <section className="container-page mt-7 md:mt-10">
         <div className="rounded-2xl border border-line bg-white p-4 md:p-6">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-[19px] font-extrabold text-navy md:text-[23px]">
@@ -208,6 +205,13 @@ export default async function BerandaPage() {
               </li>
             ))}
           </ol>
+
+          <Link
+            href="/cara-pesan"
+            className="mt-3 inline-flex min-h-11 items-center gap-1 text-[12.5px] font-bold text-brand hover:text-brand-dark"
+          >
+            Lihat contoh berjalan <ArrowRight size={14} />
+          </Link>
         </div>
       </section>
 

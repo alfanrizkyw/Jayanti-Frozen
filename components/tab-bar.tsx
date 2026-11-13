@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 import { ShoppingBag } from "lucide-react";
 import { NAV_TABS } from "@/lib/nav";
 import { useCart } from "./cart-provider";
@@ -10,25 +9,7 @@ import { useCart } from "./cart-provider";
 export function TabBar() {
   const pathname = usePathname();
   const { count } = useCart();
-  const [hash, setHash] = useState("");
-
-  useEffect(() => {
-    const baca = () => setHash(window.location.hash);
-    baca();
-    window.addEventListener("hashchange", baca);
-    window.addEventListener("popstate", baca);
-    return () => {
-      window.removeEventListener("hashchange", baca);
-      window.removeEventListener("popstate", baca);
-    };
-  }, [pathname]);
-
-  const klikTab = (href: string) => {
-    const [jalur, bagian] = href.split("#");
-    if (jalur === pathname) setHash(bagian ? `#${bagian}` : "");
-  };
-
-  const aktifIndex = NAV_TABS.findIndex((tab) => tab.cocok(pathname, hash));
+  const aktifIndex = NAV_TABS.findIndex((tab) => tab.cocok(pathname));
 
   return (
     <nav
@@ -49,7 +30,7 @@ export function TabBar() {
         </span>
 
         {NAV_TABS.map((tab) => {
-          const aktif = tab.cocok(pathname, hash);
+          const aktif = tab.cocok(pathname);
           const Ikon = tab.Ikon;
 
           if (tab.utama) {
@@ -57,12 +38,12 @@ export function TabBar() {
               <Link
                 key={tab.href}
                 href={tab.href}
-                onClick={() => klikTab(tab.href)}
                 aria-current={aktif ? "page" : undefined}
                 aria-label={`Keranjang, ${count} produk`}
                 className="press relative flex min-h-[54px] flex-col items-center justify-end rounded-xl pb-1.5"
               >
                 <span
+                  data-keranjang-target
                   className={`absolute left-1/2 top-0 flex h-[52px] w-[52px] -translate-x-1/2 -translate-y-[24px] items-center justify-center rounded-full bg-[linear-gradient(160deg,#3f95dc,#1f66a8)] text-white shadow-[0_10px_20px_-8px_rgba(16,43,80,0.6)] ring-[5px] ring-paper transition-transform duration-200 ease-out motion-reduce:transition-none ${
                     aktif ? "scale-105" : ""
                   }`}
@@ -92,7 +73,6 @@ export function TabBar() {
             <Link
               key={tab.href}
               href={tab.href}
-              onClick={() => klikTab(tab.href)}
               aria-current={aktif ? "page" : undefined}
               aria-label={tab.aria}
               className={`press flex min-h-[54px] flex-col items-center justify-end gap-1 rounded-xl px-0.5 pb-1.5 pt-1 text-[10px] font-bold leading-none transition-colors duration-200 motion-reduce:transition-none min-[360px]:text-[10.5px] ${

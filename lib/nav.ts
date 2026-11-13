@@ -7,15 +7,13 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-export const BAGIAN_CARA_PESAN = "#cara-pesan";
-
 export type NavTab = {
   href: string;
   label: string;
   Ikon: LucideIcon;
   aria?: string;
   utama?: boolean;
-  cocok: (pathname: string, hash: string) => boolean;
+  cocok: (pathname: string) => boolean;
 };
 
 export const NAV_TABS: NavTab[] = [
@@ -23,7 +21,7 @@ export const NAV_TABS: NavTab[] = [
     href: "/",
     label: "Beranda",
     Ikon: House,
-    cocok: (p, h) => p === "/" && h !== BAGIAN_CARA_PESAN,
+    cocok: (p) => p === "/",
   },
   {
     href: "/katalog",
@@ -40,10 +38,10 @@ export const NAV_TABS: NavTab[] = [
     cocok: (p) => p.startsWith("/keranjang") || p.startsWith("/checkout"),
   },
   {
-    href: `/${BAGIAN_CARA_PESAN}`,
+    href: "/cara-pesan",
     label: "Cara pesan",
     Ikon: BookOpenText,
-    cocok: (p, h) => p === "/" && h === BAGIAN_CARA_PESAN,
+    cocok: (p) => p.startsWith("/cara-pesan"),
   },
   {
     href: "/lacak",

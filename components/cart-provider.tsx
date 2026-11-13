@@ -37,7 +37,7 @@ interface CartContextValue {
   ready: boolean;
   count: number;
   subtotal: number;
-  add: (product: AddInput, jumlah?: number) => void;
+  add: (product: AddInput, jumlah?: number, asal?: HTMLElement | null) => void;
   setJumlah: (id: string, jumlah: number) => void;
   remove: (id: string) => void;
   clear: () => void;
@@ -70,14 +70,86 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(KEY, JSON.stringify(items));
   }, [items, ready]);
 
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
+
   const showToast = useCallback((message: string) => {
     setToast(message);
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => setToast(null), 2400);
   }, []);
 
+  const terbangkan = useCallback(
+    (asal: HTMLElement | null | undefined, gambar: string) => {
+      if (!asal || window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+        return;
+
+      const tujuan = Array.from(
+        document.querySelectorAll<HTMLElement>("[data-keranjang-target]"),
+      ).find((el) => {
+        const r = el.getBoundingClientRect();
+        return r.width > 0 && r.height > 0;
+      });
+      if (!tujuan) return;
+
+      const foto = asal.closest("article")?.querySelector("img");
+      const dari = (foto ?? asal).getBoundingClientRect();
+      const ke = tujuan.getBoundingClientRect();
+      const dx = ke.left + ke.width / 2 - (dari.left + dari.width / 2);
+      const dy = ke.top + ke.height / 2 - (dari.top + dari.height / 2);
+      const ukuran = 44;
+
+      const node = document.createElement("div");
+      node.className = "terbang-keranjang";
+      node.setAttribute("aria-hidden", "true");
+      node.style.left = `${dari.left + dari.width / 2 - ukuran / 2}px`;
+      node.style.top = `${dari.top + dari.height / 2 - ukuran / 2}px`;
+
+      const src = foto?.currentSrc || foto?.src || gambar;
+      if (src) {
+        const img = document.createElement("img");
+        img.src = src;
+        img.alt = "";
+        node.appendChild(img);
+      } else {
+        node.textContent = "+";
+      }
+      document.body.appendChild(node);
+
+      const anim = node.animate(
+        [
+          { transform: "translate(0, 0) scale(1)", opacity: 1 },
+          {
+            transform: `translate(${dx * 0.42}px, ${dy * 0.42 - 76}px) scale(0.62)`,
+            opacity: 1,
+            offset: 0.55,
+          },
+          { transform: `translate(${dx}px, ${dy}px) scale(0.16)`, opacity: 0.55 },
+        ],
+        { duration: 680, easing: "cubic-bezier(0.35, 0.7, 0.4, 1)" },
+      );
+      anim.onfinish = () => {
+        node.remove();
+        tujuan.animate(
+          [
+            { transform: "scale(1)" },
+            { transform: "scale(1.18)" },
+            { transform: "scale(1)" },
+          ],
+          { duration: 320, easing: "ease-out" },
+        );
+      };
+      anim.oncancel = () => node.remove();
+    },
+    [],
+  );
+
   const add = useCallback(
-    (product: AddInput, jumlah = 1) => {
+    (product: AddInput, jumlah = 1, asal?: HTMLElement | null) => {
       setItems((prev) => {
         const harga = product.hargaPromo ?? product.harga;
         const ada = prev.find((i) => i.id === product.id);
@@ -103,9 +175,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           },
         ];
       });
+      terbangkan(asal, product.gambar);
       showToast(`${product.nama} ditambahkan ke keranjang`);
     },
-    [showToast],
+    [showToast, terbangkan],
   );
 
   const setJumlah = useCallback((id: string, jumlah: number) => {
@@ -133,19 +206,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   return (
     <CartContext.Provider value={value}>
       {children}
-      <div
-        aria-live="polite"
-        className="pointer-events-none fixed inset-x-0 bottom-6 z-[70] flex justify-center px-4 md:bottom-28"
-      >
-        {toast && (
-          <div className="rise flex items-center gap-2.5 rounded-full bg-navy px-5 py-3 text-sm font-semibold text-white shadow-lift">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-leaf text-[11px]">
-              ✓
-            </span>
-            {toast}
-          </div>
-        )}
-      </div>
+      <p role="status" aria-live="polite" className="sr-only">
+        {toast}
+      </p>
     </CartContext.Provider>
   );
 }
