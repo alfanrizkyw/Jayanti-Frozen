@@ -228,7 +228,7 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    min-height: 38px;
+    min-height: 44px;
     padding-inline: 14px;
     border-radius: 999px;
     border: 1px solid var(--color-line);
@@ -506,7 +506,8 @@ html.tema-anim *::after {
 [data-theme="dark"] .bg-white\/92,
 [data-theme="dark"] .bg-white\/90,
 [data-theme="dark"] .bg-white\/85,
-[data-theme="dark"] .bg-white\/70 {
+[data-theme="dark"] .bg-white\/70,
+[data-theme="dark"] .bg-white\/65 {
   background-color: #101f31;
 }
 

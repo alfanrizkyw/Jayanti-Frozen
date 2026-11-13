@@ -21,7 +21,7 @@ import {
   Truck,
 } from "lucide-react";
 import { useCart } from "@/components/cart-provider";
-import { simpanKodePesanan } from "@/lib/order-history";
+import { simpanKodePesanan, simpanTelepon } from "@/lib/order-history";
 import { rupiah, salinTeks } from "@/lib/format";
 import type { PaymentMethod, Settings } from "@/lib/types";
 
@@ -98,6 +98,7 @@ export function CheckoutForm({ settings }: { settings: Settings }) {
       }
       clear();
       simpanKodePesanan(json.kode);
+      simpanTelepon(telepon);
       router.push(`/pesanan/${json.kode}?baru=1`);
     } catch {
       setError("Jaringan sedang bermasalah. Periksa koneksi lalu coba lagi.");

@@ -18,7 +18,7 @@ export default async function StoreLayout({
 
   return (
     <CartProvider>
-      <SiteHeader settings={settings} />
+      <SiteHeader />
       {!settings.tokoBuka && (
         <div role="status" className="border-b border-[#F0D9A8] bg-[#FEF8E9]">
           <div className="container-page flex items-start gap-2.5 py-2.5 text-[12px] leading-relaxed text-[#8A5207]">

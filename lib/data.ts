@@ -107,12 +107,27 @@ export async function getOrderDetail(
   };
 }
 
+/** Kode pesanan yang masih berjalan untuk satu nomor HP. */
+export async function getActiveOrderCodes(telepon: string): Promise<string[]> {
+  const hp = normalTelepon(telepon ?? "");
+  if (hp.length < 10 || hp.length > 15) return [];
+  const db = await readDB();
+  const batas = Date.now() - 21 * 86400000;
+  const teleponOrder = (o: Order) =>
+    normalTelepon(o.telepon || db.users.find((u) => u.id === o.userId)?.telepon || "");
+  return db.orders
+    .filter((o) => o.status !== "selesai" && o.status !== "batal")
+    .filter((o) => teleponOrder(o) === hp)
+    .filter((o) => new Date(o.dibuat).getTime() >= batas)
+    .sort((a, b) => b.dibuat.localeCompare(a.dibuat))
+    .slice(0, 10)
+    .map((o) => o.kode);
+}
+
 export async function getAdminData() {
   const db = await readDB();
   return db;
-}
-
-export async function getCourierData() {
+}export async function getCourierData() {
   const db = await readDB();
   const tim = db.couriers.filter((c) => c.aktif !== false);
   const courier = tim[0] ?? null;

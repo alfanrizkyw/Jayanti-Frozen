@@ -41,6 +41,31 @@ const KAMUS: Record<string, string> = {
   "Pesanan sudah siap diambil di toko.": "The order is ready for pickup.",
   "Status diperbarui otomatis oleh admin.":
     "The status is updated automatically by the admin.",
+  "Pesanan yang masih berjalan muncul otomatis dari nomor HP yang Anda pakai saat pesan. Pesanan lama bisa dibuka rinciannya.":
+    "Ongoing orders appear automatically from the phone number you used when ordering. Past orders can be opened for details.",
+  "Nomor HP saat pesan": "Phone number used to order",
+  "Nomor HP tidak valid. Contoh: 0898 0440 095.":
+    "Invalid phone number. Example: 0898 0440 095.",
+  "Lihat pesanan": "View orders",
+  "Memeriksa pesanan…": "Checking orders…",
+  "Tidak ada pesanan aktif": "No active orders",
+  "Masukkan nomor HP yang Anda pakai saat pesan. Pesanan yang masih berjalan muncul otomatis tanpa kode.":
+    "Enter the phone number you used to order. Ongoing orders appear automatically without a code.",
+  "Ganti nomor": "Change number",
+  Tutup: "Close",
+  "Nomor HP": "Phone number",
+  "Hapus nomor dari perangkat ini": "Remove this number from the device",
+  "Cek pesanan dari nomor HP lain": "Check orders from another phone number",
+  "Punya kode pesanan?": "Have an order code?",
+  "Masukkan kode dari struk atau pesan WhatsApp toko.":
+    "Enter the code from the receipt or the store's WhatsApp message.",
+  "Cari kode": "Find code",
+  "Terlalu banyak percobaan. Tunggu beberapa menit lalu coba lagi.":
+    "Too many attempts. Wait a few minutes and try again.",
+  "Nomor belum bisa diperiksa. Periksa koneksi lalu coba lagi.":
+    "The number can't be checked yet. Check your connection and try again.",
+  "Nomor HP dan kode pesanan hanya tersimpan di HP ini, tidak dikirim ke perangkat lain.":
+    "The phone number and order codes are only saved on this phone, not sent to other devices.",
   Keranjang: "Cart",
   "Keranjang belanja": "Shopping cart",
   "Lacak pesanan Anda": "Track your order",
@@ -271,6 +296,16 @@ const KAMUS: Record<string, string> = {
   "kapan saja.": "anytime.",
   "Pilih produk, lalu ambil di toko atau minta diantar. Bayar tunai, QRIS, atau transfer.":
     "Choose products, pick up at the store or have them delivered. Pay cash, QRIS, or transfer.",
+  "Pesan antar atau ambil sendiri. Bayar tunai, QRIS, atau transfer.":
+    "Order delivery or pick it up yourself. Pay cash, QRIS, or transfer.",
+  "Tetap beku −18°C": "Stays frozen at −18°C",
+  "Chat WhatsApp toko, dibalas langsung oleh admin.":
+    "Chat the store on WhatsApp. Answered directly by the admin.",
+  "Jam operasional": "Operating hours",
+  "Frozen food siap masak dari Probolinggo. Ambil di toko atau minta diantar ke rumah.":
+    "Frozen food ready to cook from Probolinggo. Pick up at the store or have it delivered.",
+  "Ambil di toko atau antar kurir area Probolinggo.":
+    "Pick up at the store or courier delivery in Probolinggo.",
   "Selalu beku −18°C": "Always frozen at −18°C",
   "Produk tetap beku sampai diterima.":
     "Stays frozen until you receive it.",
@@ -295,8 +330,8 @@ const KAMUS: Record<string, string> = {
   "Bayar": "Pay",
   "Tunai di toko, QRIS, atau transfer bank.": "Cash at the store, QRIS, or bank transfer.",
   "Terima pesanan": "Receive order",
-  "Ambil sendiri atau ikuti kurir lewat halaman lacak.":
-    "Pick it up yourself or follow the courier on the tracking page.",
+  "Ambil sendiri atau ikuti kurir lewat halaman riwayat.":
+    "Pick it up yourself or follow the courier on the order history page.",
   "Belum ada produk dipilih. Buka katalog, lalu tekan Tambah.":
     "No products picked yet. Open the catalog, then tap Add.",
   "Ada di keranjang": "Already in cart",

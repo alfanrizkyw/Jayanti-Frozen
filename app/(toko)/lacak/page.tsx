@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ChevronRight, History, LifeBuoy, Search } from "lucide-react";
 import { getOrderDetail } from "@/lib/data";
@@ -8,7 +7,7 @@ import { OrderHistory } from "@/components/order-history";
 export const metadata: Metadata = {
   title: "Riwayat pesanan",
   description:
-    "Lihat pesanan yang sedang berjalan dan riwayat pesanan Yanti Frozen di perangkat ini.",
+    "Pesanan Yanti Frozen yang sedang berjalan muncul otomatis dengan nomor HP Anda.",
 };
 
 export default async function RiwayatPage({
@@ -26,18 +25,7 @@ export default async function RiwayatPage({
 
   return (
     <div className="container-page pt-5 md:pt-8">
-      <nav
-        aria-label="Breadcrumb"
-        className="flex items-center gap-1 text-[12px] text-muted"
-      >
-        <Link href="/" className="hover:text-navy">
-          Beranda
-        </Link>
-        <ChevronRight size={13} />
-        <span className="font-semibold text-navy">Riwayat pesanan</span>
-      </nav>
-
-      <div className="mx-auto mt-5 max-w-[640px]">
+      <div className="mx-auto max-w-[640px]">
         <div className="overflow-hidden rounded-[22px] border border-line bg-white shadow-card">
           <div className="relative bg-navy px-5 py-6 text-white md:px-7">
             <div
@@ -51,21 +39,24 @@ export default async function RiwayatPage({
               Riwayat pesanan
             </h1>
             <p className="relative mt-1 max-w-[430px] text-[12.5px] leading-relaxed text-white/70">
-              Pesanan yang masih berjalan bisa dilacak, pesanan lama bisa
-              dibuka rinciannya.
+              Pesanan yang masih berjalan muncul otomatis dari nomor HP yang
+              Anda pakai saat pesan. Pesanan lama bisa dibuka rinciannya.
             </p>
           </div>
 
           <div className="px-5 pb-6 pt-1 md:px-6">
             <OrderHistory />
 
-            <div className="mt-8 border-t border-line pt-5">
-              <h2 className="text-[14px] font-extrabold text-navy">
-                Cari pesanan lain
-              </h2>
-              <p className="mt-1 text-[12px] leading-relaxed text-muted">
-                Punya kode pesanan dari perangkat lain? Masukkan kodenya di
-                sini.
+            <details className="group mt-8 border-t border-line pt-5">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg py-1 text-[13px] font-bold text-navy">
+                Punya kode pesanan?
+                <ChevronRight
+                  size={16}
+                  className="text-muted transition-transform group-open:rotate-90"
+                />
+              </summary>
+              <p className="mt-1.5 text-[12px] leading-relaxed text-muted">
+                Masukkan kode dari struk atau pesan WhatsApp toko.
               </p>
 
               <form action="/lacak" method="get" role="search" className="mt-3">
@@ -81,15 +72,14 @@ export default async function RiwayatPage({
                     <input
                       id="kode"
                       name="kode"
-                      defaultValue={kode}
                       placeholder="YF261110-4821"
                       className="field pl-10 uppercase placeholder:normal-case"
                       autoComplete="off"
                       required
                     />
                   </div>
-                  <button type="submit" className="btn btn-primary sm:px-6">
-                    Cari
+                  <button type="submit" className="btn btn-outline sm:px-6">
+                    Cari kode
                   </button>
                 </div>
               </form>
@@ -101,13 +91,13 @@ export default async function RiwayatPage({
                   dan angkanya, atau hubungi toko.
                 </div>
               )}
-            </div>
+            </details>
           </div>
         </div>
 
         <p className="mt-5 text-center text-[11.5px] leading-relaxed text-muted">
-          Kode pesanan tersimpan otomatis di HP ini selama data browser tidak
-          dihapus.
+          Nomor HP dan kode pesanan hanya tersimpan di HP ini, tidak dikirim ke
+          perangkat lain.
         </p>
       </div>
     </div>
