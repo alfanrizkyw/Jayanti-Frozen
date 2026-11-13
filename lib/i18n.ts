@@ -551,6 +551,8 @@ const KAMUS: Record<string, string> = {
   "Kurir belum ditugaskan": "No courier assigned yet",
   "Admin menentukan kurir saat pesanan siap. Peta muncul di sini.":
     "The admin assigns a courier when the order is ready. The map appears here.",
+  "Titik lokasi antar pesanan ini tidak tersimpan, jadi peta tidak bisa ditampilkan. Hubungi toko bila perlu.":
+    "The delivery location for this order wasn't saved, so the map can't be shown. Contact the store if needed.",
   "Lokasi GPS aktif ·": "GPS location active ·",
   "Lokasi diperbarui otomatis saat kurir berangkat":
     "Location updates automatically when the courier leaves",
@@ -588,6 +590,28 @@ const KAMUS: Record<string, string> = {
   "Buka dan konfirmasi pesanan:": "Open and confirm the order:",
   "Setelah dikonfirmasi, pesanan antar otomatis masuk ke halaman kurir.":
     "After confirmation, delivery orders automatically appear on the courier page.",
+
+  // Ulasan
+  "Nilai pesanan ini": "Rate this order",
+  "Terima kasih atas ulasan Anda": "Thank you for your review",
+  "Bintang dan ulasan Anda sudah masuk ke laporan admin toko.":
+    "Your stars and review have been added to the store admin report.",
+  "Bintang dan ulasan membantu toko memperbaiki layanan.":
+    "Stars and reviews help the store improve its service.",
+  "Belum dinilai": "Not rated yet",
+  "Ulasan (opsional)": "Review (optional)",
+  "Contoh: barang masih beku, kurir cepat dan ramah.":
+    "Example: items were still frozen, the courier was fast and friendly.",
+  "Kirim ulasan": "Send review",
+  "Mengirim…": "Sending…",
+  "Pilih bintang dulu ya.": "Choose a star rating first.",
+  "Ulasan gagal disimpan.": "The review couldn't be saved.",
+  "Ulasan sudah tersimpan.": "Review saved.",
+  "Ulasan pelanggan": "Customer reviews",
+  "Belum ada ulasan pada periode ini.": "No reviews in this period.",
+  "Tanpa catatan tertulis.": "No written note.",
+  "Menampilkan 8 ulasan terbaru. Unduh CSV untuk melihat semua.":
+    "Showing the 8 latest reviews. Download the CSV to see all.",
 
   // Pelacakan peta
   "Estimasi tiba": "Estimated arrival",
@@ -950,6 +974,10 @@ function aturan(teks: string): string | undefined {
   if (m) return `${m[1]} ${m[1] === "1" ? "order" : "orders"}`;
   m = teks.match(/^Sisa (\d+) pack$/);
   if (m) return `Only ${m[1]} left`;
+  m = teks.match(/^(\d+) dari 5$/);
+  if (m) return `${m[1]} of 5`;
+  m = teks.match(/^Beri (\d+) bintang$/);
+  if (m) return `Rate ${m[1]} star${m[1] === "1" ? "" : "s"}`;
   m = teks.match(/^Diskon hingga (\d+)% untuk produk pilihan$/);
   if (m) return `Up to ${m[1]}% off selected products`;
   m = teks.match(/^Gratis ongkir karena belanja ≥ (.+)$/);

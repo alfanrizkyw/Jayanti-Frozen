@@ -309,10 +309,10 @@ export function PetaPengantaran({
         : "Menunggu lokasi GPS kurir.";
 
   return (
-    <div className="relative overflow-hidden rounded-[16px] border border-line bg-[#E9F2F9]">
+    <div className="relative isolate overflow-hidden rounded-[16px] border border-line bg-[#E9F2F9]">
       <div
         ref={wadah}
-        className={`${tinggi} w-full`}
+        className={`${tinggi} w-full isolate`}
         role="region"
         aria-label={
           pilih
@@ -329,7 +329,7 @@ export function PetaPengantaran({
         </div>
       )}
 
-      <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-1.5 rounded-lg bg-white/95 px-2.5 py-1.5 text-[10px] font-bold text-navy shadow-sm backdrop-blur">
+      <div className="pointer-events-none absolute left-3 top-3 z-10 flex items-center gap-1.5 rounded-lg bg-white/95 px-2.5 py-1.5 text-[10px] font-bold text-navy shadow-sm backdrop-blur">
         {pilih ? (
           <>
             <MapPin size={11} className="text-brand" />
@@ -353,7 +353,7 @@ export function PetaPengantaran({
       </div>
 
       {etaMenit != null && (
-        <div className="pointer-events-none absolute right-2 top-2 rounded-lg bg-white/95 px-2 py-1 text-right shadow-sm backdrop-blur sm:right-3 sm:top-3 sm:px-2.5 sm:py-1.5">
+        <div className="pointer-events-none absolute right-2 top-2 z-10 rounded-lg bg-white/95 px-2 py-1 text-right shadow-sm backdrop-blur sm:right-3 sm:top-3 sm:px-2.5 sm:py-1.5">
           <p className="hidden text-[9px] font-bold uppercase tracking-wide text-muted sm:block">
             Estimasi tiba
           </p>
@@ -363,7 +363,7 @@ export function PetaPengantaran({
         </div>
       )}
 
-      <p className="pointer-events-none absolute bottom-2.5 left-3 max-w-[calc(100%-68px)] rounded-md bg-white/90 px-2 py-1 text-[8px] font-semibold text-muted backdrop-blur sm:text-[9px]">
+      <p className="pointer-events-none absolute bottom-2.5 left-3 z-10 max-w-[calc(100%-68px)] rounded-md bg-white/90 px-2 py-1 text-[8px] font-semibold text-muted backdrop-blur sm:text-[9px]">
         {catatan}
       </p>
     </div>

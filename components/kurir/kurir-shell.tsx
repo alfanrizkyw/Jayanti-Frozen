@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ArrowLeft, LogOut } from "lucide-react";
+import { AvatarPeran } from "@/components/avatar-peran";
 import { Logo } from "@/components/logo";
 
 export function KurirShell({
@@ -38,14 +39,7 @@ export function KurirShell({
               <p className="text-[12.5px] font-bold">{nama}</p>
               <p className="text-[10px] text-white/55">{kendaraan}</p>
             </div>
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand text-[11px] font-extrabold">
-              {nama
-                .split(" ")
-                .slice(0, 2)
-                .map((w) => w[0])
-                .join("")
-                .toUpperCase()}
-            </span>
+            <AvatarPeran peran="kurir" ukuran={36} className="ring-1 ring-white/25" />
             <button
               type="button"
               onClick={logout}

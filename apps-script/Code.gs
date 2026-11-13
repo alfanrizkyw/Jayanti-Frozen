@@ -72,6 +72,8 @@ var TABEL = {
       ["diperbarui", "s"],
       ["lat", "m"],
       ["lng", "m"],
+      ["bintang", "m"],
+      ["ulasan", "s"],
     ],
   },
   OrderItems: {

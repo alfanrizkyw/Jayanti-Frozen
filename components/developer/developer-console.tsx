@@ -24,6 +24,7 @@ import {
   UserRound,
   X,
 } from "lucide-react";
+import { AvatarPeran } from "@/components/avatar-peran";
 import { Logo } from "@/components/logo";
 import { BankEditor } from "@/components/bank-editor";
 import { relatif, tautanGambar, teleponRapi } from "@/lib/format";
@@ -182,6 +183,7 @@ export function DeveloperConsole({
           <Link href="/" aria-label="Yanti Frozen, ke beranda">
             <Logo tone="light" size={38} />
           </Link>
+          <AvatarPeran peran="developer" ukuran={36} className="ring-1 ring-white/25" />
           <span className="rounded-full border border-white/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-sky">
             Developer
           </span>

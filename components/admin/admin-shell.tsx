@@ -16,6 +16,7 @@ import {
   Settings2,
   X,
 } from "lucide-react";
+import { AvatarPeran } from "@/components/avatar-peran";
 import { Logo } from "@/components/logo";
 import { PreferencesControls } from "@/components/preferences-controls";
 
@@ -137,14 +138,7 @@ export function AdminShell({
                 <span className="h-1.5 w-1.5 rounded-full bg-sun" />
                 {baru} pesanan baru
               </Link>
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-navy text-[12px] font-extrabold text-white">
-                {nama
-                  .split(" ")
-                  .slice(0, 2)
-                  .map((w) => w[0])
-                  .join("")
-                  .toUpperCase()}
-              </span>
+              <AvatarPeran peran="admin" ukuran={36} className="ring-1 ring-line" />
               <div className="hidden leading-tight sm:block">
                 <p className="text-[12.5px] font-bold text-navy">{nama}</p>
                 <p className="text-[10.5px] text-muted">Administrator</p>

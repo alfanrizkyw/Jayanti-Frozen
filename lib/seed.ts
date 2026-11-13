@@ -248,6 +248,8 @@ export function createSeed(): DB {
         jadwal: "Kemarin, 10.00",
         dibuat: iso(1 * hari + 3 * jam),
         diperbarui: iso(1 * hari),
+        bintang: 5,
+        ulasan: "Ambil di toko cepat, barang masih beku saat dibawa pulang.",
       },
       {
         id: "DEMO3",
@@ -270,6 +272,8 @@ export function createSeed(): DB {
         jadwal: "3 hari lalu, 16.00",
         dibuat: iso(3 * hari + 2 * jam),
         diperbarui: iso(3 * hari),
+        bintang: 4,
+        ulasan: "Kurir ramah dan tepat waktu. Kemasan bisa lebih rapi.",
       },
       {
         id: "DEMO4",

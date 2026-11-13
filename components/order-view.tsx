@@ -25,14 +25,15 @@ import {
   Store,
   Truck,
 } from "lucide-react";
+import { AvatarPeran } from "./avatar-peran";
 import { PetaPengantaran } from "./peta-pengantaran";
 import { PilihTitik, type TitikPilihan } from "./pilih-titik";
+import { UlasanPesanan } from "./ulasan-pesanan";
 import { OrderStatusBadge } from "./status-badge";
 import { ReceiptActions } from "./receipt-actions";
 import { BuktiFoto } from "./bukti-foto";
 import { simpanKodePesanan } from "@/lib/order-history";
 import {
-  inisial,
   relatif,
   rupiah,
   salinTeks,
@@ -323,9 +324,7 @@ export function OrderView({
               <div className="p-4 md:p-5">
                 {order.metode === "antar" ? (
                   <>
-                    {titikPelanggan ||
-                    order.status === "diantar" ||
-                    order.status === "selesai" ? (
+                    {titikPelanggan ? (
                       <>
                         <PetaPengantaran
                           tujuan={titikPelanggan}
@@ -347,6 +346,15 @@ export function OrderView({
                             </p>
                           )}
                       </>
+                    ) : order.status === "diantar" ||
+                      order.status === "selesai" ? (
+                      <div className="flex items-start gap-3 rounded-xl bg-paper p-4">
+                        <MapPin size={19} className="mt-0.5 flex-none text-brand" />
+                        <p className="text-[12px] leading-relaxed text-muted">
+                          Titik lokasi antar pesanan ini tidak tersimpan, jadi
+                          peta tidak bisa ditampilkan. Hubungi toko bila perlu.
+                        </p>
+                      </div>
                     ) : (
                       <div className="flex items-start gap-3 rounded-xl bg-paper p-4">
                         <Truck size={19} className="mt-0.5 flex-none text-brand" />
@@ -367,9 +375,11 @@ export function OrderView({
 
                     {kurir && (
                       <div className="mt-3.5 flex flex-wrap items-center gap-3 rounded-xl border border-line p-3">
-                        <span className="flex h-11 w-11 flex-none items-center justify-center rounded-full bg-navy text-[12px] font-bold text-white">
-                          {inisial(kurir.nama)}
-                        </span>
+                        <AvatarPeran
+                          peran="kurir"
+                          ukuran={44}
+                          className="ring-1 ring-line"
+                        />
                         <div className="min-w-0 flex-1">
                           <p className="flex items-center gap-1.5 text-[12.5px] font-bold text-navy">
                             {kurir.nama}
@@ -804,6 +814,14 @@ export function OrderView({
           </section>
         </div>
       </div>
+
+      {order.status === "selesai" && (
+        <UlasanPesanan
+          kode={order.kode}
+          bintang={order.bintang}
+          ulasan={order.ulasan}
+        />
+      )}
 
       <p className="mt-5 text-center text-[11px] text-muted">
         Status terakhir diperbarui {tanggalJam(order.diperbarui)} ·{" "}

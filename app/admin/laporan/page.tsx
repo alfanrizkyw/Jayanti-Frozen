@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bike, Banknote, Store, TrendingUp, Wallet } from "lucide-react";
+import { Bike, Banknote, Star, Store, TrendingUp, Wallet } from "lucide-react";
 import { ExportCsv } from "@/components/admin/export-csv";
 import { OrderStatusBadge } from "@/components/status-badge";
 import { PaymentBadge } from "@/components/payment-badge";
@@ -38,6 +38,12 @@ export default async function AdminReports({
   const itemSah = db.orderItems.filter((i) => itemIds.has(i.orderId));
   const unitTerjual = itemSah.reduce((n, i) => n + i.jumlah, 0);
   const selesai = sah.filter((o) => o.status === "selesai").length;
+  const berulasan = sah
+    .filter((o) => Number(o.bintang) >= 1)
+    .sort((a, b) => b.diperbarui.localeCompare(a.diperbarui));
+  const rataBintang = berulasan.length
+    ? berulasan.reduce((n, o) => n + Number(o.bintang), 0) / berulasan.length
+    : 0;
 
   const produk = new Map<string, { nama: string; jumlah: number; omzet: number }>();
   for (const it of itemSah) {
@@ -90,6 +96,8 @@ export default async function AdminReports({
       "Ongkir",
       "Total",
       "Status",
+      "Bintang",
+      "Ulasan",
     ],
     ...pesanan.map((o) => [
       o.kode,
@@ -103,6 +111,8 @@ export default async function AdminReports({
       o.ongkir,
       o.total,
       STATUS_LABEL[o.status],
+      o.bintang ?? "",
+      o.ulasan ?? "",
     ]),
   ];
 
@@ -300,6 +310,85 @@ export default async function AdminReports({
           </section>
         </div>
       </div>
+
+      <section className="card overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3.5 md:px-5">
+          <div>
+            <h2 className="text-[15px] font-extrabold text-navy">
+              Ulasan pelanggan
+            </h2>
+            <p className="mt-0.5 text-[11.5px] text-muted">
+              {berulasan.length} pesanan dinilai pada periode ini.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="stat-num text-[24px] font-extrabold text-navy">
+              {berulasan.length ? rataBintang.toFixed(1).replace(".", ",") : "—"}
+            </span>
+            <div className="flex gap-0.5" aria-hidden="true">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <Star
+                  key={n}
+                  size={15}
+                  className={
+                    n <= Math.round(rataBintang)
+                      ? "text-[#F2A03A]"
+                      : "text-line"
+                  }
+                  fill={n <= Math.round(rataBintang) ? "currentColor" : "none"}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+        <ul className="divide-y divide-line">
+          {berulasan.slice(0, 8).map((o) => (
+            <li key={o.id} className="px-4 py-3 md:px-5">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span className="text-[12px] font-bold text-navy">
+                  {o.pelanggan}
+                </span>
+                <Link
+                  href={`/admin/pesanan/${o.kode}`}
+                  className="text-[10.5px] font-bold text-brand hover:text-brand-dark"
+                >
+                  {o.kode}
+                </Link>
+                <span className="ml-auto text-[10.5px] text-muted">
+                  {tanggalJam(o.diperbarui)}
+                </span>
+              </div>
+              <div className="mt-1 flex gap-0.5" aria-hidden="true">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <Star
+                    key={n}
+                    size={12}
+                    className={
+                      n <= Number(o.bintang) ? "text-[#F2A03A]" : "text-line"
+                    }
+                    fill={n <= Number(o.bintang) ? "currentColor" : "none"}
+                  />
+                ))}
+              </div>
+              <p className="mt-1 text-[12px] leading-relaxed text-navy/80">
+                {o.ulasan?.trim() || (
+                  <span className="text-muted">Tanpa catatan tertulis.</span>
+                )}
+              </p>
+            </li>
+          ))}
+          {berulasan.length === 0 && (
+            <li className="px-5 py-9 text-center text-[12px] text-muted">
+              Belum ada ulasan pada periode ini.
+            </li>
+          )}
+        </ul>
+        {berulasan.length > 8 && (
+          <p className="border-t border-line px-4 py-2.5 text-center text-[10.5px] text-muted">
+            Menampilkan 8 ulasan terbaru. Unduh CSV untuk melihat semua.
+          </p>
+        )}
+      </section>
 
       <section className="card overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3.5 md:px-5">

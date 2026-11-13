@@ -590,6 +590,37 @@ export async function updateOrderTitik(
   return baru;
 }
 
+/** Simpan rating bintang + ulasan pembeli setelah pesanan selesai. */
+export async function simpanUlasan(
+  kode: string,
+  bintang: number,
+  ulasan: string,
+) {
+  const db = await readDB(true);
+  const cari = kode.toLowerCase().trim();
+  const order = db.orders.find((o) => o.kode.toLowerCase() === cari);
+  if (!order) throw new Error("Pesanan tidak ditemukan.");
+  if (order.status !== "selesai")
+    throw new Error("Ulasan bisa dikirim setelah pesanan selesai.");
+  if (order.bintang != null)
+    throw new Error("Ulasan untuk pesanan ini sudah dikirim.");
+  const nilai = Math.round(Number(bintang));
+  if (!Number.isFinite(nilai) || nilai < 1 || nilai > 5)
+    throw new Error("Pilih bintang 1 sampai 5.");
+  const teks = (ulasan ?? "").trim().slice(0, 400);
+
+  const baru: Order = {
+    ...order,
+    bintang: nilai,
+    ulasan: teks,
+    diperbarui: new Date().toISOString(),
+  };
+  await saveAll({
+    orders: { rows: [baru], fields: ["bintang", "ulasan", "diperbarui"] },
+  });
+  return baru;
+}
+
 export async function verifyAdmin(
   sandi: string,
 ): Promise<{ nama: string; id?: string } | null> {

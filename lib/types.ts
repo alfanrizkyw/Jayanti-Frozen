@@ -56,6 +56,10 @@ export interface Order {
   jadwal: string;
   dibuat: string;
   diperbarui: string;
+  /** Nilai bintang 1–5 dari pembeli setelah pesanan selesai. */
+  bintang?: number | null;
+  /** Ulasan tertulis, boleh kosong. */
+  ulasan?: string;
 }
 
 export interface OrderItem {

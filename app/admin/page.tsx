@@ -9,6 +9,7 @@ import {
   TrendingUp,
   Wallet,
 } from "lucide-react";
+import { AvatarPeran } from "@/components/avatar-peran";
 import { QuickPaid } from "@/components/admin/quick-paid";
 import { StoreToggle } from "@/components/admin/store-toggle";
 import { AutoRefresh } from "@/components/auto-refresh";
@@ -351,9 +352,7 @@ export default async function AdminHome() {
             <ul className="mt-3 space-y-2.5">
               {db.couriers.map((c) => (
                 <li key={c.id} className="flex items-center gap-2.5">
-                  <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-navy text-[10px] font-extrabold text-white">
-                    {inisial(c.nama)}
-                  </span>
+                  <AvatarPeran peran="kurir" ukuran={32} className="ring-1 ring-line" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[12px] font-bold text-navy">{c.nama}</p>
                     <p className="text-[10px] text-muted">{c.kendaraan}</p>
