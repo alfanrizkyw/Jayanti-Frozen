@@ -34,7 +34,7 @@ export default async function StoreLayout({
       )}
       <main>{children}</main>
       <SiteFooter settings={settings} />
-      <div aria-hidden="true" className="h-[72px] md:hidden" />
+      <div aria-hidden="true" className="h-[92px] md:hidden" />
       <TabBar />
       <MiniCart />
       <WelcomeIntro />

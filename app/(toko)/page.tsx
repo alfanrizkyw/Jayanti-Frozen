@@ -39,10 +39,10 @@ export default async function BerandaPage() {
         {/* Tepi bawah hero melebur ke warna halaman, jadi peralihan ke kartu bantuan terasa halus. */}
         <div
           aria-hidden="true"
-          className="hero-fade pointer-events-none absolute inset-x-0 bottom-0 h-28 sm:h-32"
+          className="hero-fade pointer-events-none absolute inset-x-0 bottom-0 h-[200px] sm:h-[230px] lg:h-[260px]"
         />
 
-        <div className="container-page relative flex min-h-[400px] flex-col justify-center pb-16 pt-6 sm:min-h-[440px] lg:min-h-[500px] lg:pb-20 lg:pt-10">
+        <div className="container-page relative flex min-h-[400px] flex-col justify-center pb-[120px] pt-6 sm:min-h-[440px] sm:pb-[132px] lg:min-h-[500px] lg:pb-[150px] lg:pt-10">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 text-[11.5px] font-semibold text-white/85 backdrop-blur">
               <Sun size={13} className={settings.tokoBuka ? "text-[#8ee0a8]" : "text-[#ffd48a]"} />
@@ -157,52 +157,10 @@ export default async function BerandaPage() {
         </div>
       </section>
 
-      <section className="container-page mt-7 md:mt-10">
-        <h2 className="text-[19px] font-extrabold text-navy md:text-[23px]">
-          Kategori
-        </h2>
-
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1 hide-scrollbar">
-          <Link href="/katalog" className="chip chip-active">
-            Semua
-            <span className="rounded-full bg-white/15 px-1.5 text-[10px]">{products.length}</span>
-          </Link>
-          {kategori.map((k) => (
-            <Link
-              key={k}
-              href={`/katalog?kategori=${encodeURIComponent(k)}`}
-              className="chip"
-            >
-              {k}
-              <span className="rounded-full bg-paper px-1.5 text-[10px] text-muted">
-                {products.filter((p) => p.kategori === k).length}
-              </span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="container-page mt-7 md:mt-10">
-        <div className="flex items-center justify-between gap-4">
-          <h2 className="text-[19px] font-extrabold text-navy md:text-[23px]">
-            Produk
-          </h2>
-          <Link
-            href="/katalog"
-            className="flex min-h-11 flex-none items-center gap-1 whitespace-nowrap text-[13px] font-bold text-brand hover:text-brand-dark"
-          >
-            Lihat semua <ArrowRight size={14} />
-          </Link>
-        </div>
-
-        <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
-          {tampil.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
-      </section>
-
-      <section className="container-page mt-8 md:mt-12">
+      <section
+        id="cara-pesan"
+        className="container-page mt-7 scroll-mt-24 md:mt-10"
+      >
         <div className="rounded-2xl border border-line bg-white p-4 md:p-6">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-[19px] font-extrabold text-navy md:text-[23px]">
@@ -252,6 +210,52 @@ export default async function BerandaPage() {
           </ol>
         </div>
       </section>
+
+      <section className="container-page mt-7 md:mt-10">
+        <h2 className="text-[19px] font-extrabold text-navy md:text-[23px]">
+          Kategori
+        </h2>
+
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1 hide-scrollbar">
+          <Link href="/katalog" className="chip chip-active">
+            Semua
+            <span className="rounded-full bg-white/15 px-1.5 text-[10px]">{products.length}</span>
+          </Link>
+          {kategori.map((k) => (
+            <Link
+              key={k}
+              href={`/katalog?kategori=${encodeURIComponent(k)}`}
+              className="chip"
+            >
+              {k}
+              <span className="rounded-full bg-paper px-1.5 text-[10px] text-muted">
+                {products.filter((p) => p.kategori === k).length}
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="container-page mt-7 md:mt-10">
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-[19px] font-extrabold text-navy md:text-[23px]">
+            Produk
+          </h2>
+          <Link
+            href="/katalog"
+            className="flex min-h-11 flex-none items-center gap-1 whitespace-nowrap text-[13px] font-bold text-brand hover:text-brand-dark"
+          >
+            Lihat semua <ArrowRight size={14} />
+          </Link>
+        </div>
+
+        <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
+          {tampil.map((p) => (
+            <ProductCard key={p.id} product={p} />
+          ))}
+        </div>
+      </section>
+
     </>
   );
 }

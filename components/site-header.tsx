@@ -3,34 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { NAV_TABS } from "@/lib/nav";
 import { Logo } from "./logo";
 import { useCart } from "./cart-provider";
 import { PreferencesControls } from "./preferences-controls";
-
-const tabs = [
-  {
-    href: "/",
-    label: "Beranda",
-    cocok: (p: string) => p === "/",
-  },
-  {
-    href: "/katalog",
-    label: "Katalog",
-    cocok: (p: string) => p.startsWith("/katalog") || p.startsWith("/produk"),
-  },
-  {
-    href: "/lacak",
-    label: "Riwayat",
-    aria: "Riwayat pesanan",
-    cocok: (p: string) => p.startsWith("/lacak") || p.startsWith("/pesanan"),
-  },
-  {
-    href: "/keranjang",
-    label: "Keranjang",
-    cocok: (p: string) =>
-      p.startsWith("/keranjang") || p.startsWith("/checkout"),
-  },
-];
 
 const AMBANG_ATAS = 96;
 const AMBANG_GESER = 4;
@@ -40,6 +16,7 @@ export function SiteHeader() {
   const { count } = useCart();
   const [sembunyi, setSembunyi] = useState(false);
   const [bergulir, setBergulir] = useState(false);
+  const [hash, setHash] = useState("");
   const posisiTerakhir = useRef(0);
 
   useEffect(() => {
@@ -47,6 +24,22 @@ export function SiteHeader() {
     setBergulir(false);
     posisiTerakhir.current = window.scrollY;
   }, [pathname]);
+
+  useEffect(() => {
+    const baca = () => setHash(window.location.hash);
+    baca();
+    window.addEventListener("hashchange", baca);
+    window.addEventListener("popstate", baca);
+    return () => {
+      window.removeEventListener("hashchange", baca);
+      window.removeEventListener("popstate", baca);
+    };
+  }, [pathname]);
+
+  const klikTab = (href: string) => {
+    const [jalur, bagian] = href.split("#");
+    if (jalur === pathname) setHash(bagian ? `#${bagian}` : "");
+  };
 
   useEffect(() => {
     let frame = 0;
@@ -100,13 +93,14 @@ export function SiteHeader() {
             className="hidden items-center gap-0.5 md:ml-2 md:flex lg:ml-4 lg:gap-1"
             aria-label="Navigasi utama"
           >
-            {tabs.map((tab) => {
-              const active = tab.cocok(pathname);
+            {NAV_TABS.map((tab) => {
+              const active = tab.cocok(pathname, hash);
               const keranjang = tab.href === "/keranjang";
               return (
                 <Link
                   key={tab.href}
                   href={tab.href}
+                  onClick={() => klikTab(tab.href)}
                   aria-current={active ? "page" : undefined}
                   aria-label={keranjang ? `Keranjang, ${count} produk` : undefined}
                   className={`press inline-flex items-center gap-1.5 rounded-full px-3 py-2.5 text-[13.5px] font-semibold transition-colors lg:px-4 ${

@@ -85,9 +85,14 @@
     background: linear-gradient(
       to bottom,
       transparent 0%,
-      transparent 34%,
-      color-mix(in srgb, var(--color-paper) 26%, transparent) 58%,
-      color-mix(in srgb, var(--color-paper) 70%, transparent) 82%,
+      transparent 30%,
+      color-mix(in srgb, var(--color-paper) 2%, transparent) 42%,
+      color-mix(in srgb, var(--color-paper) 6%, transparent) 54%,
+      color-mix(in srgb, var(--color-paper) 13%, transparent) 65%,
+      color-mix(in srgb, var(--color-paper) 24%, transparent) 74%,
+      color-mix(in srgb, var(--color-paper) 40%, transparent) 82%,
+      color-mix(in srgb, var(--color-paper) 62%, transparent) 89%,
+      color-mix(in srgb, var(--color-paper) 84%, transparent) 95%,
       var(--color-paper) 100%
     );
   }
