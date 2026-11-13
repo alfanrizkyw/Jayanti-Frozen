@@ -1,26 +1,14 @@
-import type { Order, Settings } from "./types";
-
 export interface Titik {
   lat: number;
   lng: number;
 }
 
 /** Seberapa rinci titik tujuan bisa dipastikan dari alamat tertulis. */
-export type Presisi = "alamat" | "jalan" | "wilayah" | "kota" | "tidak-ada";
+export type Presisi = "alamat" | "jalan" | "wilayah" | "kota";
 
-export interface HasilRute {
-  toko: Titik;
-  tujuan: Titik | null;
-  /** [lat, lng] mengikuti jalan dari OSRM; kosong bila tujuan belum diketahui. */
-  rute: [number, number][];
-  jarakMeter: number;
-  durasiDetik: number;
-  presisi: Presisi;
-}
-
-interface Temuan {
+export interface TitikAlamat {
   titik: Titik;
-  presisi: Exclude<Presisi, "tidak-ada">;
+  presisi: Presisi;
 }
 
 const KOTA = "Kota Probolinggo, Jawa Timur";
@@ -30,8 +18,7 @@ const PUSAT: Titik = { lat: -7.7441, lng: 113.2158 };
 const BATAS = { lat: 0.35, lng: 0.45 };
 const VIEWBOX = "113.00,-7.55,113.45,-7.95";
 
-const cacheAlamat = new Map<string, Temuan | null>();
-const cacheRute = new Map<string, HasilRute | null>();
+const cacheAlamat = new Map<string, TitikAlamat | null>();
 
 function alamatLengkap(alamat: string) {
   const bersih = alamat.trim();
@@ -46,22 +33,12 @@ function dekatKota(titik: Titik) {
   );
 }
 
-/** Titik toko bisa dipatok tepat lewat PETA_TITIK_TOKO="lat,lng". */
-function titikTokoEnv(): Titik | null {
-  const isi = process.env.PETA_TITIK_TOKO?.trim();
-  if (!isi) return null;
-  const [lat, lng] = isi.split(",").map((n) => Number(n));
-  return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
-}
-
 /**
  * Alamat warga sering memakai RT/RW, nomor rumah, atau nama perumahan yang
  * tidak ada di peta. Dicoba bertingkat: alamat lengkap, nama jalan, lalu
  * kelurahan/kecamatan, supaya titik yang didapat tetap berasal dari peta asli.
  */
-function varianAlamat(
-  alamat: string,
-): { query: string; presisi: Temuan["presisi"] }[] {
+function varianAlamat(alamat: string): { query: string; presisi: Presisi }[] {
   const dasar = alamatLengkap(alamat);
   if (!dasar) return [];
 
@@ -81,8 +58,8 @@ function varianAlamat(
     .filter(Boolean)
     .filter((s) => !/probolinggo|jawa timur/i.test(s));
 
-  const hasil: { query: string; presisi: Temuan["presisi"] }[] = [];
-  const tambah = (query: string, presisi: Temuan["presisi"]) => {
+  const hasil: { query: string; presisi: Presisi }[] = [];
+  const tambah = (query: string, presisi: Presisi) => {
     const q = query.replace(/\s+/g, " ").trim();
     if (q && !hasil.some((h) => h.query === q)) hasil.push({ query: q, presisi });
   };
@@ -121,7 +98,7 @@ async function cariAlamat(query: string): Promise<Titik | null> {
 async function geocode(
   alamat: string,
   terimaKota = true,
-): Promise<Temuan | null> {
+): Promise<TitikAlamat | null> {
   const percobaan = varianAlamat(alamat);
   if (!percobaan.length) return null;
   const kunci = `${terimaKota ? "a" : "b"}|${percobaan[0].query}`;
@@ -146,77 +123,12 @@ async function geocode(
   }
 }
 
-async function ruteJalan(
-  dari: Titik,
-  ke: Titik,
-): Promise<{ rute: [number, number][]; jarak: number; durasi: number } | null> {
-  try {
-    const url =
-      `https://router.project-osrm.org/route/v1/driving/` +
-      `${dari.lng},${dari.lat};${ke.lng},${ke.lat}` +
-      `?overview=full&geometries=geojson`;
-    const res = await fetch(url, {
-      headers: { "User-Agent": UA, Accept: "application/json" },
-      signal: AbortSignal.timeout(8000),
-      cache: "no-store",
-    });
-    if (!res.ok) return null;
-    const json = (await res.json()) as {
-      routes?: {
-        distance?: number;
-        duration?: number;
-        geometry?: { coordinates?: [number, number][] };
-      }[];
-    };
-    const jalur = json.routes?.[0];
-    const koordinat = jalur?.geometry?.coordinates;
-    if (!jalur || !koordinat?.length) return null;
-    return {
-      rute: koordinat.map(([lng, lat]) => [lat, lng] as [number, number]),
-      jarak: Number(jalur.distance ?? 0),
-      durasi: Number(jalur.duration ?? 0),
-    };
-  } catch {
-    return null;
-  }
-}
-
 /**
- * Rute pengantaran asli: titik toko dan alamat pembeli dicari di peta OSM, lalu
- * disambungkan mengikuti jalan oleh OSRM. Bila alamat pembeli tidak ditemukan,
- * peta tetap memakai titik toko asli dan `tujuan` dikosongkan agar tidak
- * menampilkan titik palsu.
+ * Mencocokkan alamat tertulis dengan titik di peta. Dipakai sebagai bantuan
+ * awal; pembeli tetap memeriksa dan menggeser pin ke titik yang benar.
  */
-export async function rutePengantaran(
-  order: Order,
-  settings: Settings,
-): Promise<HasilRute | null> {
-  const kunci = `${order.kode}|${order.alamat}|${settings.alamat}`;
-  if (cacheRute.has(kunci)) return cacheRute.get(kunci) ?? null;
-
-  try {
-    const [temuanToko, temuanTujuan] = await Promise.all([
-      geocode(settings.alamat),
-      geocode(order.alamat, false),
-    ]);
-    const toko = titikTokoEnv() ?? temuanToko?.titik ?? PUSAT;
-    const tujuan = temuanTujuan?.titik ?? null;
-    const presisi: Presisi = temuanTujuan?.presisi ?? "tidak-ada";
-
-    const jalan = tujuan ? await ruteJalan(toko, tujuan) : null;
-    const hasil: HasilRute = {
-      toko,
-      tujuan,
-      rute: jalan?.rute?.length ? jalan.rute : [],
-      jarakMeter: jalan?.jarak ?? 0,
-      durasiDetik: jalan?.durasi ?? 0,
-      presisi,
-    };
-
-    if (cacheRute.size > 300) cacheRute.clear();
-    cacheRute.set(kunci, hasil);
-    return hasil;
-  } catch {
-    return null;
-  }
+export async function cariTitikAlamat(
+  alamat: string,
+): Promise<TitikAlamat | null> {
+  return geocode(alamat, false);
 }

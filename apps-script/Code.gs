@@ -70,6 +70,8 @@ var TABEL = {
       ["jadwal", "s"],
       ["dibuat", "s"],
       ["diperbarui", "s"],
+      ["lat", "m"],
+      ["lng", "m"],
     ],
   },
   OrderItems: {

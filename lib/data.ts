@@ -186,11 +186,24 @@ export interface CheckoutInput {
   nama: string;
   telepon: string;
   alamat: string;
+  lat?: number | null;
+  lng?: number | null;
   catatan: string;
   metode: "ambil" | "antar";
   pembayaran: PaymentMethod;
   jadwal: string;
   items: { id: string; jumlah: number }[];
+}
+
+/** Titik peta harus angka wajar, dan (0,0) hampir pasti kiriman yang rusak. */
+function titikSah(lat: number, lng: number) {
+  return (
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    Math.abs(lat) <= 90 &&
+    Math.abs(lng) <= 180 &&
+    !(lat === 0 && lng === 0)
+  );
 }
 
 export async function createOrder(input: CheckoutInput) {
@@ -204,6 +217,10 @@ export async function createOrder(input: CheckoutInput) {
     throw new Error("Nomor HP tidak valid.");
   if (input.metode === "antar" && alamat.length < 8)
     throw new Error("Alamat pengantaran wajib diisi minimal 8 karakter.");
+  const lat = input.metode === "antar" ? Number(input.lat) : NaN;
+  const lng = input.metode === "antar" ? Number(input.lng) : NaN;
+  if (input.metode === "antar" && !titikSah(lat, lng))
+    throw new Error("Tandai titik lokasi antar di peta dulu.");
   if (!["ambil", "antar"].includes(input.metode))
     throw new Error("Metode pengambilan tidak valid.");
   if (!["tunai", "qris", "transfer"].includes(input.pembayaran))
@@ -301,6 +318,8 @@ export async function createOrder(input: CheckoutInput) {
     pelanggan: nama,
     telepon,
     alamat,
+    lat: input.metode === "antar" ? lat : null,
+    lng: input.metode === "antar" ? lng : null,
     catatan: input.catatan?.trim() ?? "",
     metode: input.metode,
     pembayaran: input.pembayaran,
@@ -538,6 +557,37 @@ export async function updateOrder(
   await saveAll(perubahan);
 
   return { order: baru, delivery };
+}
+
+/**
+ * Pembeli menentukan sendiri titik antar dari halaman pesanan. Selama pesanan
+ * belum ditutup, titik boleh diperbaiki agar kurir menuju tempat yang benar.
+ */
+export async function updateOrderTitik(
+  kode: string,
+  lat: number,
+  lng: number,
+) {
+  const db = await readDB(true);
+  const cari = kode.toLowerCase().trim();
+  const order = db.orders.find((o) => o.kode.toLowerCase() === cari);
+  if (!order) throw new Error("Pesanan tidak ditemukan.");
+  if (order.metode !== "antar")
+    throw new Error("Pesanan ini diambil sendiri di toko.");
+  if (order.status === "selesai" || order.status === "batal")
+    throw new Error("Pesanan sudah ditutup. Hubungi toko untuk mengubah titik.");
+  if (!titikSah(lat, lng)) throw new Error("Titik lokasi tidak valid.");
+
+  const baru: Order = {
+    ...order,
+    lat,
+    lng,
+    diperbarui: new Date().toISOString(),
+  };
+  await saveAll({
+    orders: { rows: [baru], fields: ["lat", "lng", "diperbarui"] },
+  });
+  return baru;
 }
 
 export async function verifyAdmin(

@@ -21,6 +21,7 @@ import {
   Truck,
 } from "lucide-react";
 import { useCart } from "@/components/cart-provider";
+import { PilihTitik, type TitikPilihan } from "@/components/pilih-titik";
 import { simpanKodePesanan, simpanTelepon } from "@/lib/order-history";
 import { rupiah, salinTeks } from "@/lib/format";
 import type { PaymentMethod, Settings } from "@/lib/types";
@@ -35,6 +36,7 @@ export function CheckoutForm({ settings }: { settings: Settings }) {
   const [nama, setNama] = useState("");
   const [telepon, setTelepon] = useState("");
   const [alamat, setAlamat] = useState("");
+  const [titik, setTitik] = useState<TitikPilihan | null>(null);
   const [catatan, setCatatan] = useState("");
   const [metode, setMetode] = useState<"ambil" | "antar">(tutup ? "ambil" : "antar");
   const [pembayaran, setPembayaran] = useState<PaymentMethod>(
@@ -92,6 +94,10 @@ export function CheckoutForm({ settings }: { settings: Settings }) {
       setError(tutup ? "Pilih jadwal kirim/ambil lebih dulu." : "Jadwal tidak tersedia.");
       return;
     }
+    if (metode === "antar" && !titik) {
+      setError("Tandai titik lokasi antar di peta dulu.");
+      return;
+    }
     setProses(true);
     try {
       const res = await fetch("/api/orders", {
@@ -101,6 +107,8 @@ export function CheckoutForm({ settings }: { settings: Settings }) {
           nama,
           telepon,
           alamat: metode === "antar" ? alamat : "",
+          lat: metode === "antar" ? titik?.lat ?? null : null,
+          lng: metode === "antar" ? titik?.lng ?? null : null,
           catatan,
           metode: tutup ? "ambil" : metode,
           pembayaran: tutup ? "tunai" : pembayaran,
@@ -301,6 +309,17 @@ export function CheckoutForm({ settings }: { settings: Settings }) {
                 <MapPin size={13} className="text-brand" />
                 Kurir akan menghubungi nomor HP saat tiba.
               </p>
+
+              <div className="mt-3 rounded-xl border border-line bg-paper/60 p-3">
+                <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-muted">
+                  <MapPin size={12} className="text-brand" /> Titik lokasi antar · wajib
+                </p>
+                <p className="mt-1 text-[11.5px] leading-relaxed text-muted">
+                  Tandai titik rumah Anda di peta supaya kurir sampai ke tempat
+                  yang benar, bukan hanya dari nama jalan.
+                </p>
+                <PilihTitik alamat={alamat} nilai={titik} onPilih={setTitik} />
+              </div>
             </div>
           )}
 

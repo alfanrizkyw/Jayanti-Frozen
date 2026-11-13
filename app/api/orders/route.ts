@@ -12,6 +12,8 @@ export async function POST(req: Request) {
       nama: String(body.nama ?? ""),
       telepon: String(body.telepon ?? ""),
       alamat: String(body.alamat ?? ""),
+      lat: body.lat,
+      lng: body.lng,
       catatan: String(body.catatan ?? ""),
       metode: body.metode,
       pembayaran: body.pembayaran,

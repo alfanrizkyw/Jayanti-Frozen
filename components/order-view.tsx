@@ -14,6 +14,7 @@ import {
   Copy,
   CreditCard,
   Landmark,
+  Loader2,
   MapPin,
   MessageCircle,
   Package,
@@ -25,6 +26,7 @@ import {
   Truck,
 } from "lucide-react";
 import { PetaPengantaran } from "./peta-pengantaran";
+import { PilihTitik, type TitikPilihan } from "./pilih-titik";
 import { OrderStatusBadge } from "./status-badge";
 import { ReceiptActions } from "./receipt-actions";
 import { BuktiFoto } from "./bukti-foto";
@@ -82,6 +84,11 @@ export function OrderView({
   const [data, setData] = useState<OrderViewData>(initial);
   const [sekarang, setSekarang] = useState<number | null>(null);
   const [salin, setSalin] = useState("");
+  const [ubahTitik, setUbahTitik] = useState(false);
+  const [drafTitik, setDrafTitik] = useState<TitikPilihan | null>(null);
+  const [menyimpanTitik, setMenyimpanTitik] = useState(false);
+  const [pesanTitik, setPesanTitik] = useState("");
+  const [gagalTitik, setGagalTitik] = useState(false);
 
   const { order, items, delivery, kurir, settings } = data;
   const final = order.status === "selesai" || order.status === "batal";
@@ -142,19 +149,24 @@ export function OrderView({
       ? [{ bank: "", nomor: settings.rekening, atasNama: settings.atasNama }]
       : [];
 
-  const { progress, eta } = useMemo(() => {
-    if (order.status === "selesai") return { progress: 1, eta: 0 };
+  const eta = useMemo(() => {
+    if (order.status === "selesai") return 0;
     if (order.status !== "diantar" || !delivery?.mulai)
-      return { progress: 0.05, eta: delivery?.estimasiMenit ?? settings.estimasiAntar };
+      return delivery?.estimasiMenit ?? settings.estimasiAntar;
     const estimasi = (delivery.estimasiMenit || settings.estimasiAntar) * 60_000;
     const lewat = (sekarang ?? Date.now()) - new Date(delivery.mulai).getTime();
-    return {
-      progress: Math.min(0.96, Math.max(0.05, lewat / estimasi)),
-      eta: Math.max(1, Math.ceil((estimasi - lewat) / 60_000)),
-    };
+    return Math.max(1, Math.ceil((estimasi - lewat) / 60_000));
   }, [order.status, delivery, settings.estimasiAntar, sekarang]);
 
   const gpsAktif = Boolean(delivery?.lat && delivery?.lng);
+  const titikPelanggan =
+    order.lat != null && order.lng != null
+      ? { lat: order.lat, lng: order.lng }
+      : null;
+  const bisaUbahTitik =
+    order.metode === "antar" &&
+    order.status !== "selesai" &&
+    order.status !== "batal";
 
   const langkah = [
     { k: "baru", label: "Pesanan diterima", desc: "Pesanan masuk dan menunggu konfirmasi admin." },
@@ -183,6 +195,33 @@ export function OrderView({
     if (await salinTeks(text)) {
       setSalin(label);
       setTimeout(() => setSalin(""), 1800);
+    }
+  }
+
+  async function simpanTitik() {
+    if (!drafTitik) return;
+    setMenyimpanTitik(true);
+    setPesanTitik("");
+    try {
+      const res = await fetch(`/api/orders/${encodeURIComponent(order.kode)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lat: drafTitik.lat, lng: drafTitik.lng }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error || "Titik gagal disimpan.");
+      if (json?.order) setData((prev) => ({ ...prev, order: json.order }));
+      setUbahTitik(false);
+      setDrafTitik(null);
+      setGagalTitik(false);
+      setPesanTitik("Titik lokasi tersimpan. Kurir menuju titik ini.");
+    } catch (err) {
+      setGagalTitik(true);
+      setPesanTitik(
+        err instanceof Error ? err.message : "Titik gagal disimpan.",
+      );
+    } finally {
+      setMenyimpanTitik(false);
     }
   }
 
@@ -284,19 +323,30 @@ export function OrderView({
               <div className="p-4 md:p-5">
                 {order.metode === "antar" ? (
                   <>
-                    {order.status === "diantar" || order.status === "selesai" ? (
-                      <PetaPengantaran
-                        kode={order.kode}
-                        posisi={
-                          delivery?.lat != null && delivery?.lng != null
-                            ? { lat: delivery.lat, lng: delivery.lng }
-                            : null
-                        }
-                        progress={progress}
-                        aktif={order.status === "diantar"}
-                        etaMenit={eta}
-                        gpsAktif={gpsAktif}
-                      />
+                    {titikPelanggan ||
+                    order.status === "diantar" ||
+                    order.status === "selesai" ? (
+                      <>
+                        <PetaPengantaran
+                          tujuan={titikPelanggan}
+                          posisi={
+                            delivery?.lat != null && delivery?.lng != null
+                              ? { lat: delivery.lat, lng: delivery.lng }
+                              : null
+                          }
+                          aktif={order.status === "diantar"}
+                          etaMenit={order.status === "diantar" ? eta : null}
+                          labelTujuan="Titik Anda"
+                        />
+                        {order.status !== "diantar" &&
+                          order.status !== "selesai" && (
+                            <p className="mt-2 text-[11px] leading-relaxed text-muted">
+                              {kurir
+                                ? `${kurir.nama} berangkat setelah pesanan diserahkan admin.`
+                                : "Admin menentukan kurir saat pesanan siap. Peta kurir aktif saat pengantaran mulai."}
+                            </p>
+                          )}
+                      </>
                     ) : (
                       <div className="flex items-start gap-3 rounded-xl bg-paper p-4">
                         <Truck size={19} className="mt-0.5 flex-none text-brand" />
@@ -356,6 +406,72 @@ export function OrderView({
                         {order.alamat}
                       </p>
                     </div>
+
+                    {bisaUbahTitik && (
+                      <div className="mt-3 rounded-xl border border-line bg-white p-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-muted">
+                            <MapPin size={12} className="text-brand" /> Titik
+                            lokasi antar
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setUbahTitik((lama) => !lama);
+                              setDrafTitik(null);
+                              setPesanTitik("");
+                              setGagalTitik(false);
+                            }}
+                            className="btn btn-sm btn-outline min-h-11"
+                          >
+                            {ubahTitik
+                              ? "Tutup"
+                              : titikPelanggan
+                                ? "Ubah titik"
+                                : "Tentukan titik"}
+                          </button>
+                        </div>
+                        <p className="mt-1 text-[11.5px] leading-relaxed text-muted">
+                          {titikPelanggan
+                            ? "Kurir menuju titik yang Anda tandai di peta, bukan perkiraan dari alamat."
+                            : "Titik belum diatur. Tandai titik rumah Anda supaya kurir tidak salah alamat."}
+                        </p>
+
+                        {ubahTitik && (
+                          <>
+                            <PilihTitik
+                              alamat={order.alamat}
+                              nilai={drafTitik ?? titikPelanggan}
+                              onPilih={setDrafTitik}
+                            />
+                            <button
+                              type="button"
+                              onClick={simpanTitik}
+                              disabled={!drafTitik || menyimpanTitik}
+                              className="btn btn-primary mt-2 w-full"
+                            >
+                              {menyimpanTitik ? (
+                                <Loader2 size={16} className="animate-spin" />
+                              ) : (
+                                <Check size={16} />
+                              )}
+                              {menyimpanTitik ? "Menyimpan…" : "Simpan titik"}
+                            </button>
+                          </>
+                        )}
+
+                        {pesanTitik && (
+                          <p
+                            role="status"
+                            className={`mt-2 text-[11px] font-semibold ${
+                              gagalTitik ? "text-[#8F2E25]" : "text-leaf"
+                            }`}
+                          >
+                            {pesanTitik}
+                          </p>
+                        )}
+                      </div>
+                    )}
 
                     {order.status === "selesai" && (
                       <div className="mt-3">

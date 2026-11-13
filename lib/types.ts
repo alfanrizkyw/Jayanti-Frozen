@@ -41,6 +41,9 @@ export interface Order {
   pelanggan: string;
   telepon: string;
   alamat: string;
+  /** Titik lokasi antar yang ditentukan pembeli sendiri. */
+  lat: number | null;
+  lng: number | null;
   catatan: string;
   metode: Fulfillment;
   pembayaran: PaymentMethod;

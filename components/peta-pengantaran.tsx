@@ -2,12 +2,12 @@
 
 import "leaflet/dist/leaflet.css";
 import { useEffect, useRef, useState } from "react";
-import { Navigation } from "lucide-react";
-import { TrackMap } from "./track-map";
-import type { HasilRute } from "@/lib/peta";
+import { MapPin } from "lucide-react";
 
 type Posisi = { lat: number; lng: number } | null;
 type LModule = typeof import("leaflet");
+
+const PUSAT: [number, number] = [-7.7441, 113.2158];
 
 const PENGUIN = `
 <svg viewBox="0 0 64 64" width="54" height="54" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
@@ -77,110 +77,70 @@ const PENGUIN = `
   </g>
 </svg>`;
 
-const IKON_TOKO = `
-<svg viewBox="0 0 32 32" width="32" height="32" aria-hidden="true">
-  <circle cx="16" cy="16" r="14" fill="#ffffff" stroke="#2166AC" stroke-width="2.2"/>
-  <path d="M9.5 13.5h13l-1.3-3.4H10.8z" fill="#2166AC"/>
-  <rect x="10" y="13.5" width="12" height="7.5" rx="1.2" fill="#2166AC"/>
-  <rect x="13" y="16.4" width="6" height="4.6" rx="0.9" fill="#ffffff"/>
+const PIN_TUJUAN = `
+<svg viewBox="0 0 36 44" width="36" height="44" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="18" cy="41.4" rx="7" ry="2.3" fill="#0F2440" opacity="0.18"/>
+  <path d="M18 2.4c-7.2 0-13 5.7-13 12.8 0 9.4 13 26.2 13 26.2s13-16.8 13-26.2c0-7.1-5.8-12.8-13-12.8Z" fill="#2166AC" stroke="#FFFFFF" stroke-width="2.4"/>
+  <circle cx="18" cy="15.2" r="4.8" fill="#FFFFFF"/>
 </svg>`;
 
-const IKON_TUJUAN = `
-<svg viewBox="0 0 32 32" width="32" height="32" aria-hidden="true">
-  <circle cx="16" cy="16" r="14" fill="#ffffff" stroke="#2166AC" stroke-width="2.2"/>
-  <path d="M16 8.5l7 6.2v8.3h-5.1v-4.4h-3.8v4.4H9v-8.3z" fill="#2166AC"/>
-</svg>`;
-
-function divIkon(L: LModule, html: string, ukuran: number, jangkar: number) {
+function divIkon(L: LModule, html: string, lebar: number, tinggi: number, jangkar: number) {
   return L.divIcon({
     className: "peta-pin-ikon",
     html,
-    iconSize: [ukuran, ukuran],
-    iconAnchor: [ukuran / 2, jangkar],
+    iconSize: [lebar, tinggi],
+    iconAnchor: [lebar / 2, jangkar],
   });
 }
 
-function indeksTerdekat(rute: [number, number][], titik: Posisi) {
-  if (!titik || !rute.length) return 0;
-  let best = 0;
-  let jarak = Number.POSITIVE_INFINITY;
-  for (let i = 0; i < rute.length; i++) {
-    const d =
-      (rute[i][0] - titik.lat) ** 2 + (rute[i][1] - titik.lng) ** 2;
-    if (d < jarak) {
-      jarak = d;
-      best = i;
-    }
-  }
-  return best;
-}
-
-function titikRute(rute: [number, number][], progres: number): Posisi {
-  if (!rute.length) return null;
-  const t = Math.min(0.999, Math.max(0, progres));
-  const titik = rute[Math.floor(t * (rute.length - 1))];
-  return { lat: titik[0], lng: titik[1] };
-}
-
+/**
+ * Peta pengantaran tanpa garis rute: hanya titik pelanggan dan posisi kurir
+ * yang dikirim GPS. Bila `onPilih` diisi, peta berubah menjadi pemilih titik
+ * dengan pin yang bisa digeser atau diketuk.
+ */
 export function PetaPengantaran({
-  kode,
-  posisi,
-  progress,
-  aktif,
-  etaMenit,
-  gpsAktif,
+  tujuan,
+  posisi = null,
   akurasi = null,
-  labelTujuan = "Alamat Anda",
+  aktif = false,
+  etaMenit = null,
+  labelTujuan = "Titik pelanggan",
+  onPilih,
+  tinggi = "h-[240px] sm:h-[290px]",
 }: {
-  kode: string;
-  posisi: Posisi;
-  progress: number;
-  aktif: boolean;
-  etaMenit: number;
-  gpsAktif: boolean;
+  tujuan: Posisi;
+  posisi?: Posisi;
   akurasi?: number | null;
+  aktif?: boolean;
+  etaMenit?: number | null;
   labelTujuan?: string;
+  onPilih?: (t: { lat: number; lng: number }) => void;
+  tinggi?: string;
 }) {
-  const [rute, setRute] = useState<HasilRute | null>(null);
-  const [status, setStatus] = useState<"muat" | "siap" | "gagal">("muat");
+  const pilih = Boolean(onPilih);
+  const [siap, setSiap] = useState(false);
   const wadah = useRef<HTMLDivElement | null>(null);
-  const peta = useRef<import("leaflet").Map | null>(null);
-  const penanda = useRef<import("leaflet").Marker | null>(null);
-  // Posisi awal dibaca lewat ref supaya peta tidak dibuat ulang tiap update GPS.
-  const posisiRef = useRef(posisi);
-  const progresRef = useRef(progress);
-  posisiRef.current = posisi;
-  progresRef.current = progress;
+  const petaRef = useRef<import("leaflet").Map | null>(null);
+  const lRef = useRef<LModule | null>(null);
+  const titikRef = useRef<import("leaflet").Marker | null>(null);
+  const kurirRef = useRef<import("leaflet").Marker | null>(null);
+  const lingkarRef = useRef<import("leaflet").Circle | null>(null);
+  const kurirPas = useRef(false);
+  const onPilihRef = useRef(onPilih);
+  onPilihRef.current = onPilih;
 
   useEffect(() => {
-    const ctrl = new AbortController();
-    setRute(null);
-    setStatus("muat");
-    fetch(`/api/rute/${encodeURIComponent(kode)}`, {
-      signal: ctrl.signal,
-      cache: "no-store",
-    })
-      .then(async (res) => {
-        const json = await res.json();
-        if (!res.ok || json?.fallback || !Array.isArray(json?.rute))
-          throw new Error("Rute tidak tersedia");
-        setRute(json as HasilRute);
-        setStatus("siap");
-      })
-      .catch(() => {
-        if (!ctrl.signal.aborted) setStatus("gagal");
-      });
-    return () => ctrl.abort();
-  }, [kode]);
-
-  useEffect(() => {
-    if (!rute || !wadah.current) return;
-    let dibatalkan = false;
+    let batal = false;
     let map: import("leaflet").Map | null = null;
+    titikRef.current = null;
+    kurirRef.current = null;
+    lingkarRef.current = null;
+    kurirPas.current = false;
 
     (async () => {
       const L = (await import("leaflet")).default;
-      if (dibatalkan || !wadah.current) return;
+      if (batal || !wadah.current) return;
+      lRef.current = L;
 
       map = L.map(wadah.current, {
         zoomControl: false,
@@ -190,7 +150,13 @@ export function PetaPengantaran({
         keyboard: false,
         touchZoom: true,
       });
-      L.control.zoom({ position: "bottomright", zoomInTitle: "Perbesar peta", zoomOutTitle: "Perkecil peta" }).addTo(map);
+      L.control
+        .zoom({
+          position: "bottomright",
+          zoomInTitle: "Perbesar peta",
+          zoomOutTitle: "Perkecil peta",
+        })
+        .addTo(map);
 
       L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
@@ -198,159 +164,208 @@ export function PetaPengantaran({
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       }).addTo(map);
 
-      L.polyline(rute.rute, {
-        color: "#ffffff",
-        weight: 9,
-        opacity: 0.9,
-        lineJoin: "round",
-      }).addTo(map);
-      const garis = L.polyline(rute.rute, {
-        color: "#2166AC",
-        weight: 4.5,
-        opacity: 0.9,
-        lineJoin: "round",
-        dashArray: "1 7",
-      }).addTo(map);
+      map.on("click", (e) => {
+        onPilihRef.current?.({ lat: e.latlng.lat, lng: e.latlng.lng });
+      });
 
-      L.marker([rute.toko.lat, rute.toko.lng], {
-        icon: divIkon(L, IKON_TOKO, 32, 16),
-        interactive: false,
-        zIndexOffset: 400,
-      }).addTo(map);
-      if (rute.tujuan) {
-        L.marker([rute.tujuan.lat, rute.tujuan.lng], {
-          icon: divIkon(L, IKON_TUJUAN, 32, 16),
-          interactive: false,
-          zIndexOffset: 400,
-        }).addTo(map);
-      }
-
-      const awal =
-        posisiRef.current ??
-        titikRute(rute.rute, progresRef.current) ??
-        rute.toko;
-      penanda.current = L.marker([awal.lat, awal.lng], {
-        icon: L.divIcon({
-          className: "peta-kurir-ikon",
-          html: `<div class="peta-kurir">${PENGUIN}</div>`,
-          iconSize: [54, 54],
-          iconAnchor: [27, 48],
-        }),
-        interactive: false,
-        zIndexOffset: 1000,
-      }).addTo(map);
-
-      if (rute.rute.length > 1) {
-        map.fitBounds(garis.getBounds(), { padding: [26, 26] });
-      } else {
-        map.setView([rute.toko.lat, rute.toko.lng], 14);
-      }
+      map.setView(PUSAT, pilih ? 14 : 13);
+      petaRef.current = map;
+      setSiap(true);
       window.setTimeout(() => map?.invalidateSize(), 120);
-      peta.current = map;
     })();
 
     return () => {
-      dibatalkan = true;
-      penanda.current = null;
-      peta.current = null;
+      batal = true;
+      titikRef.current = null;
+      kurirRef.current = null;
+      lingkarRef.current = null;
+      petaRef.current = null;
+      lRef.current = null;
       map?.remove();
       map = null;
     };
-    // Cukup sekali per rute; pergerakan kurir ditangani efek di bawah.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rute]);
+  }, [pilih]);
 
-  // Posisi kurir diperbarui tanpa membuat ulang peta.
+  // Titik pelanggan dan kurir digambar ulang tanpa membuat peta baru.
   useEffect(() => {
-    if (!rute || !penanda.current) return;
-    const titik =
-      posisi ??
-      titikRute(rute.rute, progress) ??
-      (rute.rute.length ? null : rute.toko);
-    if (!titik) return;
-    penanda.current.setLatLng([titik.lat, titik.lng]);
-    if (rute.rute.length < 2) return;
-    const el = penanda.current.getElement()
-      ?.firstElementChild as HTMLElement | null;
-    if (el) {
-      const i = indeksTerdekat(rute.rute, titik);
-      const depan = rute.rute[Math.min(rute.rute.length - 1, i + 2)];
-      const barat = depan ? depan[1] < titik.lng : false;
-      el.style.transform = barat ? "scaleX(-1)" : "";
+    const L = lRef.current;
+    const map = petaRef.current;
+    if (!siap || !L || !map) return;
+
+    if (tujuan) {
+      if (!titikRef.current) {
+        titikRef.current = L.marker([tujuan.lat, tujuan.lng], {
+          icon: divIkon(L, PIN_TUJUAN, 36, 44, 41),
+          draggable: pilih,
+          keyboard: false,
+          zIndexOffset: 700,
+        }).addTo(map);
+        if (pilih) {
+          titikRef.current.on("dragend", () => {
+            const p = titikRef.current?.getLatLng();
+            if (p) onPilihRef.current?.({ lat: p.lat, lng: p.lng });
+          });
+        }
+      } else {
+        const p = titikRef.current.getLatLng();
+        if (
+          Math.abs(p.lat - tujuan.lat) > 1e-7 ||
+          Math.abs(p.lng - tujuan.lng) > 1e-7
+        )
+          titikRef.current.setLatLng([tujuan.lat, tujuan.lng]);
+      }
+    } else if (titikRef.current) {
+      titikRef.current.remove();
+      titikRef.current = null;
     }
-  }, [rute, posisi, progress]);
 
-  const catatan = !rute
-    ? ""
-    : !rute.tujuan
-      ? "Alamat belum ada di peta · kurir pakai navigasi alamat"
-      : rute.presisi !== "alamat"
-        ? "Titik alamat diperkirakan dari nama jalan/wilayah"
-        : gpsAktif
-          ? akurasi != null && akurasi > 0
-            ? `Posisi GPS kurir · akurasi ±${Math.max(1, Math.round(akurasi))} m`
-            : "Posisi GPS kurir diterima"
-          : "Posisi diperkirakan dari waktu tempuh";
+    if (posisi) {
+      if (!kurirRef.current) {
+        kurirRef.current = L.marker([posisi.lat, posisi.lng], {
+          icon: L.divIcon({
+            className: "peta-kurir-ikon",
+            html: `<div class="peta-kurir">${PENGUIN}</div>`,
+            iconSize: [54, 54],
+            iconAnchor: [27, 48],
+          }),
+          interactive: false,
+          zIndexOffset: 1000,
+        }).addTo(map);
+      } else {
+        kurirRef.current.setLatLng([posisi.lat, posisi.lng]);
+      }
+      if (akurasi != null && akurasi > 1 && akurasi < 5000) {
+        if (!lingkarRef.current) {
+          lingkarRef.current = L.circle([posisi.lat, posisi.lng], {
+            radius: akurasi,
+            color: "#2166AC",
+            weight: 1,
+            opacity: 0.45,
+            fillColor: "#2166AC",
+            fillOpacity: 0.12,
+            interactive: false,
+          }).addTo(map);
+        } else {
+          lingkarRef.current.setLatLng([posisi.lat, posisi.lng]);
+          lingkarRef.current.setRadius(akurasi);
+        }
+      } else if (lingkarRef.current) {
+        lingkarRef.current.remove();
+        lingkarRef.current = null;
+      }
+    } else {
+      if (kurirRef.current) {
+        kurirRef.current.remove();
+        kurirRef.current = null;
+      }
+      if (lingkarRef.current) {
+        lingkarRef.current.remove();
+        lingkarRef.current = null;
+      }
+    }
+  }, [siap, pilih, tujuan, posisi, akurasi]);
 
-  if (status === "gagal") {
-    return (
-      <TrackMap
-        progress={progress}
-        aktif={aktif}
-        etaMenit={etaMenit}
-        gpsAktif={gpsAktif}
-        labelTujuan={labelTujuan}
-      />
-    );
-  }
+  // Pusatkan peta pada titik yang dipilih; saat kurir muncul, tampilkan keduanya.
+  useEffect(() => {
+    const L = lRef.current;
+    const map = petaRef.current;
+    if (!siap || !L || !map) return;
+
+    if (tujuan && !posisi) {
+      const dekat =
+        map.getZoom() >= 15 &&
+        map.distance(
+          map.getCenter(),
+          L.latLng(tujuan.lat, tujuan.lng),
+        ) < 1200;
+      if (!dekat)
+        map.setView([tujuan.lat, tujuan.lng], Math.max(map.getZoom(), 16));
+    }
+
+    if (posisi && !kurirPas.current) {
+      kurirPas.current = true;
+      if (tujuan) {
+        map.fitBounds(
+          L.latLngBounds([
+            [tujuan.lat, tujuan.lng],
+            [posisi.lat, posisi.lng],
+          ]),
+          { padding: [44, 44], maxZoom: 17 },
+        );
+      } else {
+        map.setView([posisi.lat, posisi.lng], 16);
+      }
+    }
+  }, [siap, tujuan, posisi]);
+
+  const catatan = pilih
+    ? "Geser pin atau ketuk peta untuk menepatkan titik."
+    : !tujuan
+      ? "Titik pelanggan belum diatur."
+      : posisi
+        ? akurasi != null && akurasi > 1
+          ? `Lokasi kurir langsung dari GPS · akurasi ±${Math.max(1, Math.round(akurasi))} m`
+          : "Lokasi kurir diperbarui otomatis"
+        : "Menunggu lokasi GPS kurir.";
 
   return (
     <div className="relative overflow-hidden rounded-[16px] border border-line bg-[#E9F2F9]">
       <div
         ref={wadah}
-        className="h-[240px] w-full sm:h-[290px]"
+        className={`${tinggi} w-full`}
         role="region"
         aria-label={
-          aktif
-            ? `Peta perjalanan kurir dari toko menuju ${labelTujuan.toLowerCase()}`
-            : "Rute pengantaran pesanan"
+          pilih
+            ? "Peta untuk memilih titik pengantaran"
+            : aktif
+              ? `Peta lokasi kurir menuju ${labelTujuan.toLowerCase()}`
+              : `Peta ${labelTujuan.toLowerCase()}`
         }
       />
 
-      {status === "muat" && (
+      {!siap && (
         <div className="absolute inset-0 flex items-center justify-center bg-[#E9F2F9] text-[11.5px] font-semibold text-muted">
           Menyiapkan peta…
         </div>
       )}
 
       <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-1.5 rounded-lg bg-white/95 px-2.5 py-1.5 text-[10px] font-bold text-navy shadow-sm backdrop-blur">
-        {aktif ? (
+        {pilih ? (
           <>
-            <span className="live-dot h-1.5 w-1.5 rounded-full bg-leaf" />
-            KURIR DI JALAN
+            <MapPin size={11} className="text-brand" />
+            PILIH TITIK
           </>
+        ) : aktif ? (
+          posisi ? (
+            <>
+              <span className="live-dot h-1.5 w-1.5 rounded-full bg-leaf" />
+              LOKASI KURIR
+            </>
+          ) : (
+            "MENUNGGU GPS KURIR"
+          )
         ) : (
           <>
-            <Navigation size={11} className="text-brand" />
-            RUTE PENGANTARAN
+            <MapPin size={11} className="text-brand" />
+            TITIK PENGANTARAN
           </>
         )}
       </div>
 
-      <div className="pointer-events-none absolute right-2 top-2 rounded-lg bg-white/95 px-2 py-1 text-right shadow-sm backdrop-blur sm:right-3 sm:top-3 sm:px-2.5 sm:py-1.5">
-        <p className="hidden text-[9px] font-bold uppercase tracking-wide text-muted sm:block">
-          Estimasi tiba
-        </p>
-        <p className="stat-num text-[11px] font-extrabold leading-tight text-navy sm:text-[13px]">
-          {etaMenit > 0 ? `${etaMenit} menit` : "Tiba"}
-        </p>
-      </div>
-
-      {catatan && (
-        <p className="pointer-events-none absolute bottom-2.5 left-3 max-w-[calc(100%-68px)] rounded-md bg-white/90 px-2 py-1 text-[8px] font-semibold text-muted backdrop-blur sm:text-[9px]">
-          {catatan}
-        </p>
+      {etaMenit != null && (
+        <div className="pointer-events-none absolute right-2 top-2 rounded-lg bg-white/95 px-2 py-1 text-right shadow-sm backdrop-blur sm:right-3 sm:top-3 sm:px-2.5 sm:py-1.5">
+          <p className="hidden text-[9px] font-bold uppercase tracking-wide text-muted sm:block">
+            Estimasi tiba
+          </p>
+          <p className="stat-num text-[11px] font-extrabold leading-tight text-navy sm:text-[13px]">
+            {etaMenit > 0 ? `${etaMenit} menit` : "Tiba"}
+          </p>
+        </div>
       )}
+
+      <p className="pointer-events-none absolute bottom-2.5 left-3 max-w-[calc(100%-68px)] rounded-md bg-white/90 px-2 py-1 text-[8px] font-semibold text-muted backdrop-blur sm:text-[9px]">
+        {catatan}
+      </p>
     </div>
   );
 }

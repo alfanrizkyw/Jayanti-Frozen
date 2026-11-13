@@ -88,6 +88,10 @@ export function CourierBoard({
   const aktif =
     orders.find((o) => o.kode === pilihKode) ?? orders[0] ?? null;
   const tugasLain = orders.filter((o) => o.id !== aktif?.id);
+  const titikPelanggan =
+    aktif && aktif.lat != null && aktif.lng != null
+      ? { lat: aktif.lat, lng: aktif.lng }
+      : null;
 
   const muatTugas = useCallback(async () => {
     try {
@@ -394,11 +398,25 @@ export function CourierBoard({
                 <MapPin size={15} className="mt-0.5 flex-none text-brand" />
                 {aktif.alamat}
               </p>
+              <p
+                className={`mt-1.5 flex items-center gap-1.5 text-[10.5px] font-semibold ${
+                  titikPelanggan ? "text-leaf" : "text-[#8A520B]"
+                }`}
+              >
+                <MapPin size={12} />
+                {titikPelanggan
+                  ? "Titik peta sudah dipasang pembeli"
+                  : "Titik peta belum diatur · pakai navigasi alamat"}
+              </p>
               <div className="mt-2 flex flex-wrap gap-2">
                 <a
-                  href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
-                    aktif.alamat,
-                  )}`}
+                  href={
+                    titikPelanggan
+                      ? `https://www.google.com/maps/dir/?api=1&destination=${titikPelanggan.lat},${titikPelanggan.lng}`
+                      : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+                          aktif.alamat,
+                        )}`
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-sm btn-navy"
@@ -450,15 +468,9 @@ export function CourierBoard({
             </div>
 
             <PetaPengantaran
-              kode={aktif.kode}
+              tujuan={titikPelanggan}
               posisi={posisi ? { lat: posisi.lat, lng: posisi.lng } : null}
-              progress={(() => {
-                const d = pengantaran(aktif.id);
-                if (!d?.mulai) return 0.05;
-                const menit =
-                  (Date.now() - new Date(d.mulai).getTime()) / 60000;
-                return Math.min(0.95, Math.max(0.05, menit / (d.estimasiMenit || 20)));
-              })()}
+              akurasi={akurasi}
               aktif
               etaMenit={(() => {
                 const d = pengantaran(aktif.id);
@@ -466,9 +478,7 @@ export function CourierBoard({
                 const menit = (Date.now() - new Date(d.mulai).getTime()) / 60000;
                 return Math.max(0, Math.ceil((d.estimasiMenit || 20) - menit));
               })()}
-              gpsAktif={geo === "aktif"}
-              akurasi={akurasi}
-              labelTujuan="Alamat pelanggan"
+              labelTujuan="Titik pelanggan"
             />
 
             <div className="rounded-xl border border-line bg-white px-3 py-3">

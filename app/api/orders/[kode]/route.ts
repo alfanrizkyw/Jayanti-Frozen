@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getOrderDetail } from "@/lib/data";
+import { getOrderDetail, updateOrderTitik } from "@/lib/data";
 
 export async function GET(
   _req: Request,
@@ -29,4 +29,30 @@ export async function GET(
     namaToko: settings.namaToko,
     serverTime: Date.now(),
   });
+}
+
+export async function PATCH(
+  req: Request,
+  { params }: { params: Promise<{ kode: string }> },
+) {
+  const { kode } = await params;
+  const body = await req.json().catch(() => null);
+  if (!body)
+    return NextResponse.json({ error: "Data titik tidak valid." }, { status: 400 });
+
+  try {
+    const order = await updateOrderTitik(
+      decodeURIComponent(kode),
+      Number(body.lat),
+      Number(body.lng),
+    );
+    return NextResponse.json(
+      { ok: true, order },
+      { headers: { "Cache-Control": "no-store" } },
+    );
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Titik gagal disimpan.";
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
 }
