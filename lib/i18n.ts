@@ -62,6 +62,20 @@ const KAMUS: Record<string, string> = {
   "Cari kode": "Find code",
   "Terlalu banyak percobaan. Tunggu beberapa menit lalu coba lagi.":
     "Too many attempts. Wait a few minutes and try again.",
+  "Pesanan dari perangkat ini terbaca otomatis. Tanpa kode, tanpa mengetik nomor HP. Pesanan lama bisa dibuka rinciannya.":
+    "Orders from this device are read automatically. No code, no phone number to type. Past orders can be opened for details.",
+  "Data pesanan hanya tersimpan di perangkat ini, tidak dibagikan ke perangkat lain.":
+    "Order data stays on this device and isn't shared with other devices.",
+  "Tidak ada pesanan yang tercatat": "No orders recorded",
+  "Pesanan baru dari perangkat ini akan muncul otomatis di sini.":
+    "New orders from this device will appear here automatically.",
+  "Setelah Anda pesan dari HP ini, pesanan dan status kurirnya muncul otomatis tanpa kode.":
+    "After you order from this phone, the order and courier status appear automatically without a code.",
+  "Pesanan dari nomor lain? Cek di sini":
+    "Order from another number? Check here",
+  "Cek pesanan dari nomor lain": "Check orders from another number",
+  "Perangkat ini belum bisa memeriksa pesanan. Periksa koneksi lalu coba lagi.":
+    "This device couldn't check orders yet. Check the connection and try again.",
   "Nomor belum bisa diperiksa. Periksa koneksi lalu coba lagi.":
     "The number can't be checked yet. Check your connection and try again.",
   "Nomor HP dan kode pesanan hanya tersimpan di HP ini, tidak dikirim ke perangkat lain.":

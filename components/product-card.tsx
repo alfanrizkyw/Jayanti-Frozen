@@ -12,7 +12,7 @@ export function ProductCard({ product }: { product: Product }) {
   const habis = product.stok <= 0;
 
   return (
-    <article className="group flex flex-col overflow-hidden rounded-[16px] border border-line bg-white shadow-card transition-shadow duration-200 hover:shadow-lift">
+    <article className="lift press group flex flex-col overflow-hidden rounded-[16px] border border-line bg-white shadow-card">
       <Link
         href={`/produk/${product.slug}`}
         className="relative block aspect-[4/3] overflow-hidden bg-mist"

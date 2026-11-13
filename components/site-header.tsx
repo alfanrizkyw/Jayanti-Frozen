@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ShoppingBag } from "lucide-react";
 import { Logo } from "./logo";
 import { useCart } from "./cart-provider";
 import { PreferencesControls } from "./preferences-controls";
@@ -39,7 +38,6 @@ const AMBANG_GESER = 4;
 export function SiteHeader() {
   const pathname = usePathname();
   const { count } = useCart();
-  const aktifIndex = tabs.findIndex((tab) => tab.cocok(pathname));
   const [sembunyi, setSembunyi] = useState(false);
   const [bergulir, setBergulir] = useState(false);
   const posisiTerakhir = useRef(0);
@@ -102,20 +100,30 @@ export function SiteHeader() {
             className="hidden items-center gap-0.5 md:ml-2 md:flex lg:ml-4 lg:gap-1"
             aria-label="Navigasi utama"
           >
-            {tabs.slice(0, 3).map((tab) => {
+            {tabs.map((tab) => {
               const active = tab.cocok(pathname);
+              const keranjang = tab.href === "/keranjang";
               return (
                 <Link
                   key={tab.href}
                   href={tab.href}
                   aria-current={active ? "page" : undefined}
-                  className={`rounded-full px-3 py-2.5 text-[13.5px] font-semibold transition-colors lg:px-4 ${
+                  aria-label={keranjang ? `Keranjang, ${count} produk` : undefined}
+                  className={`press inline-flex items-center gap-1.5 rounded-full px-3 py-2.5 text-[13.5px] font-semibold transition-colors lg:px-4 ${
                     active
                       ? "bg-white text-brand shadow-[0_1px_2px_rgba(16,43,80,0.08)] ring-1 ring-line"
                       : "text-navy/70 hover:bg-white/70 hover:text-navy"
                   }`}
                 >
                   {tab.label}
+                  {keranjang && count > 0 && (
+                    <span
+                      key={count}
+                      className="stat-num flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand px-1 text-[10px] font-bold text-white [animation:cart-pop_.32s_ease]"
+                    >
+                      {count}
+                    </span>
+                  )}
                 </Link>
               );
             })}
@@ -123,60 +131,9 @@ export function SiteHeader() {
 
           <div className="ml-auto flex flex-none items-center gap-0.5">
             <PreferencesControls />
-            <Link
-              href="/keranjang"
-              className="icon-btn relative hidden md:inline-flex"
-              aria-label={`Keranjang, ${count} produk`}
-            >
-              <ShoppingBag size={20} strokeWidth={2.1} />
-              {count > 0 && (
-                <span
-                  key={count}
-                  className="stat-num absolute right-1 top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand px-1 text-[10px] font-bold text-white [animation:cart-pop_.32s_ease]"
-                >
-                  {count}
-                </span>
-              )}
-            </Link>
           </div>
         </div>
 
-        <nav aria-label="Navigasi utama" className="pb-2 md:hidden">
-          <div className="relative grid grid-cols-4 rounded-2xl border border-line/70 bg-white/65 p-1">
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-y-1 left-1 w-[calc((100%-8px)/4)] transition-transform duration-300 ease-out motion-reduce:transition-none"
-              style={{
-                transform: `translateX(${Math.max(aktifIndex, 0) * 100}%)`,
-                opacity: aktifIndex < 0 ? 0 : 1,
-              }}
-            >
-              <span className="block h-full rounded-xl bg-mist ring-1 ring-line" />
-            </span>
-
-            {tabs.map((tab) => {
-              const active = tab.cocok(pathname);
-              return (
-                <Link
-                  key={tab.href}
-                  href={tab.href}
-                  aria-current={active ? "page" : undefined}
-                  aria-label={tab.aria}
-                  className={`relative flex min-h-11 items-center justify-center rounded-xl px-1 text-[12.5px] font-bold transition-colors duration-200 motion-reduce:transition-none ${
-                    active ? "text-brand" : "text-navy/70"
-                  }`}
-                >
-                  {tab.label}
-                  {tab.href === "/keranjang" && count > 0 && (
-                    <span className="stat-num absolute right-1.5 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[9px] font-bold text-white">
-                      {count}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-        </nav>
       </header>
     </div>
   );

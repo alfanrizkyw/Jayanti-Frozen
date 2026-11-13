@@ -2,6 +2,7 @@ import { AlertCircle } from "lucide-react";
 import { CartProvider } from "@/components/cart-provider";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { TabBar } from "@/components/tab-bar";
 import { MiniCart } from "@/components/mini-cart";
 import { WelcomeIntro } from "@/components/welcome-intro";
 import { AutoRefresh } from "@/components/auto-refresh";
@@ -33,6 +34,8 @@ export default async function StoreLayout({
       )}
       <main>{children}</main>
       <SiteFooter settings={settings} />
+      <div aria-hidden="true" className="h-[72px] md:hidden" />
+      <TabBar />
       <MiniCart />
       <WelcomeIntro />
       <AutoRefresh detik={20} />

@@ -107,7 +107,34 @@
   }
 
   .btn:active {
-    transform: translateY(1px);
+    transform: translateY(1px) scale(0.985);
+    transition-duration: 0.1s;
+  }
+
+  .press {
+    transition: transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1);
+    will-change: transform;
+  }
+
+  .press:active {
+    transform: scale(0.97);
+  }
+
+  .lift {
+    transition: transform 0.22s cubic-bezier(0.2, 0.7, 0.3, 1),
+      box-shadow 0.22s ease, border-color 0.18s ease;
+  }
+
+  @media (hover: hover) {
+    .lift:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lift);
+    }
+  }
+
+  .lift:active {
+    transform: translateY(0) scale(0.995);
+    box-shadow: var(--shadow-card);
   }
 
   .btn:disabled {
@@ -237,7 +264,12 @@
     font-size: 13px;
     font-weight: 700;
     white-space: nowrap;
-    transition: all 0.16s ease;
+    transition: background-color 0.16s ease, border-color 0.16s ease,
+      color 0.16s ease, transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+
+  .chip:active {
+    transform: scale(0.97);
   }
 
   .chip:hover {
@@ -529,6 +561,11 @@ html.tema-anim *::after {
 
 [data-theme="dark"] .text-brand-dark {
   color: #9acdf7;
+}
+
+[data-theme="dark"] .tab-pill {
+  background-color: #1a3550;
+  --tw-ring-color: #2b4a68;
 }
 
 [data-theme="dark"] .text-leaf {

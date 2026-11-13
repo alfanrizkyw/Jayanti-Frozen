@@ -13,7 +13,7 @@ import {
   simpanKodePesanan,
   simpanTelepon,
 } from "@/lib/order-history";
-import { relatif, rupiah, tanggal, teleponRapi } from "@/lib/format";
+import { relatif, rupiah, tanggal } from "@/lib/format";
 import type { Order, OrderItem } from "@/lib/types";
 
 type KurirRingkas = { nama: string } | null;
@@ -43,12 +43,6 @@ async function ambilPesanan(kode: string): Promise<Pesanan | null> {
   }
 }
 
-function samarkan(nomor: string): string {
-  const tel = teleponRapi(nomor);
-  if (tel.length < 7) return tel;
-  return `${tel.slice(0, 4)}•••${tel.slice(-3)}`;
-}
-
 function KartuPesanan({
   pesanan,
   aktif,
@@ -62,7 +56,7 @@ function KartuPesanan({
   return (
     <Link
       href={`/pesanan/${encodeURIComponent(order.kode)}`}
-      className="flex items-start gap-3 rounded-2xl border border-line bg-white px-4 py-4 transition-colors hover:border-[#C9E1F7]"
+      className="lift press flex items-start gap-3 rounded-2xl border border-line bg-white px-4 py-4"
     >
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
@@ -122,6 +116,12 @@ export function OrderHistory() {
     if (cariNomor) setMencari(true);
     let pesan = "";
 
+    // Detail pesanan yang sudah tersimpan diambil bersamaan dengan pemeriksaan
+    // nomor, supaya daftar tidak menunggu dua kali lipat.
+    const awal = new Map(
+      bacaKodePesanan().map((c) => [c.kode, ambilPesanan(c.kode)]),
+    );
+
     if (cariNomor && hp) {
       try {
         const res = await fetch(
@@ -139,17 +139,19 @@ export function OrderHistory() {
           pesan = "Terlalu banyak percobaan. Tunggu beberapa menit lalu coba lagi.";
         }
       } catch {
-        pesan = "Nomor belum bisa diperiksa. Periksa koneksi lalu coba lagi.";
+        pesan = "Perangkat ini belum bisa memeriksa pesanan. Periksa koneksi lalu coba lagi.";
       }
     }
 
     const kode = bacaKodePesanan();
-    const hasil = await Promise.all(kode.map((c) => ambilPesanan(c.kode)));
+    const hasil = await Promise.all(
+      kode.map((c) => awal.get(c.kode) ?? ambilPesanan(c.kode)),
+    );
     if (urut !== versi.current) return;
 
     setDaftar(hasil.filter((x): x is Pesanan => Boolean(x)));
     setCatatan(pesan);
-    if (cariNomor) setMencari(false);
+    setMencari(false);
   }, []);
 
   useEffect(() => {
@@ -205,14 +207,15 @@ export function OrderHistory() {
 
   if (daftar === null) {
     return (
-      <p className="mt-6 text-center text-[12.5px] text-muted">
+      <p className="mt-6 flex items-center justify-center gap-2 text-[12.5px] text-muted">
+        <Loader2 size={14} className="animate-spin" />
         Memuat riwayat pesanan…
       </p>
     );
   }
 
   const formulir = (
-    <form onSubmit={cekNomor} className="mt-3 text-left">
+    <form onSubmit={cekNomor} className="mt-4 text-left">
       <label htmlFor="nomor-hp" className="label">
         Nomor HP saat pesan
       </label>
@@ -236,7 +239,28 @@ export function OrderHistory() {
         </div>
         <button type="submit" className="btn btn-primary sm:px-5" disabled={mencari}>
           {mencari ? <Loader2 size={16} className="animate-spin" /> : null}
-          Lihat pesanan
+          Cari pesanan
+        </button>
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-x-4">
+        {nomor && (
+          <button
+            type="button"
+            onClick={lupakanNomor}
+            className="inline-flex min-h-11 items-center text-[11.5px] font-semibold text-muted underline underline-offset-2 hover:text-navy"
+          >
+            Hapus nomor dari perangkat ini
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => {
+            setUbahNomor(false);
+            setCatatan("");
+          }}
+          className="inline-flex min-h-11 items-center text-[11.5px] font-semibold text-brand"
+        >
+          Batal
         </button>
       </div>
     </form>
@@ -252,33 +276,33 @@ export function OrderHistory() {
           {mencari
             ? "Memeriksa pesanan…"
             : nomor
-              ? "Tidak ada pesanan aktif"
+              ? "Tidak ada pesanan yang tercatat"
               : "Belum ada pesanan di perangkat ini"}
         </p>
         {!mencari && (
           <p className="mx-auto mt-1 max-w-[340px] text-[13px] leading-relaxed text-muted">
             {nomor
-              ? `Pesanan dari nomor ${samarkan(nomor)} yang masih berjalan akan muncul otomatis di sini.`
-              : "Masukkan nomor HP yang Anda pakai saat pesan. Pesanan yang masih berjalan muncul otomatis tanpa kode."}
+              ? "Pesanan baru dari perangkat ini akan muncul otomatis di sini."
+              : "Setelah Anda pesan dari HP ini, pesanan dan status kurirnya muncul otomatis tanpa kode."}
           </p>
         )}
 
-        {(ubahNomor || !nomor) && formulir}
-
-        {nomor && !ubahNomor && (
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+        {!mencari && !ubahNomor && (
+          <div className="mt-4 flex flex-col items-center gap-1.5">
+            <Link href="/katalog" className="btn btn-primary">
+              Buka katalog
+            </Link>
             <button
               type="button"
               onClick={() => setUbahNomor(true)}
-              className="btn btn-outline btn-sm"
+              className="inline-flex min-h-11 items-center px-2 text-[12px] font-semibold text-brand"
             >
-              Ganti nomor
+              Pesanan dari nomor lain? Cek di sini
             </button>
-            <Link href="/katalog" className="btn btn-primary btn-sm">
-              Buka katalog
-            </Link>
           </div>
         )}
+
+        {ubahNomor && formulir}
 
         {catatan && (
           <p className="mx-auto mt-3 max-w-[340px] text-[12px] leading-relaxed text-[#8A520B]">
@@ -297,21 +321,6 @@ export function OrderHistory() {
 
   return (
     <div className="mt-5 space-y-7">
-      {nomor && (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-paper px-3.5 py-2.5">
-          <span className="text-[12px] text-muted">
-            Nomor HP <strong className="font-bold text-navy">{samarkan(nomor)}</strong>
-          </span>
-          <button
-            type="button"
-            onClick={() => setUbahNomor((v) => !v)}
-            className="inline-flex min-h-11 items-center px-1 text-[12px] font-bold text-brand"
-          >
-            {ubahNomor ? "Tutup" : "Ganti nomor"}
-          </button>
-        </div>
-      )}
-
       {ubahNomor && formulir}
 
       {catatan && (
@@ -357,22 +366,13 @@ export function OrderHistory() {
         </section>
       )}
 
-      {nomor && (
-        <button
-          type="button"
-          onClick={lupakanNomor}
-          className="inline-flex min-h-11 items-center text-[11.5px] font-semibold text-muted underline underline-offset-2 hover:text-navy"
-        >
-          Hapus nomor dari perangkat ini
-        </button>
-      )}
-      {!nomor && !ubahNomor && (
+      {!ubahNomor && (
         <button
           type="button"
           onClick={() => setUbahNomor(true)}
-          className="inline-flex min-h-11 items-center text-[11.5px] font-semibold text-brand underline underline-offset-2"
+          className="inline-flex min-h-11 items-center text-[11.5px] font-semibold text-muted underline underline-offset-2 hover:text-navy"
         >
-          Cek pesanan dari nomor HP lain
+          Cek pesanan dari nomor lain
         </button>
       )}
     </div>
