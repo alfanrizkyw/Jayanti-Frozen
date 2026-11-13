@@ -22,8 +22,8 @@ const tabs = [
   },
   {
     href: "/lacak",
-    label: "Lacak",
-    aria: "Lacak pesanan",
+    label: "Riwayat",
+    aria: "Riwayat pesanan",
     cocok: (p: string) => p.startsWith("/lacak") || p.startsWith("/pesanan"),
   },
   {
@@ -92,7 +92,7 @@ export function SiteHeader({ settings }: { settings: Settings }) {
                         : "text-navy/75 hover:bg-mist/70 hover:text-navy"
                     }`}
                   >
-                    {tab.href === "/lacak" ? "Lacak pesanan" : tab.label}
+                    {tab.label}
                   </Link>
                 );
               })}

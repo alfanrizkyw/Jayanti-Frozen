@@ -57,9 +57,7 @@ export function Logo({
           tone === "light" ? "logo-word-light" : ""
         }`}
       >
-        <span className="text-[19px] font-extrabold tracking-[-0.03em]">
-          Yanti
-        </span>
+        <span className="logo-name text-[21px] leading-none">Yanti</span>
         <span className="mt-[3px] text-[9px] font-bold uppercase tracking-[0.32em]">
           Frozen
         </span>

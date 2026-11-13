@@ -370,6 +370,12 @@
   animation: logo-blink 5.4s ease-in-out infinite;
 }
 
+.logo-name {
+  font-family: var(--font-brand), var(--font-jakarta), ui-sans-serif, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
 .logo-word {
   background-image: linear-gradient(
     100deg,

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Baloo_2, Plus_Jakarta_Sans } from "next/font/google";
 import { ErrorReporter } from "@/components/error-reporter";
 import { PreferencesProvider } from "@/components/preferences";
 import { AutoTranslate } from "@/components/auto-translate";
@@ -12,7 +12,14 @@ const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
 });
 
-const skripPreferensi = `(function(){try{var t=localStorage.getItem("jayanti-tema");var tema=t==="dark"||t==="light"?t:"light";document.documentElement.dataset.theme=tema;var b=localStorage.getItem("jayanti-bahasa");document.documentElement.lang=b==="en"?"en":"id";}catch(e){}})();`;
+const baloo = Baloo_2({
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  display: "swap",
+  variable: "--font-brand",
+});
+
+const skripPreferensi = `(function(){try{var t=localStorage.getItem("yanti-tema");var tema=t==="dark"||t==="light"?t:"light";document.documentElement.dataset.theme=tema;var b=localStorage.getItem("jayanti-bahasa");document.documentElement.lang=b==="en"?"en":"id";}catch(e){}})();`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -55,7 +62,7 @@ export default function RootLayout({
       lang="id"
       data-scroll-behavior="smooth"
       suppressHydrationWarning
-      className={jakarta.variable}
+      className={`${jakarta.variable} ${baloo.variable}`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: skripPreferensi }} />

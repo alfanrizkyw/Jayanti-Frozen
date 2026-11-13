@@ -16,6 +16,31 @@ const KAMUS: Record<string, string> = {
   "Lacak pesanan": "Track order",
   Lokasi: "Location",
   Lacak: "Track",
+  Riwayat: "History",
+  "Riwayat pesanan": "Order history",
+  "Riwayat pesanan Anda": "Your order history",
+  "Pesanan yang masih berjalan bisa dilacak, pesanan lama bisa dibuka rinciannya.":
+    "Ongoing orders can be tracked, and past orders can be opened for details.",
+  "Cari pesanan lain": "Find another order",
+  "Punya kode pesanan dari perangkat lain? Masukkan kodenya di sini.":
+    "Have an order code from another device? Enter it here.",
+  "Kode pesanan tersimpan otomatis di HP ini selama data browser tidak dihapus.":
+    "Order codes are saved automatically on this phone as long as browser data isn't cleared.",
+  "Memuat riwayat pesanan…": "Loading order history…",
+  "Belum ada pesanan di perangkat ini": "No orders on this device yet",
+  "Pesanan yang Anda buat lewat HP ini akan tersimpan di sini.":
+    "Orders you place from this phone will be saved here.",
+  "Buka katalog": "Open catalog",
+  "Sedang berjalan": "In progress",
+  "Sudah selesai": "Completed",
+  "Status dan posisi kurir ikut diperbarui otomatis.":
+    "Status and courier position update automatically.",
+  "Lihat rincian": "View details",
+  Diperbarui: "Updated",
+  "Kurir sedang mengantar.": "The courier is on the way.",
+  "Pesanan sudah siap diambil di toko.": "The order is ready for pickup.",
+  "Status diperbarui otomatis oleh admin.":
+    "The status is updated automatically by the admin.",
   Keranjang: "Cart",
   "Keranjang belanja": "Shopping cart",
   "Lacak pesanan Anda": "Track your order",
@@ -350,6 +375,8 @@ const KAMUS: Record<string, string> = {
     "No order found with that code. Check the letters and numbers again, or contact the store.",
   "Tautan mungkin sudah berubah. Kembali ke beranda atau lacak pesanan Anda lewat kode.":
     "The link may have changed. Go back home or track your order using the code.",
+  "Tautan mungkin sudah berubah. Kembali ke beranda atau buka riwayat pesanan Anda.":
+    "The link may have changed. Go back home or open your order history.",
 
   // Checkout
   "Checkout": "Checkout",

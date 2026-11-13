@@ -12,7 +12,7 @@ import {
 import type { Lang, Theme } from "@/lib/i18n";
 
 const KUNCI_BAHASA = "jayanti-bahasa";
-const KUNCI_TEMA = "jayanti-tema";
+const KUNCI_TEMA = "yanti-tema";
 
 type Preferensi = {
   lang: Lang;

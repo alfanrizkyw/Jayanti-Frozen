@@ -28,6 +28,7 @@ import { TrackMap } from "./track-map";
 import { OrderStatusBadge } from "./status-badge";
 import { ReceiptActions } from "./receipt-actions";
 import { BuktiFoto } from "./bukti-foto";
+import { simpanKodePesanan } from "@/lib/order-history";
 import {
   inisial,
   relatif,
@@ -84,6 +85,10 @@ export function OrderView({
 
   const { order, items, delivery, kurir, settings } = data;
   const final = order.status === "selesai" || order.status === "batal";
+
+  useEffect(() => {
+    simpanKodePesanan(order.kode);
+  }, [order.kode]);
 
   useEffect(() => {
     setSekarang(Date.now());
@@ -176,7 +181,7 @@ export function OrderView({
       <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-[12px] text-muted">
         <Link href="/" className="hover:text-navy">Beranda</Link>
         <span aria-hidden="true">/</span>
-        <Link href="/lacak" className="hover:text-navy">Lacak pesanan</Link>
+        <Link href="/lacak" className="hover:text-navy">Riwayat pesanan</Link>
         <span aria-hidden="true">/</span>
         <span className="font-semibold text-navy">{order.kode}</span>
       </nav>
@@ -657,7 +662,7 @@ export function OrderView({
                 href="/lacak"
                 className="btn btn-sm flex-1 border border-white/20 bg-white/10 text-white hover:bg-white/15"
               >
-                Lacak lain <ArrowRight size={13} />
+                Riwayat pesanan <ArrowRight size={13} />
               </Link>
             </div>
           </section>

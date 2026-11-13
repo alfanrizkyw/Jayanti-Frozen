@@ -16,12 +16,12 @@ export default function NotFound() {
           Halaman tidak ditemukan
         </h1>
         <p className="mt-2 text-[13px] leading-relaxed text-muted">
-          Tautan mungkin sudah berubah. Kembali ke beranda atau lacak pesanan
-          Anda lewat kode.
+          Tautan mungkin sudah berubah. Kembali ke beranda atau buka riwayat
+          pesanan Anda.
         </p>
         <div className="mt-5 flex flex-col gap-2 sm:flex-row">
           <Link href="/" className="btn btn-primary flex-1">Ke beranda</Link>
-          <Link href="/lacak" className="btn btn-outline flex-1">Lacak pesanan</Link>
+          <Link href="/lacak" className="btn btn-outline flex-1">Riwayat pesanan</Link>
         </div>
       </div>
     </div>

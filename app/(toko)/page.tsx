@@ -8,8 +8,8 @@ import {
   ChevronRight,
   CreditCard,
   ExternalLink,
+  Headset,
   MapPin,
-  MessageCircle,
   Search,
   Snowflake,
   Store,
@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { getStorefront } from "@/lib/data";
 import { ProductCard } from "@/components/product-card";
+import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { rupiah, waLink } from "@/lib/format";
 
 export default async function BerandaPage() {
@@ -286,7 +287,7 @@ export default async function BerandaPage() {
         <div className="flex flex-col items-start justify-between gap-4 rounded-[22px] border border-[#C9E1F7] bg-mist px-5 py-5 sm:flex-row sm:items-center md:px-7">
           <div className="flex items-start gap-3">
             <span className="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-white text-brand">
-              <MessageCircle size={20} />
+              <Headset size={20} />
             </span>
             <div>
               <p className="text-[15px] font-extrabold text-navy">
@@ -304,7 +305,7 @@ export default async function BerandaPage() {
               rel="noopener noreferrer"
               className="btn btn-primary flex-1 sm:flex-none"
             >
-              <MessageCircle size={16} /> WhatsApp toko
+              <WhatsAppIcon size={16} /> WhatsApp toko
             </a>
             <Link href="/katalog" className="btn btn-outline flex-1 sm:flex-none">
               Lihat katalog
