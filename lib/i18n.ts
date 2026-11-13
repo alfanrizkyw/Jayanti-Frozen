@@ -30,6 +30,10 @@ const KAMUS: Record<string, string> = {
   "Belum ada pesanan di perangkat ini": "No orders on this device yet",
   "Pesanan yang Anda buat lewat HP ini akan tersimpan di sini.":
     "Orders you place from this phone will be saved here.",
+  "Setelah Anda pesan dari HP ini, pesanan dan status kurirnya muncul otomatis di sini.":
+    "After you order from this phone, the order and courier status appear here automatically.",
+  "Riwayat belum bisa dimuat. Periksa koneksi lalu coba lagi.":
+    "The history couldn't be loaded. Check your connection and try again.",
   "Buka katalog": "Open catalog",
   "Sedang berjalan": "In progress",
   "Sudah selesai": "Completed",
@@ -62,8 +66,8 @@ const KAMUS: Record<string, string> = {
   "Cari kode": "Find code",
   "Terlalu banyak percobaan. Tunggu beberapa menit lalu coba lagi.":
     "Too many attempts. Wait a few minutes and try again.",
-  "Pesanan dari perangkat ini terbaca otomatis. Tanpa kode, tanpa mengetik nomor HP. Pesanan lama bisa dibuka rinciannya.":
-    "Orders from this device are read automatically. No code, no phone number to type. Past orders can be opened for details.",
+  "Pesanan dari perangkat ini terbaca otomatis. Tidak perlu kode atau mengetik apa pun. Pesanan lama bisa dibuka rinciannya.":
+    "Orders from this device are read automatically. No code or typing needed. Past orders can be opened for details.",
   "Data pesanan hanya tersimpan di perangkat ini, tidak dibagikan ke perangkat lain.":
     "Order data stays on this device and isn't shared with other devices.",
   "Tidak ada pesanan yang tercatat": "No orders recorded",

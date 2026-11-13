@@ -7,7 +7,7 @@ import { OrderHistory } from "@/components/order-history";
 export const metadata: Metadata = {
   title: "Riwayat pesanan",
   description:
-    "Pesanan Yanti Frozen di perangkat ini muncul otomatis, tanpa kode dan tanpa memasukkan nomor HP.",
+    "Pesanan Yanti Frozen di perangkat ini muncul otomatis, tanpa kode dan tanpa mengisi apa pun.",
 };
 
 export default async function RiwayatPage({
@@ -39,8 +39,8 @@ export default async function RiwayatPage({
               Riwayat pesanan
             </h1>
             <p className="relative mt-1 max-w-[430px] text-[12.5px] leading-relaxed text-white/70">
-              Pesanan dari perangkat ini terbaca otomatis. Tanpa kode, tanpa
-              mengetik nomor HP. Pesanan lama bisa dibuka rinciannya.
+              Pesanan dari perangkat ini terbaca otomatis. Tidak perlu kode atau
+              mengetik apa pun. Pesanan lama bisa dibuka rinciannya.
             </p>
           </div>
 

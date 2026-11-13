@@ -19,10 +19,6 @@ export default async function BerandaPage() {
   const tampil = (unggulan.length >= 4 ? unggulan : products).slice(0, 8);
   const kategori = Array.from(new Set(products.map((p) => p.kategori)));
   const promo = banner;
-  const diskon = products.reduce((maks, p) => {
-    if (!p.hargaPromo) return maks;
-    return Math.max(maks, Math.round((1 - p.hargaPromo / p.harga) * 100));
-  }, 0);
   const gambarHero = promo?.gambar || "/brand/hero-promo.jpg";
 
   return (
@@ -65,7 +61,7 @@ export default async function BerandaPage() {
           <form
             action="/katalog"
             method="get"
-            className="mt-4 flex gap-2 sm:max-w-[420px]"
+            className="mt-4 flex max-w-[560px] gap-2"
             role="search"
           >
             <label htmlFor="cari-beranda" className="sr-only">
@@ -91,37 +87,30 @@ export default async function BerandaPage() {
               Cari
             </button>
           </form>
+
+          {promo && (
+            <Link
+              href={promo.cta || "/katalog"}
+              className="lift press mt-3 flex max-w-[560px] items-center gap-3 rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-white backdrop-blur-md"
+            >
+              <span className="hidden h-9 w-9 flex-none items-center justify-center rounded-xl bg-white/10 text-sky min-[420px]:flex">
+                <Snowflake size={17} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-extrabold uppercase tracking-[0.15em] text-sky">
+                  {promo.badge || "Promo"}
+                </p>
+                <p className="mt-0.5 text-[13.5px] font-extrabold leading-snug sm:text-[14px]">
+                  {promo.judul}
+                </p>
+              </div>
+              <span className="btn btn-sm flex-none bg-white text-navy hover:bg-white/90">
+                Lihat <ArrowRight size={14} />
+              </span>
+            </Link>
+          )}
         </div>
       </section>
-
-      {promo && (
-        <section className="container-page mt-3 md:mt-4">
-          <Link
-            href={promo.cta || "/katalog"}
-            className="lift press flex items-center gap-3 overflow-hidden rounded-2xl bg-[linear-gradient(110deg,#132f57,#1d5f9e)] px-4 py-3.5 text-white md:px-5"
-          >
-            <span className="hidden h-10 w-10 flex-none items-center justify-center rounded-xl bg-white/10 text-sky min-[370px]:flex">
-              <Snowflake size={18} />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.15em] text-sky">
-                {promo.badge || "Promo"}
-              </p>
-              <p className="mt-0.5 text-[13.5px] font-extrabold leading-snug sm:text-[14px]">
-                {promo.judul}
-              </p>
-              <p className="hidden truncate text-[11.5px] text-white/65 sm:block">
-                {diskon > 0
-                  ? `Diskon hingga ${diskon}% untuk produk pilihan`
-                  : promo.deskripsi}
-              </p>
-            </div>
-            <span className="btn btn-sm flex-none bg-white text-navy hover:bg-white/90">
-              Lihat <ArrowRight size={14} />
-            </span>
-          </Link>
-        </section>
-      )}
 
       <section className="container-page mt-3 md:mt-4">
         <div className="overflow-hidden rounded-2xl border border-line bg-white">
