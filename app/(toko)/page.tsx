@@ -36,8 +36,13 @@ export default async function BerandaPage() {
           aria-hidden="true"
           className="absolute inset-0 bg-gradient-to-t from-navy via-navy/90 to-navy/45 lg:bg-[linear-gradient(90deg,#102b50_0%,rgba(16,43,80,0.94)_40%,rgba(16,43,80,0.6)_66%,rgba(16,43,80,0.18)_100%)]"
         />
+        {/* Tepi bawah hero melebur ke warna halaman, jadi peralihan ke kartu bantuan terasa halus. */}
+        <div
+          aria-hidden="true"
+          className="hero-fade pointer-events-none absolute inset-x-0 bottom-0 h-28 sm:h-32"
+        />
 
-        <div className="container-page relative flex min-h-[400px] flex-col justify-center pb-7 pt-6 sm:min-h-[440px] lg:min-h-[500px] lg:pb-12 lg:pt-10">
+        <div className="container-page relative flex min-h-[400px] flex-col justify-center pb-16 pt-6 sm:min-h-[440px] lg:min-h-[500px] lg:pb-20 lg:pt-10">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 text-[11.5px] font-semibold text-white/85 backdrop-blur">
               <Sun size={13} className={settings.tokoBuka ? "text-[#8ee0a8]" : "text-[#ffd48a]"} />

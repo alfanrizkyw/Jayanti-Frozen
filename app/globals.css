@@ -81,6 +81,17 @@
     }
   }
 
+  .hero-fade {
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      transparent 34%,
+      color-mix(in srgb, var(--color-paper) 26%, transparent) 58%,
+      color-mix(in srgb, var(--color-paper) 70%, transparent) 82%,
+      var(--color-paper) 100%
+    );
+  }
+
   .card {
     background: #fff;
     border: 1px solid var(--color-line);
