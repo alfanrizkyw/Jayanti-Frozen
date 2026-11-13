@@ -1,6 +1,24 @@
 import { NextResponse } from "next/server";
 import { bad, guard } from "@/lib/api";
-import { courierFinish } from "@/lib/data";
+import { courierFinish, getCourierData } from "@/lib/data";
+
+export async function GET() {
+  const { response } = await guard("kurir");
+  if (response) return response;
+
+  const data = await getCourierData(true);
+  return NextResponse.json(
+    {
+      orders: data.orders,
+      riwayat: data.riwayat,
+      items: data.items,
+      deliveries: data.deliveries,
+      settings: data.settings,
+      serverTime: Date.now(),
+    },
+    { headers: { "Cache-Control": "no-store" } },
+  );
+}
 
 export async function POST(req: Request) {
   const { response } = await guard("kurir");

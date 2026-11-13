@@ -25,7 +25,7 @@ export default async function PesananPage({
 }) {
   const { kode } = await params;
   const sp = await searchParams;
-  const detail = await getOrderDetail(decodeURIComponent(kode));
+  const detail = await getOrderDetail(decodeURIComponent(kode), true);
   if (!detail) notFound();
 
   return (

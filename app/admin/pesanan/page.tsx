@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Bike, ChevronRight, PackageSearch, Search, Store } from "lucide-react";
 import { PaymentBadge } from "@/components/payment-badge";
 import { OrderStatusBadge } from "@/components/status-badge";
+import { AutoRefresh } from "@/components/auto-refresh";
 import { getAdminData } from "@/lib/data";
 import { inisial, rupiah, tanggalJam } from "@/lib/format";
 import { STATUS_LABEL, type OrderStatus } from "@/lib/types";
@@ -25,7 +26,7 @@ export default async function AdminOrders({
 }: {
   searchParams: Promise<{ status?: string; q?: string }>;
 }) {
-  const [db, query] = await Promise.all([getAdminData(), searchParams]);
+  const [db, query] = await Promise.all([getAdminData(true), searchParams]);
   const status = query.status && STATUS_LABEL[query.status as OrderStatus] ? query.status : "";
   const q = (query.q ?? "").trim().toLowerCase();
 
@@ -42,6 +43,7 @@ export default async function AdminOrders({
 
   return (
     <div className="space-y-4">
+      <AutoRefresh detik={5} />
       <div>
         <p className="eyebrow">Operasional</p>
         <h1 className="mt-1 text-[24px] font-extrabold text-navy md:text-[28px]">Pesanan</h1>

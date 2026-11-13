@@ -24,7 +24,7 @@ import {
   Store,
   Truck,
 } from "lucide-react";
-import { TrackMap } from "./track-map";
+import { PetaPengantaran } from "./peta-pengantaran";
 import { OrderStatusBadge } from "./status-badge";
 import { ReceiptActions } from "./receipt-actions";
 import { BuktiFoto } from "./bukti-foto";
@@ -100,6 +100,7 @@ export function OrderView({
     if (final) return;
     let berhenti = false;
     const tick = async () => {
+      if (document.visibilityState !== "visible") return;
       try {
         const res = await fetch(`/api/orders/${encodeURIComponent(order.kode)}`, {
           cache: "no-store",
@@ -107,21 +108,30 @@ export function OrderView({
         if (!res.ok) return;
         const json = await res.json();
         if (berhenti) return;
-        setData((prev) => ({
-          ...prev,
-          order: json.order,
-          items: json.items,
-          delivery: json.delivery,
-          kurir: json.kurir,
-        }));
+        setData((prev) =>
+          prev.order.diperbarui === json.order.diperbarui &&
+          prev.delivery?.diperbarui === json.delivery?.diperbarui
+            ? prev
+            : {
+                ...prev,
+                order: json.order,
+                items: json.items,
+                delivery: json.delivery,
+                kurir: json.kurir,
+              },
+        );
       } catch {
         /* coba lagi pada polling berikutnya */
       }
     };
-    const timer = setInterval(tick, 5000);
+    const timer = setInterval(tick, 4000);
+    document.addEventListener("visibilitychange", tick);
+    window.addEventListener("focus", tick);
     return () => {
       berhenti = true;
       clearInterval(timer);
+      document.removeEventListener("visibilitychange", tick);
+      window.removeEventListener("focus", tick);
     };
   }, [order.kode, final]);
 
@@ -275,7 +285,13 @@ export function OrderView({
                 {order.metode === "antar" ? (
                   <>
                     {order.status === "diantar" || order.status === "selesai" ? (
-                      <TrackMap
+                      <PetaPengantaran
+                        kode={order.kode}
+                        posisi={
+                          delivery?.lat != null && delivery?.lng != null
+                            ? { lat: delivery.lat, lng: delivery.lng }
+                            : null
+                        }
                         progress={progress}
                         aktif={order.status === "diantar"}
                         etaMenit={eta}
@@ -537,7 +553,11 @@ export function OrderView({
                     : "border-[#F3DFBC] bg-[#FFF4E3] text-[#8A520B]"
                 }`}
               >
-                {order.dibayar ? "Lunas" : "Belum dibayar"}
+                {order.dibayar
+                  ? "Lunas"
+                  : order.pembayaran === "tunai"
+                    ? "Bayar di toko"
+                    : "Menunggu konfirmasi"}
               </span>
             </div>
 
@@ -634,8 +654,9 @@ export function OrderView({
             ) : (
               <p className="mt-3 flex items-start gap-2 rounded-lg bg-paper px-3 py-2.5 text-[11.5px] leading-relaxed text-muted">
                 <Banknote size={14} className="mt-0.5 flex-none text-brand" />
-                Bayar tunai saat mengambil pesanan
-                {order.metode === "antar" ? " atau saat kurir tiba." : " di toko."}
+                {order.metode === "antar"
+                  ? "Pesanan antar wajib non-tunai. Hubungi toko untuk mengubah metode pembayaran."
+                  : "Bayar tunai di kasir saat mengambil pesanan."}
               </p>
             )}
 

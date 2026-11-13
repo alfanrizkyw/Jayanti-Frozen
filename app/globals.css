@@ -766,6 +766,49 @@ html.tema-anim *::after {
   background-position: right 14px center;
 }
 
+/* Peta pengantaran */
+.leaflet-container {
+  background: #e9f2f9;
+  font-family: inherit;
+}
+
+.leaflet-control-attribution {
+  font-size: 9px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.peta-pin-ikon,
+.peta-kurir-ikon {
+  background: transparent;
+  border: 0;
+}
+
+.peta-kurir-ikon {
+  transition: transform 0.85s linear;
+}
+
+.peta-kurir {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  filter: drop-shadow(0 3px 3px rgba(15, 36, 64, 0.25));
+}
+
+.peta-pinguin {
+  animation: peta-bob 1.9s ease-in-out infinite;
+  transform-origin: 50% 80%;
+}
+
+@keyframes peta-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

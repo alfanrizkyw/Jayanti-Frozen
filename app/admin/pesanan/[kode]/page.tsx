@@ -19,7 +19,7 @@ export default async function AdminOrderDetail({
   params: Promise<{ kode: string }>;
 }) {
   const { kode } = await params;
-  const db = await getAdminData();
+  const db = await getAdminData(true);
   const order = db.orders.find(
     (o) => o.kode.toLowerCase() === decodeURIComponent(kode).toLowerCase(),
   );

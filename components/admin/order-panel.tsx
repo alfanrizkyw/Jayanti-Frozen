@@ -12,10 +12,12 @@ import {
   CheckCircle2,
   Copy,
   ExternalLink,
+  Landmark,
   Loader2,
   MapPin,
   MessageCircle,
   Phone,
+  QrCode,
   Store,
   Truck,
   UserRound,
@@ -25,6 +27,7 @@ import { PaymentBadge } from "@/components/payment-badge";
 import { OrderStatusBadge } from "@/components/status-badge";
 import { BuktiFoto } from "@/components/bukti-foto";
 import { rupiah, salinTeks, tanggalJam, teleponRapi, waLink } from "@/lib/format";
+import { perluKonfirmasiBayar } from "@/lib/pembayaran";
 import {
   PAYMENT_LABEL,
   type CourierPublic,
@@ -69,14 +72,21 @@ export function AdminOrderPanel({
   useEffect(() => {
     setStatusOptimis(null);
     setBayarOptimis(null);
-  }, [order.status, order.dibayar, order.diperbarui]);
+    setKurirPilih(order.kurirId);
+  }, [order.status, order.dibayar, order.kurirId, order.diperbarui]);
 
   useEffect(() => {
-    // Status dari kurir / pesanan baru harus terlihat tanpa muat ulang manual.
-    const timer = window.setInterval(() => {
+    // Satu putaran sinkron saja: status dari kurir dan pesanan baru langsung
+    // terlihat tanpa menumpuk beberapa timer refresh.
+    const segarkan = () => {
       if (document.visibilityState === "visible" && !sibuk.current) router.refresh();
-    }, 6000);
-    return () => window.clearInterval(timer);
+    };
+    const timer = window.setInterval(segarkan, 5000);
+    window.addEventListener("focus", segarkan);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", segarkan);
+    };
   }, [router]);
 
   const selesai = statusTampil === "selesai" || statusTampil === "batal";
@@ -116,19 +126,55 @@ export function AdminOrderPanel({
     }
   }
 
-  const aksiUtama: { label: string; status: OrderStatus; icon: typeof Check } | null =
-    statusTampil === "baru"
-      ? { label: "Konfirmasi pesanan", status: "dikonfirmasi", icon: Check }
+  // Pembayaran non-tunai wajib dikonfirmasi admin sebelum pesanan diproses.
+  const butuhBayar = perluKonfirmasiBayar(order.pembayaran, dibayarTampil);
+
+  const aksiUtama: {
+    label: string;
+    icon: typeof Check;
+    patch: Record<string, unknown>;
+  } | null = butuhBayar
+    ? {
+        label: "Konfirmasi pembayaran",
+        icon: Check,
+        patch: { dibayar: true },
+      }
+    : statusTampil === "baru"
+      ? {
+          label: "Konfirmasi pesanan",
+          icon: Check,
+          patch: { status: "dikonfirmasi" },
+        }
       : statusTampil === "dikonfirmasi"
-        ? { label: "Mulai siapkan pesanan", status: "disiapkan", icon: Check }
+        ? {
+            label: "Mulai siapkan pesanan",
+            icon: Check,
+            patch: { status: "disiapkan" },
+          }
         : statusTampil === "disiapkan" && order.metode === "antar"
-          ? { label: "Serahkan ke kurir", status: "diantar", icon: Truck }
+          ? {
+              label: "Serahkan ke kurir",
+              icon: Truck,
+              patch: { status: "diantar", kurirId: kurirPilih || undefined },
+            }
           : statusTampil === "disiapkan"
-            ? { label: "Tandai siap diambil", status: "siap", icon: Store }
+            ? {
+                label: "Tandai siap diambil",
+                icon: Store,
+                patch: { status: "siap" },
+              }
             : statusTampil === "siap" && order.metode === "antar"
-              ? { label: "Serahkan ke kurir", status: "diantar", icon: Truck }
+              ? {
+                  label: "Serahkan ke kurir",
+                  icon: Truck,
+                  patch: { status: "diantar", kurirId: kurirPilih || undefined },
+                }
               : statusTampil === "siap"
-                ? { label: "Selesaikan pesanan", status: "selesai", icon: CheckCircle2 }
+                ? {
+                    label: "Selesaikan pesanan",
+                    icon: CheckCircle2,
+                    patch: { status: "selesai" },
+                  }
                 : null;
 
   const tahap = alur.indexOf(statusTampil === "diantar" ? "siap" : statusTampil);
@@ -138,7 +184,7 @@ export function AdminOrderPanel({
       ? `${settings.rekening} · a.n. ${settings.atasNama}`
       : order.pembayaran === "qris"
         ? `QRIS ${settings.qrisNama}`
-        : "Dibayar langsung di toko saat pengambilan.";
+        : "Dibayar tunai saat pesanan diambil di toko.";
 
   const AksiIcon = aksiUtama?.icon;
 
@@ -185,17 +231,7 @@ export function AdminOrderPanel({
             {aksiUtama && (
               <button
                 type="button"
-                onClick={() =>
-                  kirim(
-                    {
-                      status: aksiUtama.status,
-                      ...(aksiUtama.status === "diantar"
-                        ? { kurirId: kurirPilih || undefined }
-                        : {}),
-                    },
-                    "status",
-                  )
-                }
+                onClick={() => kirim(aksiUtama.patch, "status")}
                 disabled={proses !== null}
                 className="btn btn-primary w-full sm:w-auto"
               >
@@ -415,16 +451,58 @@ export function AdminOrderPanel({
               <PaymentBadge metode={order.pembayaran} dibayar={dibayarTampil} />
             </div>
             <p className="mt-2 text-[12px] text-muted">{PAYMENT_LABEL[order.pembayaran]}</p>
-            <p className="mt-2 rounded-xl bg-paper px-3 py-2.5 text-[11.5px] leading-relaxed text-navy">
-              {infoBayar}
-            </p>
+            {order.metode === "antar" && order.pembayaran === "tunai" ? (
+              <div className="mt-2 rounded-xl border border-[#F3DFBC] bg-[#FFF4E3] px-3 py-2.5">
+                <p className="text-[11.5px] font-bold text-[#8A520B]">
+                  Antar wajib non-tunai
+                </p>
+                <p className="mt-0.5 text-[11px] leading-relaxed text-[#8A520B]/85">
+                  Pesanan ini masih tunai. Ganti ke QRIS atau transfer supaya
+                  bisa diproses dan diantar.
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => kirim({ pembayaran: "qris" }, "bayar")}
+                    disabled={proses !== null}
+                    className="btn btn-sm btn-outline"
+                  >
+                    <QrCode size={13} /> Ubah ke QRIS
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => kirim({ pembayaran: "transfer" }, "bayar")}
+                    disabled={proses !== null}
+                    className="btn btn-sm btn-outline"
+                  >
+                    <Landmark size={13} /> Ubah ke transfer
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="mt-2 rounded-xl bg-paper px-3 py-2.5 text-[11.5px] leading-relaxed text-navy">
+                {infoBayar}
+              </p>
+            )}
             <p className="stat-num mt-3 text-[22px] font-extrabold text-navy">
               {rupiah(order.total)}
             </p>
+            {butuhBayar && (
+              <p className="mt-2 rounded-lg bg-[#FFF4E3] px-3 py-2 text-[11px] font-semibold leading-relaxed text-[#8A520B]">
+                Pembayaran belum dikonfirmasi. Konfirmasi dulu sebelum pesanan
+                disiapkan atau diantar.
+              </p>
+            )}
             <button
               type="button"
               onClick={() => kirim({ dibayar: !dibayarTampil }, "bayar")}
-              disabled={proses !== null || statusTampil === "batal"}
+              disabled={
+                proses !== null ||
+                statusTampil === "batal" ||
+                (dibayarTampil &&
+                  order.pembayaran !== "tunai" &&
+                  statusTampil !== "baru")
+              }
               className={`btn mt-3 w-full ${
                 dibayarTampil ? "btn-outline" : "btn-primary"
               }`}
@@ -436,10 +514,16 @@ export function AdminOrderPanel({
               ) : (
                 <Check size={15} />
               )}
-              {dibayarTampil ? "Batalkan status lunas" : "Tandai sudah dibayar"}
+              {dibayarTampil
+                ? "Batalkan status lunas"
+                : order.pembayaran === "tunai"
+                  ? "Tandai tunai diterima"
+                  : "Konfirmasi pembayaran"}
             </button>
             <p className="mt-2 text-[10.5px] leading-relaxed text-muted">
-              Periksa dana masuk di rekening atau mutasi QRIS sebelum menandai lunas.
+              {order.pembayaran === "tunai"
+                ? "Tunai diterima saat pesanan diambil di toko."
+                : "Periksa dana masuk di rekening atau mutasi QRIS sebelum menandai lunas."}
             </p>
           </section>
 
@@ -473,7 +557,7 @@ export function AdminOrderPanel({
                   className="field"
                   value={kurirPilih}
                   onChange={(e) => setKurirPilih(e.target.value)}
-                  disabled={selesai}
+                  disabled={selesai || butuhBayar}
                 >
                   <option value="">Belum ditugaskan</option>
                   {couriers.map((c) => (
@@ -482,11 +566,19 @@ export function AdminOrderPanel({
                     </option>
                   ))}
                 </select>
+                {butuhBayar && (
+                  <p className="mt-1.5 text-[10.5px] leading-relaxed text-muted">
+                    Konfirmasi pembayaran dulu sebelum menentukan kurir.
+                  </p>
+                )}
                 <button
                   type="button"
                   onClick={() => kirim({ kurirId: kurirPilih }, "kurir")}
                   disabled={
-                    proses !== null || selesai || kurirPilih === order.kurirId
+                    proses !== null ||
+                    selesai ||
+                    butuhBayar ||
+                    kurirPilih === order.kurirId
                   }
                   className="btn btn-outline mt-2 w-full"
                 >

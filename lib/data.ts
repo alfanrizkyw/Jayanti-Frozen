@@ -26,6 +26,21 @@ import type {
   StaffPublic,
 } from "./types";
 import { kodePesanan, normalTelepon, slugify, tautanGambar } from "./format";
+import {
+  metodeBayarSah,
+  PESAN_ANTAR_NON_TUNAI,
+  PESAN_BAYAR_DULU,
+} from "./pembayaran";
+
+const URUT_STATUS: Record<OrderStatus, number> = {
+  baru: 0,
+  dikonfirmasi: 1,
+  disiapkan: 2,
+  siap: 3,
+  diantar: 4,
+  selesai: 5,
+  batal: 6,
+};
 
 export interface OrderDetail {
   order: Order;
@@ -124,11 +139,12 @@ export async function getActiveOrderCodes(telepon: string): Promise<string[]> {
     .map((o) => o.kode);
 }
 
-export async function getAdminData() {
-  const db = await readDB();
-  return db;
-}export async function getCourierData() {
-  const db = await readDB();
+export async function getAdminData(segar = false) {
+  return readDB(segar);
+}
+
+export async function getCourierData(segar = false) {
+  const db = await readDB(segar);
   const tim = db.couriers.filter((c) => c.aktif !== false);
   const courier = tim[0] ?? null;
   // Semua kurir berbagi satu daftar tugas, jadi siapa pun yang masuk bisa
@@ -192,15 +208,21 @@ export async function createOrder(input: CheckoutInput) {
     throw new Error("Metode pengambilan tidak valid.");
   if (!["tunai", "qris", "transfer"].includes(input.pembayaran))
     throw new Error("Metode pembayaran tidak valid.");
+  if (!metodeBayarSah(input.metode, input.pembayaran))
+    throw new Error(PESAN_ANTAR_NON_TUNAI);
 
   const tutup = !db.settings.tokoBuka;
   const jadwalTersedia = db.settings.jadwalKirim ?? [];
   const jadwalDiminta = input.jadwal?.trim() ?? "";
 
   if (tutup) {
+    if (input.metode !== "ambil")
+      throw new Error(
+        "Toko sedang tutup. Untuk sementara pesanan hanya bisa diambil di toko.",
+      );
     if (input.pembayaran !== "tunai")
       throw new Error(
-        "Toko sedang tutup, pembayaran online belum bisa dilakukan. Pilih bayar tunai saat pesanan diserahkan.",
+        "Toko sedang tutup, pembayaran online belum bisa dilakukan. Pilih bayar tunai saat mengambil pesanan.",
       );
     if (!jadwalDiminta || !jadwalTersedia.includes(jadwalDiminta))
       throw new Error(
@@ -303,10 +325,18 @@ export async function createOrder(input: CheckoutInput) {
 
 export async function updateOrder(
   kode: string,
-  patch: { status?: OrderStatus; dibayar?: boolean; kurirId?: string; catatan?: string },
+  patch: {
+    status?: OrderStatus;
+    dibayar?: boolean;
+    kurirId?: string;
+    pembayaran?: PaymentMethod;
+  },
 ) {
-  const db = await readDB();
-  const order = db.orders.find((o) => o.kode === kode);
+  // Aksi admin selalu membaca data terbaru dulu supaya klik yang hampir
+  // bersamaan (admin + kurir) tidak menimpa status yang lebih maju.
+  const db = await readDB(true);
+  const cari = kode.toLowerCase().trim();
+  const order = db.orders.find((o) => o.kode.toLowerCase() === cari);
   if (!order) throw new Error("Pesanan tidak ditemukan.");
 
   const sekarang = new Date().toISOString();
@@ -316,8 +346,69 @@ export async function updateOrder(
   // aksi kurir yang hampir bersamaan tidak saling menimpa.
   const kolomOrder = new Set<string>(["diperbarui"]);
 
+  if (patch.pembayaran) {
+    if (!["tunai", "qris", "transfer"].includes(patch.pembayaran))
+      throw new Error("Metode pembayaran tidak valid.");
+    if (!metodeBayarSah(order.metode, patch.pembayaran))
+      throw new Error(PESAN_ANTAR_NON_TUNAI);
+    baru.pembayaran = patch.pembayaran;
+    kolomOrder.add("pembayaran");
+  }
+
   if (typeof patch.dibayar === "boolean") {
+    if (
+      !patch.dibayar &&
+      order.dibayar &&
+      order.pembayaran !== "tunai" &&
+      order.status !== "baru"
+    )
+      throw new Error(
+        "Pembayaran non-tunai yang sudah diproses tidak bisa dibatalkan.",
+      );
     baru.dibayar = patch.dibayar;
+    kolomOrder.add("dibayar");
+  }
+
+  if (patch.status) {
+    if (
+      !["baru", "dikonfirmasi", "disiapkan", "siap", "diantar", "selesai", "batal"].includes(
+        patch.status,
+      )
+    )
+      throw new Error("Status tidak valid.");
+    if (patch.status !== "batal") {
+      if (lama === "selesai") throw new Error("Pesanan sudah selesai.");
+      if (lama === "batal") throw new Error("Pesanan sudah dibatalkan.");
+      if (URUT_STATUS[patch.status] < URUT_STATUS[lama])
+        throw new Error(
+          "Status pesanan sudah lebih maju. Muat ulang halaman lalu periksa lagi.",
+        );
+    } else if (lama === "batal") {
+      throw new Error("Pesanan sudah dibatalkan.");
+    }
+    baru.status = patch.status;
+    kolomOrder.add("status");
+  }
+
+  // Pembayaran non-tunai yang dikonfirmasi admin berarti pesanan sah masuk
+  // proses. Tidak perlu klik konfirmasi dua kali.
+  if (baru.dibayar && !patch.status && baru.status === "baru") {
+    baru.status = "dikonfirmasi";
+    kolomOrder.add("status");
+  }
+
+  // Non-tunai wajib lunas dulu sebelum pesanan diproses lebih jauh.
+  if (
+    baru.status !== "baru" &&
+    baru.status !== "batal" &&
+    baru.pembayaran !== "tunai" &&
+    !baru.dibayar
+  )
+    throw new Error(PESAN_BAYAR_DULU);
+
+  // Uang tunai baru diterima saat pesanan diserahkan di toko.
+  if (baru.status === "selesai" && baru.pembayaran === "tunai" && !baru.dibayar) {
+    baru.dibayar = true;
     kolomOrder.add("dibayar");
   }
 
@@ -334,17 +425,6 @@ export async function updateOrder(
 
   let delivery = db.deliveries.find((d) => d.orderId === order.id) ?? null;
   const deliveryBaru = !delivery;
-
-  if (patch.status) {
-    if (
-      !["baru", "dikonfirmasi", "disiapkan", "siap", "diantar", "selesai", "batal"].includes(
-        patch.status,
-      )
-    )
-      throw new Error("Status tidak valid.");
-    baru.status = patch.status;
-    kolomOrder.add("status");
-  }
 
   // Pesanan antar yang sudah dikonfirmasi langsung masuk ke kurir yang siap,
   // supaya admin tidak perlu menugaskan dua kali.
@@ -499,7 +579,7 @@ function pilihTujuan(db: Awaited<ReturnType<typeof readDB>>, kode: string) {
 }
 
 export async function courierFinish(kode: string) {
-  const db = await readDB();
+  const db = await readDB(true);
   const { order } = pilihTujuan(db, kode);
   if (order.status === "selesai")
     throw new Error("Pesanan ini sudah ditandai diterima.");
@@ -541,17 +621,34 @@ export async function courierLocation(
   lng: number,
   kode?: string,
 ) {
-  const db = await readDB();
-  const order = kode
-    ? db.orders.find(
-        (o) =>
-          o.kode.toLowerCase() === kode.toLowerCase().trim() &&
-          o.status === "diantar",
-      )
-    : db.orders.find((o) => o.status === "diantar");
-  if (!order) return;
-  const delivery = db.deliveries.find((d) => d.orderId === order.id);
-  if (!delivery) return;
+  if (
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lng) ||
+    Math.abs(lat) > 90 ||
+    Math.abs(lng) > 180
+  )
+    return;
+
+  const cariTugas = (db: Awaited<ReturnType<typeof readDB>>) => {
+    const order = kode
+      ? db.orders.find(
+          (o) =>
+            o.kode.toLowerCase() === kode.toLowerCase().trim() &&
+            o.status === "diantar",
+        )
+      : db.orders.find((o) => o.status === "diantar");
+    if (!order) return null;
+    const delivery = db.deliveries.find((d) => d.orderId === order.id);
+    return delivery ? { order, delivery } : null;
+  };
+
+  // Titik GPS dikirim setiap beberapa detik. Pakai salinan cache dulu; hanya
+  // baca ulang ke Sheets kalau tugas baru belum terlihat di instance ini.
+  let hasil = cariTugas(await readDB());
+  if (!hasil) hasil = cariTugas(await readDB(true));
+  if (!hasil) return;
+
+  const { delivery } = hasil;
   await saveAll({
     deliveries: {
       rows: [
@@ -560,7 +657,7 @@ export async function courierLocation(
           lat,
           lng,
           diperbarui: new Date().toISOString(),
-          status: "aktif",
+          status: delivery.status === "selesai" ? "selesai" : "aktif",
         },
       ],
       fields: ["lat", "lng", "diperbarui", "status"],
@@ -569,7 +666,7 @@ export async function courierLocation(
 }
 
 export async function setCourierOnline(courierId: string, online: boolean) {
-  const db = await readDB();
+  const db = await readDB(true);
   const kurir = db.couriers.find((c) => c.id === courierId);
   if (!kurir) throw new Error("Kurir tidak ditemukan.");
   await saveRows("couriers", [

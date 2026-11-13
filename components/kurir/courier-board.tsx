@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlertCircle,
   Banknote,
@@ -17,11 +16,9 @@ import {
   Navigation,
   PackageCheck,
   Phone,
-  Radio,
   RefreshCw,
-  X,
 } from "lucide-react";
-import { TrackMap } from "@/components/track-map";
+import { PetaPengantaran } from "@/components/peta-pengantaran";
 import {
   jam,
   rupiah,
@@ -41,12 +38,20 @@ import { PaymentBadge } from "@/components/payment-badge";
 
 type GeoState = "idle" | "mencari" | "aktif" | "ditolak" | "gagal";
 
+interface DataTugas {
+  orders: Order[];
+  riwayat: Order[];
+  items: OrderItem[];
+  deliveries: Delivery[];
+  settings: Settings;
+}
+
 export function CourierBoard({
-  orders,
-  riwayat,
-  items,
-  deliveries,
-  settings,
+  orders: ordersAwal,
+  riwayat: riwayatAwal,
+  items: itemsAwal,
+  deliveries: deliveriesAwal,
+  settings: settingsAwal,
 }: {
   orders: Order[];
   riwayat: Order[];
@@ -54,7 +59,14 @@ export function CourierBoard({
   deliveries: Delivery[];
   settings: Settings;
 }) {
-  const router = useRouter();
+  const [tugas, setTugas] = useState<DataTugas>({
+    orders: ordersAwal,
+    riwayat: riwayatAwal,
+    items: itemsAwal,
+    deliveries: deliveriesAwal,
+    settings: settingsAwal,
+  });
+  const { orders, riwayat, items, deliveries, settings } = tugas;
   const [proses, setProses] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [tersalin, setTersalin] = useState("");
@@ -76,27 +88,116 @@ export function CourierBoard({
     orders.find((o) => o.kode === pilihKode) ?? orders[0] ?? null;
   const tugasLain = orders.filter((o) => o.id !== aktif?.id);
 
-  function hentikanLacak() {
+  const muatTugas = useCallback(async () => {
+    try {
+      const res = await fetch("/api/kurir/tugas", { cache: "no-store" });
+      if (!res.ok) return;
+      const json = await res.json();
+      setTugas({
+        orders: Array.isArray(json.orders) ? json.orders : [],
+        riwayat: Array.isArray(json.riwayat) ? json.riwayat : [],
+        items: Array.isArray(json.items) ? json.items : [],
+        deliveries: Array.isArray(json.deliveries) ? json.deliveries : [],
+        settings: json.settings ?? settingsAwal,
+      });
+    } catch {
+      /* coba lagi pada putaran berikutnya */
+    }
+  }, [settingsAwal]);
+
+  // Satu putaran sinkron saja: tugas baru dan status dari admin langsung masuk.
+  useEffect(() => {
+    let berhenti = false;
+    const tick = () => {
+      if (document.visibilityState === "visible" && !berhenti) void muatTugas();
+    };
+    const timer = window.setInterval(tick, 4000);
+    document.addEventListener("visibilitychange", tick);
+    window.addEventListener("focus", tick);
+    return () => {
+      berhenti = true;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", tick);
+      window.removeEventListener("focus", tick);
+    };
+  }, [muatTugas]);
+
+  const hentikanLacak = useCallback(() => {
     if (watch.current !== null) {
       navigator.geolocation.clearWatch(watch.current);
       watch.current = null;
     }
     setGeo("idle");
-  }
+  }, []);
+
+  const mulaiLacak = useCallback(() => {
+    if (typeof navigator === "undefined" || !("geolocation" in navigator)) {
+      setGeo("gagal");
+      return;
+    }
+    if (watch.current !== null) return;
+    setGeo("mencari");
+    watch.current = navigator.geolocation.watchPosition(
+      (p) => {
+        const at = Date.now();
+        setPosisi({ lat: p.coords.latitude, lng: p.coords.longitude, at });
+        setGeo("aktif");
+        if (at - kirimTerakhir.current > 5000 && kodeAktif.current) {
+          kirimTerakhir.current = at;
+          fetch("/api/kurir/lokasi", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              lat: p.coords.latitude,
+              lng: p.coords.longitude,
+              kode: kodeAktif.current,
+            }),
+          }).catch(() => {});
+        }
+      },
+      (err) => {
+        if (watch.current !== null) {
+          navigator.geolocation.clearWatch(watch.current);
+          watch.current = null;
+        }
+        setGeo(err.code === 1 ? "ditolak" : "gagal");
+      },
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 },
+    );
+  }, []);
+
+  const kodeTugas = aktif?.kode ?? "";
+
+  // Lokasi langsung dibagikan begitu ada tugas aktif, tanpa tombol.
+  useEffect(() => {
+    if (!kodeTugas) {
+      hentikanLacak();
+      return;
+    }
+    kodeAktif.current = kodeTugas;
+    kirimTerakhir.current = 0;
+    setPosisi(null);
+    mulaiLacak();
+    return () => hentikanLacak();
+  }, [kodeTugas, hentikanLacak, mulaiLacak]);
+
+  // Izin lokasi atau sinyal bisa pulih sendiri; coba lagi tanpa perlu ditekan.
+  useEffect(() => {
+    if (!kodeTugas || geo === "aktif" || geo === "mencari") return;
+    const timer = window.setTimeout(
+      () => mulaiLacak(),
+      geo === "ditolak" ? 15000 : 8000,
+    );
+    return () => window.clearTimeout(timer);
+  }, [kodeTugas, geo, mulaiLacak]);
 
   useEffect(() => {
-    // Tugas yang diserahkan admin harus langsung terlihat di halaman kurir.
-    const muat = () => {
-      if (document.visibilityState === "visible" && proses === null) router.refresh();
+    const segarkan = () => {
+      if (document.visibilityState === "visible") mulaiLacak();
     };
-    const timer = window.setInterval(muat, 5000);
-    document.addEventListener("visibilitychange", muat);
-    return () => {
-      window.clearInterval(timer);
-      document.removeEventListener("visibilitychange", muat);
-      if (watch.current !== null) navigator.geolocation.clearWatch(watch.current);
-    };
-  }, [router, proses]);
+    document.addEventListener("visibilitychange", segarkan);
+    return () => document.removeEventListener("visibilitychange", segarkan);
+  }, [mulaiLacak]);
 
   const idAktif = aktif?.id;
   useEffect(() => {
@@ -142,43 +243,6 @@ export function CourierBoard({
     }
   }
 
-  function mulaiLacak(kode: string) {
-    kodeAktif.current = kode;
-    if (!("geolocation" in navigator)) {
-      setGeo("gagal");
-      return;
-    }
-    if (watch.current !== null) return;
-    setGeo("mencari");
-    watch.current = navigator.geolocation.watchPosition(
-      (p) => {
-        const at = Date.now();
-        setPosisi({ lat: p.coords.latitude, lng: p.coords.longitude, at });
-        setGeo("aktif");
-        if (at - kirimTerakhir.current > 8000) {
-          kirimTerakhir.current = at;
-          fetch("/api/kurir/lokasi", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              lat: p.coords.latitude,
-              lng: p.coords.longitude,
-              kode: kodeAktif.current,
-            }),
-          }).catch(() => {});
-        }
-      },
-      (err) => {
-        setGeo(err.code === 1 ? "ditolak" : "gagal");
-        if (watch.current !== null) {
-          navigator.geolocation.clearWatch(watch.current);
-          watch.current = null;
-        }
-      },
-      { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 },
-    );
-  }
-
   async function aksiTugas(order: Order) {
     if (unggah !== "siap") {
       setError("Ambil dan unggah foto bukti barang diterima dulu.");
@@ -196,7 +260,7 @@ export function CourierBoard({
       if (!res.ok) throw new Error(json?.error || "Gagal memperbarui tugas.");
       hentikanLacak();
       setPilihKode("");
-      router.refresh();
+      await muatTugas();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal memperbarui tugas.");
     } finally {
@@ -352,7 +416,9 @@ export function CourierBoard({
               </div>
             </div>
 
-            <TrackMap
+            <PetaPengantaran
+              kode={aktif.kode}
+              posisi={posisi ? { lat: posisi.lat, lng: posisi.lng } : null}
               progress={(() => {
                 const d = pengantaran(aktif.id);
                 if (!d?.mulai) return 0.05;
@@ -394,12 +460,7 @@ export function CourierBoard({
               )}
             </div>
 
-            <GpsPanel
-              state={geo}
-              posisi={posisi}
-              onMulai={() => mulaiLacak(aktif.kode)}
-              onStop={hentikanLacak}
-            />
+            <StatusLokasi state={geo} posisi={posisi} />
 
             <div
               className={`rounded-xl border p-3 ${
@@ -534,7 +595,6 @@ export function CourierBoard({
                 <button
                   type="button"
                   onClick={() => {
-                    hentikanLacak();
                     setPilihKode(o.kode);
                   }}
                   className="btn btn-sm btn-outline flex-none"
@@ -559,7 +619,7 @@ export function CourierBoard({
           </p>
           <button
             type="button"
-            onClick={() => router.refresh()}
+            onClick={() => void muatTugas()}
             className="btn btn-outline btn-sm mt-4"
           >
             <RefreshCw size={14} /> Muat ulang tugas
@@ -600,16 +660,12 @@ export function CourierBoard({
   );
 }
 
-function GpsPanel({
+function StatusLokasi({
   state,
   posisi,
-  onMulai,
-  onStop,
 }: {
   state: GeoState;
   posisi: { lat: number; lng: number; at: number } | null;
-  onMulai: () => void;
-  onStop: () => void;
 }) {
   if (state === "aktif") {
     return (
@@ -617,16 +673,8 @@ function GpsPanel({
         <div className="flex items-center gap-2">
           <span className="live-dot h-2 w-2 rounded-full bg-leaf" />
           <p className="text-[12px] font-extrabold text-leaf">
-            Lokasi live dibagikan ke pelanggan
+            Lokasi Anda dibagikan otomatis
           </p>
-          <button
-            type="button"
-            onClick={onStop}
-            className="ml-auto flex h-9 w-9 items-center justify-center rounded-lg text-leaf/70 hover:bg-white/60"
-            aria-label="Hentikan pembagian lokasi"
-          >
-            <X size={15} />
-          </button>
         </div>
         <p className="mt-1 text-[10.5px] leading-relaxed text-leaf/80">
           {posisi
@@ -642,14 +690,13 @@ function GpsPanel({
   if (state === "ditolak") {
     return (
       <div className="rounded-xl border border-[#F5CFCB] bg-[#FDF2F1] px-3 py-2.5">
-        <p className="text-[12px] font-bold text-[#8F2E25]">Izin lokasi ditolak</p>
-        <p className="mt-0.5 text-[10.5px] leading-relaxed text-[#8F2E25]/80">
-          Pelanggan tidak bisa melihat posisi Anda. Aktifkan izin lokasi di pengaturan
-          peramban, lalu tekan coba lagi.
+        <p className="flex items-center gap-1.5 text-[12px] font-bold text-[#8F2E25]">
+          <Navigation size={13} /> Izin lokasi ditolak
         </p>
-        <button type="button" onClick={onMulai} className="btn btn-sm btn-outline mt-2">
-          <Radio size={13} /> Coba lagi
-        </button>
+        <p className="mt-0.5 text-[10.5px] leading-relaxed text-[#8F2E25]/80">
+          Buka pengaturan peramban, izinkan lokasi untuk situs ini. Pembagian
+          lokasi menyala sendiri setelah izin diberikan.
+        </p>
       </div>
     );
   }
@@ -657,13 +704,13 @@ function GpsPanel({
   if (state === "gagal") {
     return (
       <div className="rounded-xl border border-[#F3DFBC] bg-[#FFF4E3] px-3 py-2.5">
-        <p className="text-[12px] font-bold text-[#8A520B]">GPS belum tersedia</p>
-        <p className="mt-0.5 text-[10.5px] leading-relaxed text-[#8A520B]/80">
-          Perangkat tidak mengirim lokasi. Pelanggan tetap bisa melihat status pesanan.
+        <p className="flex items-center gap-1.5 text-[12px] font-bold text-[#8A520B]">
+          <Navigation size={13} /> GPS belum tersedia
         </p>
-        <button type="button" onClick={onMulai} className="btn btn-sm btn-outline mt-2">
-          <Radio size={13} /> Coba aktifkan
-        </button>
+        <p className="mt-0.5 text-[10.5px] leading-relaxed text-[#8A520B]/80">
+          Sistem mencari sinyal lagi sendiri. Pelanggan tetap bisa melihat status
+          pesanan.
+        </p>
       </div>
     );
   }
@@ -671,25 +718,12 @@ function GpsPanel({
   return (
     <div className="rounded-xl border border-line bg-paper/70 px-3 py-2.5">
       <div className="flex items-center gap-2">
-        <Radio size={15} className="text-brand" />
-        <p className="text-[12px] font-bold text-navy">Bagikan lokasi live</p>
-        <button
-          type="button"
-          onClick={onMulai}
-          disabled={state === "mencari"}
-          className="btn btn-sm btn-navy ml-auto"
-        >
-          {state === "mencari" ? (
-            <Loader2 size={13} className="animate-spin" />
-          ) : (
-            <Navigation size={13} />
-          )}
-          {state === "mencari" ? "Mencari GPS…" : "Aktifkan"}
-        </button>
+        <Loader2 size={13} className="animate-spin text-brand" />
+        <p className="text-[12px] font-bold text-navy">Menyambungkan GPS…</p>
       </div>
       <p className="mt-1 text-[10.5px] leading-relaxed text-muted">
-        Izinkan akses lokasi agar pelanggan dapat memantau posisi Anda sampai pesanan
-        tiba.
+        Lokasi dibagikan otomatis selama ada tugas antar. Tidak perlu menekan
+        tombol apa pun.
       </p>
     </div>
   );

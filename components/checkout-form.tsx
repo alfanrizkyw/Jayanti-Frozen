@@ -36,8 +36,10 @@ export function CheckoutForm({ settings }: { settings: Settings }) {
   const [telepon, setTelepon] = useState("");
   const [alamat, setAlamat] = useState("");
   const [catatan, setCatatan] = useState("");
-  const [metode, setMetode] = useState<"ambil" | "antar">("antar");
-  const [pembayaran, setPembayaran] = useState<PaymentMethod>("tunai");
+  const [metode, setMetode] = useState<"ambil" | "antar">(tutup ? "ambil" : "antar");
+  const [pembayaran, setPembayaran] = useState<PaymentMethod>(
+    tutup ? "tunai" : "qris",
+  );
   const [jadwal, setJadwal] = useState(opsiJadwal[0] ?? "");
   const [proses, setProses] = useState(false);
   const [error, setError] = useState("");
@@ -57,6 +59,22 @@ export function CheckoutForm({ settings }: { settings: Settings }) {
         ? 0
         : settings.ongkir;
   const total = subtotal + ongkir;
+  const tunaiMati = tutup || metode === "antar";
+
+  function pilihMetode(nilai: "ambil" | "antar") {
+    setMetode(nilai);
+    // Antar wajib non-tunai, jadi pembayaran tunai otomatis diganti QRIS.
+    if (nilai === "antar" && pembayaran === "tunai") setPembayaran("qris");
+  }
+
+  function pilihPembayaran(nilai: PaymentMethod) {
+    if (nilai === "tunai" && metode === "antar") {
+      setPembayaran("tunai");
+      setMetode("ambil");
+      return;
+    }
+    setPembayaran(nilai);
+  }
   const rekeningTampil = settings.bank?.length
     ? settings.bank
     : settings.rekening
@@ -84,7 +102,7 @@ export function CheckoutForm({ settings }: { settings: Settings }) {
           telepon,
           alamat: metode === "antar" ? alamat : "",
           catatan,
-          metode,
+          metode: tutup ? "ambil" : metode,
           pembayaran: tutup ? "tunai" : pembayaran,
           jadwal: jadwal === "Secepatnya" ? "" : jadwal,
           items: items.map((i) => ({ id: i.id, jumlah: i.jumlah })),
@@ -139,8 +157,8 @@ export function CheckoutForm({ settings }: { settings: Settings }) {
                   {settings.tutupCatatan}
                 </p>
                 <p className="mt-1.5 text-[12px] leading-relaxed text-[#8A6A28]">
-                  Pembayaran QRIS dan transfer belum bisa dilakukan. Pilih jadwal
-                  kirim/ambil di bawah, lalu bayar tunai saat pesanan diserahkan.
+                  Untuk sementara hanya bisa ambil di toko dan bayar tunai. Pilih
+                  jadwal ambil di bawah.
                 </p>
               </div>
             </div>
@@ -210,24 +228,30 @@ export function CheckoutForm({ settings }: { settings: Settings }) {
                   value: "antar" as const,
                   icon: Truck,
                   judul: "Antar ke rumah",
-                  teks: `Ongkir ${rupiah(settings.ongkir)} · gratis di atas ${rupiah(settings.gratisOngkirMin)}`,
+                  teks: `Ongkir ${rupiah(settings.ongkir)} · gratis di atas ${rupiah(settings.gratisOngkirMin)} · wajib QRIS/transfer`,
+                  mati: tutup,
+                  matiTeks: "Toko tutup: sementara hanya ambil di toko",
                 },
                 {
                   value: "ambil" as const,
                   icon: Store,
                   judul: "Ambil di toko",
-                  teks: "Gratis · siap setelah admin konfirmasi",
+                  teks: "Gratis · bisa bayar tunai di kasir",
+                  mati: false,
+                  matiTeks: "",
                 },
               ].map((opsi) => {
                 const Icon = opsi.icon;
-                const aktif = metode === opsi.value;
+                const aktif = !opsi.mati && metode === opsi.value;
                 return (
                   <label
                     key={opsi.value}
-                    className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-colors ${
-                      aktif
-                        ? "border-brand bg-mist ring-1 ring-brand/25"
-                        : "border-line bg-white hover:border-[#B9D6F2]"
+                    className={`flex items-start gap-3 rounded-xl border p-3.5 transition-colors ${
+                      opsi.mati
+                        ? "cursor-not-allowed border-line/70 bg-paper/60 opacity-60"
+                        : aktif
+                          ? "cursor-pointer border-brand bg-mist ring-1 ring-brand/25"
+                          : "cursor-pointer border-line bg-white hover:border-[#B9D6F2]"
                     }`}
                   >
                     <input
@@ -235,7 +259,8 @@ export function CheckoutForm({ settings }: { settings: Settings }) {
                       name="metode"
                       className="sr-only"
                       checked={aktif}
-                      onChange={() => setMetode(opsi.value)}
+                      disabled={opsi.mati}
+                      onChange={() => pilihMetode(opsi.value)}
                     />
                     <span
                       className={`mt-0.5 flex h-9 w-9 flex-none items-center justify-center rounded-lg ${
@@ -250,7 +275,7 @@ export function CheckoutForm({ settings }: { settings: Settings }) {
                         {aktif && <Check size={13} className="text-brand" />}
                       </span>
                       <span className="mt-0.5 block text-[11px] leading-relaxed text-muted">
-                        {opsi.teks}
+                        {opsi.mati ? opsi.matiTeks : opsi.teks}
                       </span>
                     </span>
                   </label>
@@ -338,7 +363,7 @@ export function CheckoutForm({ settings }: { settings: Settings }) {
                   value: "tunai" as const,
                   icon: Banknote,
                   judul: "Tunai",
-                  teks: "Bayar saat ambil atau saat kurir tiba",
+                  teks: "Bayar di kasir saat mengambil pesanan",
                 },
                 {
                   value: "qris" as const,
@@ -354,7 +379,9 @@ export function CheckoutForm({ settings }: { settings: Settings }) {
                 },
               ].map((opsi) => {
                 const Icon = opsi.icon;
-                const mati = tutup && opsi.value !== "tunai";
+                const mati = tutup
+                  ? opsi.value !== "tunai"
+                  : opsi.value === "tunai" && metode === "antar";
                 const aktif = !mati && pembayaran === opsi.value;
                 return (
                   <label
@@ -373,7 +400,7 @@ export function CheckoutForm({ settings }: { settings: Settings }) {
                       className="sr-only"
                       checked={aktif}
                       disabled={mati}
-                      onChange={() => setPembayaran(opsi.value)}
+                      onChange={() => pilihPembayaran(opsi.value)}
                     />
                     <span className="flex items-center justify-between">
                       <Icon size={18} className={aktif ? "text-brand" : "text-navy/60"} />
@@ -385,7 +412,11 @@ export function CheckoutForm({ settings }: { settings: Settings }) {
                     </span>
                     <span className="text-[12.5px] font-bold text-navy">{opsi.judul}</span>
                     <span className="text-[10.5px] leading-relaxed text-muted">
-                      {mati ? "Belum tersedia saat toko tutup" : opsi.teks}
+                      {tutup && opsi.value !== "tunai"
+                        ? "Belum tersedia saat toko tutup"
+                        : opsi.value === "tunai" && metode === "antar"
+                          ? "Hanya untuk ambil di toko"
+                          : opsi.teks}
                     </span>
                   </label>
                 );
@@ -396,8 +427,15 @@ export function CheckoutForm({ settings }: { settings: Settings }) {
           {tutup && (
             <p className="mt-3 flex items-start gap-2 rounded-xl bg-[#FEF8E9] px-3.5 py-3 text-[11.5px] leading-relaxed text-[#8A6A28]">
               <Lock size={14} className="mt-0.5 flex-none" />
-              Toko sedang tutup, jadi pembayaran online belum bisa. Pesanan akan
-              dijadwalkan dan dibayar tunai saat diserahkan.
+              Toko sedang tutup, jadi pembayaran online belum bisa. Pesanan
+              diambil dan dibayar tunai sesuai jadwal yang dipilih.
+            </p>
+          )}
+
+          {!tutup && metode === "antar" && (
+            <p className="mt-3 rounded-xl bg-mist px-3.5 py-3 text-[11.5px] leading-relaxed text-navy/80">
+              Pesanan antar wajib QRIS atau transfer. Admin memverifikasi
+              pembayaran dulu, baru pesanan disiapkan dan diantar kurir.
             </p>
           )}
 
@@ -460,8 +498,9 @@ export function CheckoutForm({ settings }: { settings: Settings }) {
               ) : (
                 <p className="flex items-start gap-2 text-left text-[11.5px] leading-relaxed text-muted">
                   <QrCode size={14} className="mt-0.5 flex-none text-brand" />
-                  Gambar QRIS belum diatur toko. Pilih tunai atau transfer, atau
-                  hubungi admin lewat WhatsApp.
+                  {metode === "antar"
+                    ? "Gambar QRIS belum diatur toko. Pilih transfer, atau hubungi admin lewat WhatsApp."
+                    : "Gambar QRIS belum diatur toko. Pilih tunai atau transfer, atau hubungi admin lewat WhatsApp."}
                 </p>
               )}
             </div>
@@ -469,7 +508,8 @@ export function CheckoutForm({ settings }: { settings: Settings }) {
           {pembayaran === "tunai" && (
             <p className="mt-3 flex items-start gap-2 rounded-xl bg-paper px-3.5 py-3 text-[11.5px] leading-relaxed text-muted">
               <Banknote size={14} className="mt-0.5 flex-none text-brand" />
-              Siapkan uang tunai; kurir tidak selalu membawa kembalian.
+              Bayar tunai di kasir saat mengambil pesanan. Kurir hanya
+              menangani pesanan yang sudah dibayar non-tunai.
             </p>
           )}
         </section>

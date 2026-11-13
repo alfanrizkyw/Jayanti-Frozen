@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { PreferencesControls } from "@/components/preferences-controls";
-import { AutoRefresh } from "@/components/auto-refresh";
 
 const NAV = [
   { href: "/admin", label: "Ringkasan", icon: LayoutDashboard, exact: true },
@@ -155,8 +154,6 @@ export function AdminShell({
         </header>
 
         <main className="flex-1 px-4 pb-16 pt-5 md:px-7 md:pt-7">{children}</main>
-
-        <AutoRefresh detik={8} />
 
         <footer className="border-t border-line px-5 py-5 text-center text-[11px] text-muted md:px-7">
           Yanti Frozen · Panel admin · Data tersimpan aman

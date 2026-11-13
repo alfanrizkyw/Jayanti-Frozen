@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { QuickPaid } from "@/components/admin/quick-paid";
 import { StoreToggle } from "@/components/admin/store-toggle";
+import { AutoRefresh } from "@/components/auto-refresh";
 import { OrderStatusBadge } from "@/components/status-badge";
 import { getAdminData } from "@/lib/data";
 import {
@@ -26,7 +27,7 @@ import { PAYMENT_LABEL } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 export default async function AdminHome() {
-  const db = await getAdminData();
+  const db = await getAdminData(true);
   const hariIni = kunciHari();
   const pesanan = [...db.orders].sort((a, b) => b.dibuat.localeCompare(a.dibuat));
 
@@ -64,6 +65,7 @@ export default async function AdminHome() {
 
   return (
     <div className="space-y-5">
+      <AutoRefresh detik={6} />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="eyebrow">Ringkasan hari ini</p>

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { bad, guard } from "@/lib/api";
 import { updateOrder } from "@/lib/data";
-import type { OrderStatus } from "@/lib/types";
+import type { OrderStatus, PaymentMethod } from "@/lib/types";
 
 export async function PATCH(
   req: Request,
@@ -19,6 +19,10 @@ export async function PATCH(
       status: body.status as OrderStatus | undefined,
       dibayar: typeof body.dibayar === "boolean" ? body.dibayar : undefined,
       kurirId: typeof body.kurirId === "string" ? body.kurirId : undefined,
+      pembayaran:
+        typeof body.pembayaran === "string"
+          ? (body.pembayaran as PaymentMethod)
+          : undefined,
     });
     return NextResponse.json({ ok: true, ...hasil });
   } catch (err) {

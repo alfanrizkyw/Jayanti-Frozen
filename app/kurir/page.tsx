@@ -10,7 +10,7 @@ export default async function KurirPage() {
   const session = await getSession();
   if (!session || session.role !== "kurir") redirect("/kurir/masuk");
 
-  const data = await getCourierData();
+  const data = await getCourierData(true);
   if (!data) redirect("/kurir/masuk");
 
   return (

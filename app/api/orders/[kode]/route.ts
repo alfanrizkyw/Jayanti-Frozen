@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: Promise<{ kode: string }> },
 ) {
   const { kode } = await params;
-  const detail = await getOrderDetail(decodeURIComponent(kode));
+  const detail = await getOrderDetail(decodeURIComponent(kode), true);
   if (!detail)
     return NextResponse.json({ error: "Pesanan tidak ditemukan." }, { status: 404 });
 
