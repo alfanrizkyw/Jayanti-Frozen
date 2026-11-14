@@ -1,11 +1,12 @@
 "use client";
 
 import type { ComponentType, ReactNode } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
   Banknote,
+  BatteryFull,
   Bike,
   BookOpenText,
   Camera,
@@ -24,18 +25,22 @@ import {
   Minus,
   Moon,
   PackageOpen,
+  Pause,
   Phone,
+  Play,
   Plus,
   QrCode,
   RotateCcw,
   Search,
   ShoppingBag,
+  Signal,
   Snowflake,
   Star,
   Store,
   Sun,
   Trash2,
   Truck,
+  Wifi,
 } from "lucide-react";
 import { rupiah } from "@/lib/format";
 import { AvatarPeran } from "./avatar-peran";
@@ -222,7 +227,7 @@ function HeaderMini() {
 
 function TabMini({ aktif, isi }: { aktif: number; isi: number }) {
   return (
-    <div className="relative mt-auto flex-none border-t border-line/80 bg-paper/95 px-1.5 pb-1 pt-1.5">
+    <div className="relative mt-auto flex-none border-t border-line/80 bg-paper/95 px-1.5 pb-[7px] pt-1.5">
       <div className="relative grid grid-cols-5">
         <span
           aria-hidden="true"
@@ -278,6 +283,22 @@ function TabMini({ aktif, isi }: { aktif: number; isi: number }) {
   );
 }
 
+function FooterMini() {
+  return (
+    <footer className="mt-auto flex-none bg-navy px-2.5 pb-2 pt-2 text-white">
+      <div className="flex items-baseline justify-between gap-2">
+        <p className="text-[6.5px] font-extrabold leading-none">Yanti Frozen</p>
+        <p className="flex items-center gap-0.5 text-[5px] leading-none text-white/60">
+          <Clock size={5} /> 08.00 – 21.00
+        </p>
+      </div>
+      <p className="mt-1 truncate text-[5px] leading-none text-white/55">
+        Probolinggo, Jawa Timur · Ambil di toko atau antar kurir.
+      </p>
+    </footer>
+  );
+}
+
 function AppMini({
   aktif,
   isi,
@@ -290,8 +311,71 @@ function AppMini({
   return (
     <div className="flex h-full flex-col bg-paper text-navy">
       <HeaderMini />
-      <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
+      <div className="min-h-0 flex-1 overflow-hidden">
+        <div className="flex min-h-full flex-col">
+          {children}
+          <FooterMini />
+        </div>
+      </div>
       <TabMini aktif={aktif} isi={isi} />
+    </div>
+  );
+}
+
+function StatusMini() {
+  return (
+    <div className="relative z-10 flex h-[24px] flex-none items-center justify-between px-4 pt-[2px]">
+      <p className="stat-num text-[6.5px] font-bold leading-none text-navy">
+        08.40
+      </p>
+      <span
+        aria-hidden="true"
+        className="absolute left-1/2 top-[4px] h-[17px] w-[62px] -translate-x-1/2 rounded-full bg-[#0b0f13] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.07)]"
+      >
+        <span className="absolute right-2 top-1/2 h-[4px] w-[4px] -translate-y-1/2 rounded-full bg-[#17232f]" />
+      </span>
+      <span className="flex items-center gap-[3px] text-navy/85">
+        <Signal size={7} strokeWidth={2.6} />
+        <Wifi size={8} strokeWidth={2.4} />
+        <BatteryFull size={10} strokeWidth={1.8} />
+      </span>
+    </div>
+  );
+}
+
+function PonselMini({ children }: { children: ReactNode }) {
+  return (
+    <div className="relative mx-auto w-full max-w-[300px] flex-none sm:w-[280px]">
+      <span
+        aria-hidden="true"
+        className="absolute -left-[2px] top-[86px] h-5 w-[3px] rounded-l bg-[#5a646e]"
+      />
+      <span
+        aria-hidden="true"
+        className="absolute -left-[2px] top-[120px] h-9 w-[3px] rounded-l bg-[#5a646e]"
+      />
+      <span
+        aria-hidden="true"
+        className="absolute -left-[2px] top-[166px] h-9 w-[3px] rounded-l bg-[#5a646e]"
+      />
+      <span
+        aria-hidden="true"
+        className="absolute -right-[2px] top-[136px] h-11 w-[3px] rounded-r bg-[#4d565f]"
+      />
+      <div className="relative rounded-[48px] bg-[linear-gradient(155deg,#c6cfd8,#4a545e_16%,#1b2229_46%,#39424b_78%,#adb7c0)] p-[3px] shadow-[0_28px_55px_-28px_rgba(0,0,0,0.9)]">
+        <div className="overflow-hidden rounded-[45px] border-[5px] border-[#0a0d11] bg-black">
+          <div className="relative aspect-[402/874] overflow-hidden rounded-[38px] bg-paper text-navy">
+            <div className="flex h-full flex-col">
+              <StatusMini />
+              <div className="relative min-h-0 flex-1">{children}</div>
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute bottom-[3px] left-1/2 z-20 h-[3.5px] w-[96px] -translate-x-1/2 rounded-full bg-navy/35"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -726,7 +810,7 @@ function LayarBeranda() {
           alt="Aneka frozen food Yanti Frozen"
           fill
           priority
-          sizes="400px"
+          sizes="300px"
           className="object-cover object-[74%_48%]"
         />
         <div
@@ -1502,11 +1586,26 @@ const LAYAR: ComponentType[] = [
   LayarSelesai,
 ];
 
+const JEDA_MS = 4500;
+
 export function CaraPesanDemo() {
   const [tahap, setTahap] = useState(0);
+  const [jalan, setJalan] = useState(true);
   const terakhir = tahap === TAHAP.length - 1;
   const info = TAHAP[tahap];
   const Layar = LAYAR[tahap];
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setJalan(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!jalan || terakhir) return;
+    const timer = setTimeout(() => setTahap((t) => t + 1), JEDA_MS);
+    return () => clearTimeout(timer);
+  }, [jalan, tahap, terakhir]);
 
   return (
     <div className="card overflow-hidden">
@@ -1519,76 +1618,106 @@ export function CaraPesanDemo() {
             Contoh cara pesan
           </p>
           <p className="text-[11.5px] leading-snug text-muted">
-            Ikuti dengan panah Kembali dan Selanjutnya. Tidak berjalan sendiri.
-            Data contoh, bukan pesanan asli.
+            Berjalan sendiri seperti video. Bisa dijeda, atau pindah sendiri
+            dengan panah. Data contoh, bukan pesanan asli.
           </p>
         </div>
       </div>
 
-      <div className="mt-3 bg-[linear-gradient(165deg,#123f6d,#0a1f36)] px-3 py-3 md:px-4">
-        <div className="mx-auto h-[560px] max-w-[400px] overflow-hidden rounded-[20px] bg-paper text-navy shadow-[0_18px_40px_-24px_rgba(4,16,30,0.85)]">
-          <div key={info.id} className="rise h-full">
-            <Layar />
-          </div>
-        </div>
+      <div className="mt-3 bg-[linear-gradient(165deg,#123f6d,#0a1f36)] px-2 py-4 sm:px-4 sm:py-5">
+        <div className="mx-auto flex max-w-[560px] flex-col items-center gap-5 sm:flex-row sm:items-center sm:gap-6">
+          <PonselMini>
+            <div key={info.id} className="rise h-full">
+              <Layar />
+            </div>
+          </PonselMini>
 
-        <div className="mx-auto mt-3 max-w-[400px]">
-          <div className="flex items-baseline justify-between gap-2">
-            <p className="flex-none text-[10px] font-extrabold uppercase tracking-[0.12em] text-sky">
-              Langkah {tahap + 1} dari {TAHAP.length}
-            </p>
-            <p className="min-w-0 truncate text-right text-[12px] font-extrabold text-white">
-              {info.judul}
-            </p>
-          </div>
-          <p
-            aria-live="polite"
-            className="mt-0.5 min-h-[32px] text-[11px] leading-relaxed text-white/65"
-          >
-            {info.ket}
-          </p>
-
-          <div className="mt-1 flex gap-1" aria-hidden="true">
-            {TAHAP.map((t, i) => (
-              <span
-                key={t.id}
-                className={`h-1 flex-1 rounded-full ${
-                  i <= tahap ? "bg-sky" : "bg-white/15"
-                }`}
-              />
-            ))}
-          </div>
-
-          <div className="mt-3 flex gap-2">
-            <button
-              type="button"
-              onClick={() => setTahap((t) => Math.max(0, t - 1))}
-              disabled={tahap === 0}
-              className="btn flex-1 border border-white/20 bg-white/10 px-3 text-[13px] text-white hover:bg-white/15 sm:flex-none"
-            >
-              <ArrowLeft size={15} /> Kembali
-            </button>
-
-            {terakhir ? (
+          <div className="w-full min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-sky">
+                  Langkah {tahap + 1} dari {TAHAP.length}
+                </p>
+                <p className="mt-1 text-[15px] font-extrabold leading-tight text-white">
+                  {info.judul}
+                </p>
+              </div>
               <button
                 type="button"
-                onClick={() => setTahap(0)}
-                aria-label="Ulangi contoh dari awal"
-                className="btn btn-primary flex-1 px-3 text-[13px] sm:flex-none"
-              >
-                <RotateCcw size={15} /> Ulangi
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() =>
-                  setTahap((t) => Math.min(TAHAP.length - 1, t + 1))
+                onClick={() => setJalan((v) => !v)}
+                aria-label={
+                  jalan ? "Jeda contoh otomatis" : "Lanjutkan contoh otomatis"
                 }
-                className="btn btn-primary flex-1 px-3 text-[13px] sm:flex-none"
+                className="flex h-11 w-11 flex-none items-center justify-center rounded-full border border-white/25 text-white/85 transition hover:bg-white/10 hover:text-white"
               >
-                Selanjutnya <ArrowRight size={15} />
+                {jalan ? <Pause size={14} /> : <Play size={14} />}
               </button>
-            )}
+            </div>
+
+            <p
+              aria-live="polite"
+              className="mt-1 min-h-[54px] text-[12px] leading-relaxed text-white/65"
+            >
+              {info.ket}
+            </p>
+
+            <div className="mt-1.5 flex gap-1" aria-hidden="true">
+              {TAHAP.map((t, i) => (
+                <span
+                  key={t.id}
+                  className="relative h-1 flex-1 overflow-hidden rounded-full bg-white/15"
+                >
+                  {i < tahap && (
+                    <span className="absolute inset-0 rounded-full bg-sky" />
+                  )}
+                  {i === tahap && (
+                    <span
+                      key={`maju-${tahap}`}
+                      className="absolute inset-y-0 left-0 w-full origin-left rounded-full bg-sky"
+                      style={
+                        jalan
+                          ? {
+                              animation: `demo-maju ${JEDA_MS}ms linear forwards`,
+                            }
+                          : undefined
+                      }
+                    />
+                  )}
+                </span>
+              ))}
+            </div>
+
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setTahap((t) => Math.max(0, t - 1))}
+                disabled={tahap === 0}
+                className="btn flex-1 border border-white/20 bg-white/10 px-2 text-[12px] text-white hover:bg-white/15"
+              >
+                <ArrowLeft size={15} /> Kembali
+              </button>
+
+              {terakhir ? (
+                <button
+                  type="button"
+                  onClick={() => setTahap(0)}
+                  aria-label="Ulangi contoh dari awal"
+                  className="btn btn-primary flex-1 px-2 text-[12px]"
+                >
+                  <RotateCcw size={15} /> Ulangi
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setTahap((t) => Math.min(TAHAP.length - 1, t + 1))
+                  }
+                  className="btn btn-primary flex-1 px-2 text-[12px]"
+                >
+                  Selanjutnya <ArrowRight size={15} />
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>

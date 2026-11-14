@@ -62,9 +62,9 @@ export default async function CaraPesanPage() {
           Cara pesan
         </h1>
         <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted md:text-[14px]">
-          Tanpa daftar akun. Contoh di bawah meniru tampilan toko. Tekan
-          Selanjutnya atau Kembali untuk berpindah langkah; tidak berjalan
-          sendiri, jadi bisa diikuti pelan-pelan.
+          Tanpa daftar akun. Contoh di bawah berjalan sendiri seperti video;
+          bisa dijeda, dan ada panah Kembali atau Selanjutnya kalau ingin
+          pindah sendiri.
         </p>
       </div>
 
