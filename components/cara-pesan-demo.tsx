@@ -1,200 +1,495 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { useEffect, useRef, useState } from "react";
+import type { ComponentType, ReactNode } from "react";
+import { useState } from "react";
 import {
+  ArrowLeft,
   ArrowRight,
   Banknote,
   Bike,
   BookOpenText,
+  Camera,
   Check,
   ChevronDown,
-  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Crosshair,
   History,
   House,
   Landmark,
+  Languages,
   LayoutGrid,
+  Lock,
   MapPin,
   Minus,
-  Package,
-  Pause,
-  Play,
+  Moon,
+  PackageOpen,
+  Phone,
   Plus,
   QrCode,
+  RotateCcw,
   Search,
   ShoppingBag,
   Snowflake,
   Star,
   Store,
+  Sun,
+  Trash2,
   Truck,
 } from "lucide-react";
+import { rupiah } from "@/lib/format";
+import { AvatarPeran } from "./avatar-peran";
+import { Gambar } from "./gambar";
+import { WhatsAppIcon } from "./whatsapp-icon";
 
 const TAHAP = [
-  { id: "intro", ms: 2600, judul: "Perkenalan" },
-  { id: "katalog", ms: 4600, judul: "Pilih produk" },
-  { id: "keranjang", ms: 4000, judul: "Periksa keranjang" },
-  { id: "data", ms: 4600, judul: "Isi data pembeli" },
-  { id: "antar", ms: 4800, judul: "Atur pengantaran" },
-  { id: "bayar", ms: 4200, judul: "Pilih pembayaran" },
-  { id: "kurir", ms: 5400, judul: "Kurir mengantar" },
-  { id: "selesai", ms: 4400, judul: "Pesanan selesai" },
+  {
+    id: "beranda",
+    judul: "Buka beranda",
+    ket: "Cek jam buka dan promo. Kolom cari membantu kalau sudah tahu produknya.",
+  },
+  {
+    id: "katalog",
+    judul: "Pilih produk",
+    ket: "Tekan Tambah. Produk langsung masuk keranjang tanpa daftar akun.",
+  },
+  {
+    id: "keranjang",
+    judul: "Periksa keranjang",
+    ket: "Ubah jumlah bila perlu, lalu tekan Lanjut ke checkout.",
+  },
+  {
+    id: "data",
+    judul: "Isi data pembeli",
+    ket: "Cukup nama dan nomor HP. Admin mengonfirmasi lewat WhatsApp.",
+  },
+  {
+    id: "titik",
+    judul: "Tandai titik antar",
+    ket: "Tulis alamat, lalu tekan Pilih lokasi saya. Geser pin bila titiknya meleset.",
+  },
+  {
+    id: "bayar",
+    judul: "Pilih pembayaran",
+    ket: "Pesanan antar memakai QRIS atau transfer. Tunai hanya untuk ambil di toko.",
+  },
+  {
+    id: "kurir",
+    judul: "Ikuti kurir",
+    ket: "Status dan posisi kurir tampil di halaman pesanan, diperbarui otomatis.",
+  },
+  {
+    id: "selesai",
+    judul: "Beri ulasan",
+    ket: "Setelah pesanan selesai, beri bintang dan ulasan untuk toko.",
+  },
 ] as const;
 
 const TAB = [
-  { Ikon: House, label: "Beranda" },
-  { Ikon: LayoutGrid, label: "Katalog" },
-  { Ikon: ShoppingBag, label: "Keranjang" },
-  { Ikon: BookOpenText, label: "Cara pesan" },
-  { Ikon: History, label: "Riwayat" },
+  { Ikon: House, label: "Beranda", utama: false },
+  { Ikon: LayoutGrid, label: "Katalog", utama: false },
+  { Ikon: ShoppingBag, label: "Keranjang", utama: true },
+  { Ikon: BookOpenText, label: "Cara pesan", utama: false },
+  { Ikon: History, label: "Riwayat", utama: false },
 ];
 
-const POLA_QR =
-  "1100111010111010100111001101001110110011100101101".split("").map((n) => n === "1");
+type ProdukContoh = {
+  nama: string;
+  satuan: string;
+  kategori: string;
+  harga: number;
+  lama: number;
+  gambar: string;
+  jumlah: number;
+};
 
-function TabMini({ aktif, isi }: { aktif: number; isi: number }) {
+const PRODUK: ProdukContoh[] = [
+  {
+    nama: "Chicken Nugget",
+    satuan: "500 g",
+    kategori: "Nugget & Sosis",
+    harga: 27900,
+    lama: 32000,
+    gambar: "/produk/nugget.jpg",
+    jumlah: 1,
+  },
+  {
+    nama: "Sosis Sapi",
+    satuan: "500 g",
+    kategori: "Nugget & Sosis",
+    harga: 28000,
+    lama: 0,
+    gambar: "/produk/sosis.jpg",
+    jumlah: 0,
+  },
+  {
+    nama: "Bakso Sapi",
+    satuan: "500 g",
+    kategori: "Bakso",
+    harga: 30000,
+    lama: 0,
+    gambar: "/produk/bakso.jpg",
+    jumlah: 1,
+  },
+  {
+    nama: "Kentang Goreng",
+    satuan: "1 kg",
+    kategori: "Kentang",
+    harga: 34900,
+    lama: 40000,
+    gambar: "/produk/kentang.jpg",
+    jumlah: 0,
+  },
+];
+
+const POLA_QR = Array.from({ length: 169 }, (_, i) => {
+  const x = i % 13;
+  const y = Math.floor(i / 13);
+  return (x * 7 + y * 5 + ((x * y) % 3)) % 4 === 0;
+});
+
+const LANGKAH_PESANAN = [
+  "Pesanan diterima",
+  "Dikonfirmasi",
+  "Sedang disiapkan",
+  "Diantar kurir",
+  "Selesai",
+];
+
+function LogoKecil() {
   return (
-    <div className="mt-auto grid flex-none grid-cols-5 border-t border-line bg-white px-1 pb-1 pt-1">
-      {TAB.map(({ Ikon, label }, i) => (
-        <span
-          key={label}
-          className={`flex flex-col items-center gap-0.5 rounded-lg py-0.5 ${
-            i === aktif ? "text-brand" : "text-navy/40"
-          }`}
-        >
-          <span className="relative">
-            <Ikon size={13} strokeWidth={i === aktif ? 2.6 : 2} />
-            {i === 2 && isi > 0 && (
-              <span className="absolute -right-2 -top-1.5 flex h-3 min-w-3 items-center justify-center rounded-full bg-brand px-0.5 text-[6.5px] font-bold leading-none text-white">
-                {isi}
-              </span>
-            )}
-          </span>
-          <span className="text-[6.5px] font-bold leading-none">{label}</span>
+    <span className="inline-flex items-center gap-1.5">
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 48 48"
+        fill="none"
+        aria-hidden="true"
+        className="flex-none"
+      >
+        <ellipse cx="24" cy="30.6" rx="13.3" ry="12.9" fill="#102B50" />
+        <ellipse cx="24" cy="31.7" rx="10.3" ry="9.2" fill="#FCFDFF" />
+        <circle cx="20.3" cy="28.8" r="1.9" fill="#102B50" />
+        <circle cx="27.7" cy="28.8" r="1.9" fill="#102B50" />
+        <path
+          d="M21.7 32.4h4.6L25 34.7c-.55.7-1.45.7-2 0l-1.3-2.3Z"
+          fill="#F2A03A"
+          stroke="#F2A03A"
+          strokeWidth="1.2"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M13.3 16.7c-3.1 0-5.4-2.2-5.4-5.1 0-2.7 2-4.9 4.7-5.1.7-2.5 3-4.2 5.7-4.2 1.6 0 3.1.7 4.1 1.9.9-1.1 2.2-1.7 3.7-1.7 2.3 0 4.3 1.5 5 3.6 2.8-.1 4.9 2 4.9 4.8 0 2.9-2.3 5.2-5.3 5.2H13.3Z"
+          fill="#fff"
+          stroke="#102B50"
+          strokeWidth="1.6"
+          strokeLinejoin="round"
+        />
+        <rect
+          x="13.5"
+          y="15.2"
+          width="21"
+          height="5.2"
+          rx="2"
+          fill="#E8F3FF"
+          stroke="#102B50"
+          strokeWidth="1.6"
+        />
+      </svg>
+      <span className="flex flex-col leading-none">
+        <span className="text-[11px] font-extrabold leading-none tracking-[-0.02em] text-navy">
+          Yanti
         </span>
-      ))}
-    </div>
+        <span className="mt-[2px] text-[4.5px] font-bold uppercase tracking-[0.3em] text-navy">
+          Frozen
+        </span>
+      </span>
+    </span>
   );
 }
 
-function Bilah({
-  judul,
-  isi,
-  kembali = true,
-}: {
-  judul: string;
-  isi: number;
-  kembali?: boolean;
-}) {
+function HeaderMini() {
   return (
-    <div className="flex flex-none items-center gap-1.5 border-b border-line bg-white px-2.5 py-2">
-      {kembali ? (
-        <ChevronLeft size={14} className="flex-none text-navy/45" />
-      ) : (
-        <span className="flex h-6 w-6 flex-none items-center justify-center rounded-lg bg-[linear-gradient(160deg,#3f95dc,#1f66a8)] text-white">
-          <Snowflake size={12} />
-        </span>
-      )}
-      <p className="truncate text-[10.5px] font-extrabold text-navy">{judul}</p>
-      <span className="ml-auto inline-flex flex-none items-center gap-1 rounded-full bg-mist px-1.5 py-1 text-[8px] font-extrabold text-brand">
-        <ShoppingBag size={9} strokeWidth={2.6} />
-        {isi}
+    <div className="flex h-9 flex-none items-center gap-2 border-b border-line/80 bg-paper px-2.5">
+      <LogoKecil />
+      <span className="ml-auto flex items-center gap-2 text-navy/60">
+        <Languages size={12} />
+        <Moon size={12} />
       </span>
     </div>
   );
 }
 
-function Nomor({ n }: { n: number }) {
+function TabMini({ aktif, isi }: { aktif: number; isi: number }) {
   return (
-    <span className="flex h-5 w-5 flex-none items-center justify-center rounded-full bg-navy text-[8px] font-bold text-white">
-      {n}
+    <div className="relative mt-auto flex-none border-t border-line/80 bg-paper/95 px-1.5 pb-1 pt-1.5">
+      <div className="relative grid grid-cols-5">
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-1 left-0 w-1/5 rounded-lg bg-mist ring-1 ring-line transition-transform duration-300 ease-out"
+          style={{
+            transform: `translateX(${Math.max(aktif, 0) * 100}%)`,
+            opacity: TAB[aktif].utama ? 0 : 1,
+          }}
+        />
+        {TAB.map((tab, i) => {
+          const Ikon = tab.Ikon;
+          const aktifIni = i === aktif;
+
+          if (tab.utama) {
+            return (
+              <span
+                key={tab.label}
+                className="relative flex min-h-[34px] flex-col items-center justify-end pb-0.5"
+              >
+                <span className="absolute left-1/2 top-0 flex h-8 w-8 -translate-x-1/2 -translate-y-[14px] items-center justify-center rounded-full bg-[linear-gradient(160deg,#3f95dc,#1f66a8)] text-white ring-[3px] ring-paper">
+                  <ShoppingBag size={14} strokeWidth={2.2} />
+                  {isi > 0 && (
+                    <span className="stat-num absolute -right-1 -top-1 flex h-3 min-w-3 items-center justify-center rounded-full bg-navy px-0.5 text-[6px] font-bold text-white ring-1 ring-paper">
+                      {isi}
+                    </span>
+                  )}
+                </span>
+                <span
+                  className={`text-[6.5px] font-bold leading-none ${
+                    aktifIni ? "text-brand" : "text-navy/70"
+                  }`}
+                >
+                  {tab.label}
+                </span>
+              </span>
+            );
+          }
+
+          return (
+            <span
+              key={tab.label}
+              className={`relative flex min-h-[34px] flex-col items-center justify-end gap-0.5 pb-0.5 text-[6.5px] font-bold leading-none ${
+                aktifIni ? "text-brand" : "text-navy/70"
+              }`}
+            >
+              <Ikon size={13} strokeWidth={2.1} />
+              {tab.label}
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function AppMini({
+  aktif,
+  isi,
+  children,
+}: {
+  aktif: number;
+  isi: number;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex h-full flex-col bg-paper text-navy">
+      <HeaderMini />
+      <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
+      <TabMini aktif={aktif} isi={isi} />
+    </div>
+  );
+}
+
+function ChipMini({
+  children,
+  aktif = false,
+}: {
+  children: ReactNode;
+  aktif?: boolean;
+}) {
+  return (
+    <span
+      className={`inline-flex min-h-[18px] flex-none items-center gap-1 rounded-full border px-2 text-[7px] font-bold ${
+        aktif
+          ? "border-navy bg-navy text-white"
+          : "border-line bg-white text-navy"
+      }`}
+    >
+      {children}
     </span>
   );
 }
 
-function Bagian({
+function JudulHalaman({ judul, teks }: { judul: string; teks: string }) {
+  return (
+    <div className="px-2.5 pt-1.5">
+      <p className="flex items-center gap-0.5 text-[6.5px] text-muted">
+        Beranda <ChevronRight size={7} />
+        <span className="font-semibold text-navy">{judul}</span>
+      </p>
+      <h3 className="mt-0.5 text-[13px] font-extrabold leading-tight text-navy">
+        {judul}
+      </h3>
+      <p className="mt-0.5 text-[7px] leading-relaxed text-muted">{teks}</p>
+    </div>
+  );
+}
+
+function ProdukMini({ p }: { p: ProdukContoh }) {
+  const diskon = p.lama > 0 ? Math.round((1 - p.harga / p.lama) * 100) : 0;
+
+  return (
+    <article className="flex flex-col overflow-hidden rounded-lg border border-line bg-white shadow-card">
+      <div className="relative h-[50px] overflow-hidden bg-mist">
+        <Gambar
+          src={p.gambar}
+          alt={p.nama}
+          fill
+          sizes="160px"
+          className="object-cover"
+        />
+        {diskon > 0 && (
+          <span className="absolute left-1 top-1 rounded bg-sun px-1 py-0.5 text-[6px] font-extrabold leading-none text-[#3D2400]">
+            −{diskon}%
+          </span>
+        )}
+      </div>
+      <div className="flex flex-1 flex-col p-1.5">
+        <p className="truncate text-[5.5px] font-bold uppercase tracking-[0.08em] text-brand/75">
+          {p.kategori}
+        </p>
+        <p className="mt-0.5 line-clamp-1 text-[8px] font-bold leading-tight text-navy">
+          {p.nama}
+        </p>
+        <p className="text-[6.5px] text-muted">{p.satuan}</p>
+        <div className="mt-0.5 flex flex-wrap items-baseline gap-x-1">
+          <span className="stat-num text-[8.5px] font-extrabold text-navy">
+            {rupiah(p.harga)}
+          </span>
+          {p.lama > 0 && (
+            <span className="stat-num text-[6px] text-muted line-through">
+              {rupiah(p.lama)}
+            </span>
+          )}
+        </div>
+        <div className="mt-auto pt-1">
+          {p.jumlah > 0 ? (
+            <div>
+              <div className="flex items-center gap-0.5 rounded-md border border-brand/35 bg-mist p-0.5">
+                <span className="flex h-4 w-4 items-center justify-center text-brand">
+                  <Minus size={7} strokeWidth={2.6} />
+                </span>
+                <span className="stat-num flex-1 text-center text-[7.5px] font-extrabold text-navy">
+                  {p.jumlah}
+                </span>
+                <span className="flex h-4 w-4 items-center justify-center text-brand">
+                  <Plus size={7} strokeWidth={2.6} />
+                </span>
+              </div>
+              <p className="mt-0.5 text-center text-[5.5px] font-bold text-brand">
+                Ada di keranjang
+              </p>
+            </div>
+          ) : (
+            <div className="flex min-h-[22px] items-center justify-center gap-0.5 rounded-md border border-[#C9E1F7] bg-mist text-[7px] font-extrabold text-brand">
+              <Plus size={7} strokeWidth={2.6} /> Tambah
+            </div>
+          )}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function SectionMini({
   n,
   judul,
   children,
-  className = "",
 }: {
   n: number;
   judul: string;
   children: ReactNode;
-  className?: string;
 }) {
   return (
-    <div className={`rounded-xl border border-line bg-white p-2.5 ${className}`}>
+    <section className="rounded-lg border border-line bg-white p-2">
       <div className="flex items-center gap-1.5">
-        <Nomor n={n} />
-        <p className="text-[9.5px] font-extrabold text-navy">{judul}</p>
+        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-navy text-[6.5px] font-bold text-white">
+          {n}
+        </span>
+        <h4 className="text-[8.5px] font-extrabold text-navy">{judul}</h4>
       </div>
       {children}
-    </div>
+    </section>
   );
 }
 
-function Isian({
+function IsianMini({
   label,
-  isi,
-  tunda,
-  tenang,
+  nilai,
+  placeholder,
+  area = false,
 }: {
   label: string;
-  isi: string;
-  tunda: string;
-  tenang: boolean;
+  nilai?: string;
+  placeholder: string;
+  area?: boolean;
 }) {
   return (
-    <div>
-      <p className="text-[7px] font-bold uppercase tracking-[0.08em] text-muted">
-        {label}
-      </p>
-      <div className="mt-0.5 flex h-7 items-center rounded-md border border-line bg-white px-1.5">
-        <span
-          className="truncate text-[9px] font-semibold text-navy"
-          style={
-            tenang
-              ? undefined
-              : { animation: `demo-ketik .7s ${tunda} steps(10) both` }
-          }
-        >
-          {isi}
-        </span>
+    <div className={area ? "mt-1.5" : "mt-1"}>
+      <p className="text-[6px] font-bold text-navy">{label}</p>
+      <div
+        className={`mt-0.5 rounded-md border border-line bg-white px-1.5 ${
+          area ? "min-h-[30px] py-1" : "flex h-6 items-center"
+        }`}
+      >
+        {nilai ? (
+          <span
+            className={`block text-[7px] font-semibold leading-snug text-navy ${
+              area ? "" : "truncate"
+            }`}
+          >
+            {nilai}
+          </span>
+        ) : (
+          <span className="block text-[7px] text-muted">{placeholder}</span>
+        )}
       </div>
     </div>
   );
 }
 
-function Pilihan({
+function OpsiMini({
   Ikon,
   judul,
   teks,
-  aktif,
+  aktif = false,
+  mati = false,
 }: {
   Ikon: typeof Truck;
   judul: string;
   teks: string;
   aktif?: boolean;
+  mati?: boolean;
 }) {
   return (
     <div
-      className={`flex items-center gap-1.5 rounded-lg border px-1.5 py-1.5 ${
-        aktif ? "border-brand bg-mist" : "border-line bg-white"
+      className={`flex items-start gap-1.5 rounded-lg border p-1.5 ${
+        mati
+          ? "border-line/70 bg-paper/60 opacity-60"
+          : aktif
+            ? "border-brand bg-mist ring-1 ring-brand/25"
+            : "border-line bg-white"
       }`}
     >
       <span
-        className={`flex h-6 w-6 flex-none items-center justify-center rounded-md ${
+        className={`flex h-5 w-5 flex-none items-center justify-center rounded ${
           aktif ? "bg-brand text-white" : "bg-paper text-brand"
         }`}
       >
-        <Ikon size={12} />
+        <Ikon size={10} />
       </span>
-      <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-1 text-[9px] font-bold text-navy">
+      <span className="min-w-0">
+        <span className="flex items-center gap-0.5 text-[7px] font-bold text-navy">
           {judul}
-          {aktif && <Check size={9} className="text-brand" strokeWidth={3.5} />}
+          {aktif && <Check size={7} className="text-brand" strokeWidth={3.5} />}
         </span>
-        <span className="mt-0.5 block truncate text-[7.5px] text-muted">
+        <span className="mt-0.5 block text-[5.5px] leading-snug text-muted">
           {teks}
         </span>
       </span>
@@ -202,334 +497,201 @@ function Pilihan({
   );
 }
 
-function Bayar({
+function BayarMini({
   Ikon,
   judul,
   teks,
-  aktif,
-  sorot = false,
-  tenang = false,
+  aktif = false,
+  mati = false,
 }: {
   Ikon: typeof Banknote;
   judul: string;
   teks: string;
   aktif?: boolean;
-  sorot?: boolean;
-  tenang?: boolean;
+  mati?: boolean;
 }) {
   return (
     <div
-      className={`flex items-center gap-1.5 rounded-lg border px-1.5 py-1 ${
-        aktif ? "border-brand bg-mist" : "border-line bg-white"
+      className={`flex flex-col gap-1 rounded-lg border p-1.5 ${
+        mati
+          ? "border-line/70 bg-paper/60 opacity-60"
+          : aktif
+            ? "border-brand bg-mist ring-1 ring-brand/25"
+            : "border-line bg-white"
       }`}
     >
-      <Ikon
-        size={12}
-        className={aktif ? "flex-none text-brand" : "flex-none text-navy/50"}
-      />
-      <span className="min-w-0 flex-1">
-        <span className="block text-[9px] font-bold text-navy">{judul}</span>
-        <span className="mt-0.5 block truncate text-[7.5px] text-muted">
-          {teks}
-        </span>
-      </span>
-      <span
-        className={`flex h-3.5 w-3.5 flex-none items-center justify-center rounded-full ${
-          aktif ? "bg-brand text-white" : "border border-line bg-white"
-        }`}
-        style={sorot && !tenang ? { animation: "cart-pop .4s .7s both" } : undefined}
-      >
-        {aktif && <Check size={8} strokeWidth={4} />}
-      </span>
-    </div>
-  );
-}
-
-function Produk({
-  nama,
-  satuan,
-  harga,
-  lama,
-  diskon,
-  kategori,
-  tombol,
-  tenang,
-}: {
-  nama: string;
-  satuan: string;
-  harga: string;
-  lama: string;
-  diskon: string;
-  kategori: string;
-  tombol?: boolean;
-  tenang: boolean;
-}) {
-  return (
-    <div className="flex flex-col overflow-hidden rounded-lg border border-line bg-white">
-      <div className="relative flex h-[50px] items-center justify-center bg-[linear-gradient(150deg,#e2eefb,#c6def4)]">
-        <Snowflake size={16} className="text-brand/35" />
-        {diskon && (
-          <span className="absolute left-1 top-1 rounded bg-sun px-1 py-0.5 text-[6.5px] font-extrabold leading-none text-[#3D2400]">
-            {diskon}
+      <span className="flex items-center justify-between">
+        <Ikon size={11} className={aktif ? "text-brand" : "text-navy/60"} />
+        {aktif && (
+          <span className="flex h-3 w-3 items-center justify-center rounded-full bg-brand text-white">
+            <Check size={6} strokeWidth={4} />
           </span>
         )}
-      </div>
-      <div className="flex flex-1 flex-col p-1.5">
-        <p className="truncate text-[6.5px] font-bold uppercase tracking-[0.08em] text-brand/75">
-          {kategori}
-        </p>
-        <p className="mt-0.5 line-clamp-2 text-[9px] font-bold leading-tight text-navy">
-          {nama}
-        </p>
-        <p className="text-[7.5px] text-muted">{satuan}</p>
-        <div className="mt-1 flex flex-wrap items-baseline gap-x-1">
-          <span className="text-[9.5px] font-extrabold text-navy">{harga}</span>
-          {lama && (
-            <span className="text-[7px] text-muted line-through">{lama}</span>
-          )}
-        </div>
-        <div
-          className={`mt-1 flex h-6 items-center justify-center gap-0.5 rounded-md border border-[#C9E1F7] bg-mist text-[8px] font-extrabold text-brand ${
-            tombol && !tenang ? "demo-tombol" : ""
-          }`}
-        >
-          <Plus size={8} strokeWidth={3} /> Tambah
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function BarisKeranjang({
-  nama,
-  satuan,
-  harga,
-  jumlah,
-}: {
-  nama: string;
-  satuan: string;
-  harga: string;
-  jumlah: number;
-}) {
-  return (
-    <div className="flex items-center gap-1.5 py-1.5">
-      <span className="flex h-7 w-7 flex-none items-center justify-center rounded-md bg-[linear-gradient(150deg,#e2eefb,#c6def4)] text-brand/40">
-        <Snowflake size={12} />
       </span>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-[9px] font-bold text-navy">{nama}</p>
-        <p className="text-[7.5px] text-muted">{satuan}</p>
-        <div className="mt-1 flex w-fit items-center gap-0.5 rounded-md border border-brand/35 bg-white p-0.5">
-          <span className="flex h-4 w-4 items-center justify-center text-brand">
-            <Minus size={7} strokeWidth={3} />
-          </span>
-          <span className="min-w-3 text-center text-[8px] font-extrabold text-navy">
-            {jumlah}
-          </span>
-          <span className="flex h-4 w-4 items-center justify-center text-brand">
-            <Plus size={7} strokeWidth={3} />
-          </span>
-        </div>
-      </div>
-      <p className="flex-none text-[9px] font-extrabold text-navy">{harga}</p>
+      <span className="text-[7px] font-bold text-navy">{judul}</span>
+      <span className="text-[5.5px] leading-snug text-muted">{teks}</span>
     </div>
   );
 }
 
-function BarisRingkas({
-  nama,
-  jumlah,
-  harga,
-}: {
-  nama: string;
-  jumlah: number;
-  harga: string;
-}) {
+function QrMini() {
   return (
-    <div className="mt-1 flex items-center gap-1.5">
-      <span className="relative flex h-6 w-6 flex-none items-center justify-center rounded-md border border-line bg-mist text-brand/45">
-        <Snowflake size={10} />
-        <span className="absolute -bottom-0.5 -right-0.5 rounded bg-navy/85 px-0.5 text-[6px] font-bold leading-[1.4] text-white">
-          {jumlah}×
-        </span>
-      </span>
-      <p className="min-w-0 flex-1 truncate text-[8px] font-semibold text-navy">
-        {nama}
-      </p>
-      <p className="flex-none text-[8px] font-bold text-navy">{harga}</p>
-    </div>
+    <svg viewBox="0 0 29 29" className="h-14 w-14" aria-hidden="true">
+      <rect width="29" height="29" fill="#fff" />
+      {POLA_QR.map((on, i) =>
+        on ? (
+          <rect
+            key={i}
+            x={3 + (i % 13)}
+            y={3 + Math.floor(i / 13)}
+            width="1"
+            height="1"
+            fill="#102b50"
+          />
+        ) : null,
+      )}
+      {[
+        [0, 0],
+        [22, 0],
+        [0, 22],
+      ].map(([x, y]) => (
+        <g key={`${x}-${y}`}>
+          <rect x={x} y={y} width="7" height="7" fill="#102b50" />
+          <rect x={x + 1} y={y + 1} width="5" height="5" fill="#fff" />
+          <rect x={x + 2} y={y + 2} width="3" height="3" fill="#102b50" />
+        </g>
+      ))}
+    </svg>
   );
 }
 
-function PetaDemo({ tenang }: { tenang: boolean }) {
+function PetaMini({ mode }: { mode: "pilih" | "kurir" }) {
   return (
-    <div className="relative overflow-hidden rounded-lg border border-line bg-[#E9F2F9]">
+    <div className="relative overflow-hidden rounded-md border border-line bg-[#E9F2F9]">
       <svg
-        viewBox="0 0 400 200"
-        className="block h-[124px] w-full"
+        viewBox="0 0 400 118"
+        className="block h-[104px] w-full"
         preserveAspectRatio="xMidYMid slice"
         aria-hidden="true"
       >
-        <rect width="400" height="200" fill="#E9F2F9" />
+        <rect width="400" height="118" fill="#E9F2F9" />
         <g fill="#D9E9F6">
-          <rect x="14" y="12" width="72" height="40" rx="8" />
-          <rect x="104" y="18" width="50" height="30" rx="7" />
-          <rect x="238" y="10" width="64" height="34" rx="8" />
-          <rect x="318" y="14" width="62" height="30" rx="7" />
-          <rect x="22" y="72" width="46" height="28" rx="7" />
-          <rect x="250" y="82" width="58" height="44" rx="8" />
-          <rect x="334" y="86" width="46" height="40" rx="7" />
-          <rect x="116" y="128" width="60" height="40" rx="8" />
-          <rect x="214" y="142" width="56" height="32" rx="8" />
-          <rect x="308" y="146" width="62" height="36" rx="8" />
+          <rect x="12" y="8" width="66" height="24" rx="6" />
+          <rect x="96" y="10" width="44" height="18" rx="5" />
+          <rect x="150" y="6" width="48" height="22" rx="6" />
+          <rect x="234" y="8" width="58" height="20" rx="5" />
+          <rect x="318" y="10" width="56" height="18" rx="5" />
+          <rect x="18" y="44" width="42" height="16" rx="5" />
+          <rect x="248" y="46" width="52" height="22" rx="6" />
+          <rect x="334" y="48" width="42" height="20" rx="5" />
+          <rect x="112" y="86" width="54" height="24" rx="6" />
+          <rect x="212" y="88" width="48" height="20" rx="5" />
+          <rect x="306" y="86" width="58" height="24" rx="6" />
         </g>
-        <g>
-          <rect x="168" y="16" width="54" height="32" rx="9" fill="#DBF0E6" />
-          <circle cx="180" cy="28" r="4.5" fill="#B9DFCC" />
-          <circle cx="194" cy="36" r="5.5" fill="#B9DFCC" />
-          <circle cx="206" cy="26" r="3.5" fill="#B9DFCC" />
-        </g>
+        <rect x="166" y="34" width="48" height="20" rx="6" fill="#DBF0E6" />
         <g stroke="#FFFFFF" fill="none" strokeLinecap="round">
-          <path d="M0 116 H400" strokeWidth="14" />
-          <path d="M212 0 V200" strokeWidth="11" />
-          <path d="M0 62 H400" strokeWidth="5" opacity="0.85" />
-          <path d="M100 0 V200" strokeWidth="4" opacity="0.85" />
-          <path d="M320 0 V200" strokeWidth="4" opacity="0.85" />
-        </g>
-        <path
-          d="M62 158 C118 174 184 92 334 44"
-          fill="none"
-          stroke="#FFFFFF"
-          strokeWidth="8"
-          strokeLinecap="round"
-        />
-        <path
-          d="M62 158 C118 174 184 92 334 44"
-          fill="none"
-          stroke="#A9CDEC"
-          strokeWidth="3.4"
-          strokeLinecap="round"
-          strokeDasharray="2 6"
-        />
-        <path
-          d="M62 158 C118 174 184 92 334 44"
-          fill="none"
-          stroke="#2166AC"
-          strokeWidth="3.4"
-          strokeLinecap="round"
-          strokeDasharray="0.62 1"
-          pathLength={1}
-        />
-        <g transform="translate(62 158)">
-          <circle r="13" fill="#fff" opacity="0.95" />
-          <rect
-            x="-7.5"
-            y="-6.5"
-            width="15"
-            height="13"
-            rx="2.5"
-            fill="#102B50"
-          />
-          <path d="M-7.5 -2.5 H7.5" stroke="#72B9EE" strokeWidth="1.4" />
-          <rect x="-3.5" y="1.5" width="7" height="5" rx="1" fill="#E8F3FF" />
+          <path d="M0 72 H400" strokeWidth="13" />
+          <path d="M212 0 V118" strokeWidth="9" />
+          <path d="M0 34 H400" strokeWidth="4" opacity="0.85" />
+          <path d="M100 0 V118" strokeWidth="3.5" opacity="0.85" />
+          <path d="M322 0 V118" strokeWidth="3.5" opacity="0.85" />
         </g>
         <text
-          x="62"
-          y="182"
-          textAnchor="middle"
+          x="24"
+          y="66"
           fill="#102B50"
           fontSize="8"
           fontWeight="800"
+          textAnchor="middle"
         >
           Toko
         </text>
-        <g transform="translate(334 44)">
-          <circle r="13" fill="#fff" opacity="0.95" />
-          <circle r="9" fill="#2166AC" />
-          <path
-            d="M-3.5 1.5 0 -3.5 3.5 1.5v3.5a1 1 0 0 1-1 1H-2.5a1 1 0 0 1-1-1v-3.5Z"
-            fill="#fff"
-          />
-        </g>
-        <text
-          x="334"
-          y="66"
-          textAnchor="middle"
-          fill="#102B50"
-          fontSize="8"
-          fontWeight="800"
-        >
-          Alamat Anda
-        </text>
-        {tenang ? (
-          <g transform="translate(236 74)">
-            <circle r="13" fill="#2166AC" opacity="0.14" />
-            <circle r="10" fill="#fff" />
-            <circle r="7.5" fill="#2166AC" />
-          </g>
-        ) : (
-          <g>
-            <circle r="12" fill="#2166AC" opacity="0.14">
-              <animateMotion
-                dur="7s"
-                repeatCount="indefinite"
-                path="M62 158 C118 174 184 92 334 44"
-              />
-            </circle>
-            <circle r="9" fill="#fff" stroke="#2166AC" strokeWidth="1.5">
-              <animateMotion
-                dur="7s"
-                repeatCount="indefinite"
-                path="M62 158 C118 174 184 92 334 44"
-              />
-            </circle>
-            <circle r="5.5" fill="#2166AC">
-              <animateMotion
-                dur="7s"
-                repeatCount="indefinite"
-                path="M62 158 C118 174 184 92 334 44"
-              />
-            </circle>
-          </g>
-        )}
       </svg>
-      <span className="absolute left-1.5 top-1.5 flex items-center gap-1 rounded bg-white/95 px-1.5 py-1 text-[6.5px] font-bold text-navy shadow-sm">
-        <span className="live-dot h-1 w-1 rounded-full bg-leaf" /> KURIR DI JALAN
+
+      <span className="absolute left-[7%] top-[54%] flex h-4 w-4 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-sm">
+        <span className="flex h-2.5 w-2.5 items-center justify-center rounded-full bg-navy text-white">
+          <Snowflake size={5} />
+        </span>
       </span>
-      <span className="absolute bottom-1.5 right-1.5 rounded bg-white/95 px-1.5 py-1 text-[7px] font-extrabold text-navy shadow-sm">
-        ± 12 menit
-      </span>
+
+      {mode === "kurir" ? (
+        <>
+          <span className="absolute left-[58%] top-[42%] -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-white">
+            <AvatarPeran peran="kurir" ukuran={20} />
+          </span>
+          <span className="absolute left-[84%] top-[30%] -translate-x-1/2 -translate-y-1/2">
+            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-brand text-white ring-2 ring-white">
+              <MapPin size={8} />
+            </span>
+          </span>
+          <span className="absolute left-1.5 top-1.5 flex items-center gap-0.5 rounded bg-white/95 px-1 py-0.5 text-[5.5px] font-bold text-navy shadow-sm">
+            <span className="live-dot h-1 w-1 rounded-full bg-leaf" /> LOKASI
+            KURIR
+          </span>
+          <span className="absolute bottom-1.5 right-1.5 rounded bg-white/95 px-1 py-0.5 text-[6px] font-extrabold text-navy shadow-sm">
+            ± 20 menit
+          </span>
+        </>
+      ) : (
+        <>
+          <span className="absolute left-1/2 top-[45%] -translate-x-1/2 -translate-y-1/2">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand text-white shadow-[0_3px_8px_rgba(16,43,80,0.35)] ring-2 ring-white">
+              <MapPin size={10} />
+            </span>
+          </span>
+          <span className="absolute left-1.5 top-1.5 rounded bg-white/95 px-1 py-0.5 text-[5.5px] font-bold text-navy shadow-sm">
+            PILIH TITIK
+          </span>
+          <span className="absolute right-1.5 top-1.5 flex gap-0.5">
+            <span className="flex h-3.5 w-3.5 items-center justify-center rounded bg-white text-[7px] font-bold text-navy shadow-sm">
+              +
+            </span>
+            <span className="flex h-3.5 w-3.5 items-center justify-center rounded bg-white text-[7px] font-bold text-navy shadow-sm">
+              −
+            </span>
+          </span>
+          <span className="absolute bottom-1.5 left-1.5 rounded bg-white/95 px-1 py-0.5 text-[5.5px] font-semibold text-muted shadow-sm">
+            Geser pin bila perlu
+          </span>
+        </>
+      )}
     </div>
   );
 }
 
-function Timeline({ langkah, aktif }: { langkah: string[]; aktif: number }) {
+function TimelineMini({
+  aktif,
+  selesai = false,
+}: {
+  aktif: number;
+  selesai?: boolean;
+}) {
   return (
-    <ol className="rounded-xl border border-line bg-white px-2 py-1.5">
-      {langkah.map((l, i) => {
-        const selesai = i < aktif;
-        const sedang = i === aktif;
+    <ol className="rounded-lg border border-line bg-white px-2 py-1.5">
+      {LANGKAH_PESANAN.map((l, i) => {
+        const beres = selesai || i < aktif;
+        const sedang = !selesai && i === aktif;
         return (
           <li key={l} className="relative flex items-center gap-1.5 py-0.5">
-            {i < langkah.length - 1 && (
+            {i < LANGKAH_PESANAN.length - 1 && (
               <span
                 aria-hidden="true"
-                className={`absolute left-[7px] top-4 h-2.5 w-px ${
-                  selesai ? "bg-brand" : "bg-line"
+                className={`absolute left-[5px] top-3 h-1.5 w-px ${
+                  beres ? "bg-brand" : "bg-line"
                 }`}
               />
             )}
             <span
-              className={`relative z-10 flex h-3.5 w-3.5 flex-none items-center justify-center rounded-full border text-[6px] font-bold ${
-                selesai
+              className={`relative z-10 flex h-2.5 w-2.5 flex-none items-center justify-center rounded-full border text-[5px] font-bold ${
+                beres
                   ? "border-brand bg-brand text-white"
                   : sedang
                     ? "border-brand bg-white text-brand"
                     : "border-line bg-white text-muted"
               }`}
             >
-              {selesai ? (
-                <Check size={7} strokeWidth={4} />
+              {beres ? (
+                <Check size={5} strokeWidth={4.5} />
               ) : sedang ? (
                 <span className="h-1 w-1 rounded-full bg-brand" />
               ) : (
@@ -537,15 +699,15 @@ function Timeline({ langkah, aktif }: { langkah: string[]; aktif: number }) {
               )}
             </span>
             <p
-              className={`text-[8px] font-bold ${
-                selesai || sedang ? "text-navy" : "text-muted"
+              className={`text-[6.5px] font-bold ${
+                beres || sedang ? "text-navy" : "text-muted"
               }`}
             >
               {l}
             </p>
             {sedang && (
-              <span className="ml-auto rounded-full bg-mist px-1 py-0.5 text-[6px] font-semibold text-brand">
-                Sekarang
+              <span className="ml-auto rounded-full bg-mist px-1 py-px text-[5px] font-semibold text-brand">
+                Status sekarang
               </span>
             )}
           </li>
@@ -555,695 +717,880 @@ function Timeline({ langkah, aktif }: { langkah: string[]; aktif: number }) {
   );
 }
 
+function LayarBeranda() {
+  return (
+    <AppMini aktif={0} isi={2}>
+      <section className="relative isolate overflow-hidden bg-navy text-white">
+        <Gambar
+          src="/brand/hero-promo.jpg"
+          alt="Aneka frozen food Yanti Frozen"
+          fill
+          priority
+          sizes="400px"
+          className="object-cover object-[74%_48%]"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-t from-navy via-navy/90 to-navy/45"
+        />
+        <div className="relative px-2.5 pb-2.5 pt-2">
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="inline-flex min-h-[16px] items-center gap-0.5 rounded-full border border-white/15 bg-white/10 px-1.5 text-[6px] font-semibold text-white/85">
+              <Sun size={7} className="text-[#8ee0a8]" /> Buka · 08.00 – 21.00
+            </span>
+            <span className="inline-flex min-h-[16px] items-center gap-0.5 rounded-full border border-white/15 bg-white/10 px-1.5 text-[6px] font-semibold text-white/85">
+              <MapPin size={7} className="text-sky" /> Probolinggo
+            </span>
+          </div>
+
+          <h1 className="mt-1.5 max-w-[240px] text-[16px] font-extrabold leading-[1.05] tracking-[-0.035em]">
+            Frozen food,
+            <br />
+            <span className="text-sky">siap masak</span> kapan saja.
+          </h1>
+          <p className="mt-1 max-w-[210px] text-[7px] leading-relaxed text-white/75">
+            Pesan antar atau ambil sendiri. Bayar tunai, QRIS, atau transfer.
+          </p>
+
+          <div className="mt-2 flex gap-1">
+            <div className="relative min-w-0 flex-1">
+              <Search
+                size={9}
+                className="absolute left-1.5 top-1/2 -translate-y-1/2 text-muted"
+              />
+              <div className="flex h-7 items-center rounded-lg bg-white pl-5 pr-1.5 text-[7px] text-muted">
+                Cari nugget, bakso…
+              </div>
+            </div>
+            <span className="flex h-7 flex-none items-center rounded-lg bg-sky px-2 text-[7px] font-bold text-navy">
+              Cari
+            </span>
+          </div>
+
+          <div className="mt-1.5 flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/10 px-1.5 py-1">
+            <span className="flex h-5 w-5 flex-none items-center justify-center rounded bg-white/10 text-sky">
+              <Snowflake size={9} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[5px] font-extrabold uppercase tracking-[0.14em] text-sky">
+                HEMAT 20%
+              </p>
+              <p className="truncate text-[7px] font-extrabold">
+                PROMO, Beli Duo Lebih Hemat!
+              </p>
+            </div>
+            <span className="flex h-5 flex-none items-center gap-0.5 rounded bg-white px-1 text-[5.5px] font-bold text-navy">
+              Lihat <ArrowRight size={6} />
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <div className="px-2.5 pt-2">
+        <div className="overflow-hidden rounded-lg border border-line bg-white">
+          <div className="flex min-h-[26px] items-center gap-1.5 px-2">
+            <span className="flex h-4 w-4 flex-none items-center justify-center rounded bg-mist text-brand">
+              <WhatsAppIcon size={9} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[7px] font-extrabold text-navy">
+                Butuh bantuan?
+              </p>
+              <p className="truncate text-[5.5px] text-muted">
+                Chat langsung ke admin.
+              </p>
+            </div>
+            <ChevronRight size={8} className="text-muted" />
+          </div>
+          <div className="flex min-h-[26px] items-center gap-1.5 border-t border-line px-2">
+            <span className="flex h-4 w-4 flex-none items-center justify-center rounded bg-mist text-brand">
+              <MapPin size={9} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[7px] font-extrabold text-navy">Lokasi toko</p>
+              <p className="truncate text-[5.5px] text-muted">
+                Pondok Pabean Indah Blok N No. 10
+              </p>
+            </div>
+            <ChevronRight size={8} className="text-muted" />
+          </div>
+        </div>
+
+        <div className="mt-2">
+          <h2 className="text-[8.5px] font-extrabold text-navy">Kategori</h2>
+          <div className="mt-1 flex gap-1 overflow-hidden">
+            <ChipMini aktif>
+              Semua{" "}
+              <span className="rounded-full bg-white/15 px-1 text-[5.5px]">
+                12
+              </span>
+            </ChipMini>
+            <ChipMini>
+              Nugget &amp; Sosis{" "}
+              <span className="rounded-full bg-paper px-1 text-[5.5px] text-muted">
+                4
+              </span>
+            </ChipMini>
+            <ChipMini>
+              Bakso{" "}
+              <span className="rounded-full bg-paper px-1 text-[5.5px] text-muted">
+                2
+              </span>
+            </ChipMini>
+            <ChipMini>
+              Kentang{" "}
+              <span className="rounded-full bg-paper px-1 text-[5.5px] text-muted">
+                2
+              </span>
+            </ChipMini>
+          </div>
+        </div>
+
+        <div className="mt-2 flex items-center justify-between">
+          <h2 className="text-[8.5px] font-extrabold text-navy">Produk</h2>
+          <span className="text-[6px] font-bold text-brand">Lihat semua</span>
+        </div>
+        <div className="mt-1 grid grid-cols-2 gap-1.5">
+          {PRODUK.map((p) => (
+            <ProdukMini key={p.nama} p={p} />
+          ))}
+        </div>
+      </div>
+    </AppMini>
+  );
+}
+
+function LayarKatalog() {
+  return (
+    <AppMini aktif={1} isi={2}>
+      <JudulHalaman
+        judul="Katalog produk"
+        teks="Semua frozen food yang tersedia di toko. Stok dan harga diperbarui langsung oleh admin."
+      />
+
+      <div className="mx-2.5 mt-1.5 rounded-lg border border-line bg-white p-1.5 shadow-card">
+        <div className="flex gap-1">
+          <div className="relative min-w-0 flex-1">
+            <Search
+              size={9}
+              className="absolute left-1.5 top-1/2 -translate-y-1/2 text-muted"
+            />
+            <div className="flex h-6 items-center rounded-md border border-line bg-white pl-5 pr-1.5 text-[6.5px] text-muted">
+              Cari produk, kategori, atau kebutuhan…
+            </div>
+          </div>
+          <span className="flex h-6 flex-none items-center rounded-md bg-brand px-2 text-[6.5px] font-bold text-white">
+            Cari
+          </span>
+        </div>
+        <div className="mt-1.5 flex gap-1 overflow-hidden">
+          <ChipMini aktif>Semua</ChipMini>
+          <ChipMini>Nugget &amp; Sosis</ChipMini>
+          <ChipMini>Bakso</ChipMini>
+          <ChipMini>Kentang</ChipMini>
+        </div>
+      </div>
+
+      <div className="mx-2.5 mt-2 flex items-center justify-between">
+        <p className="text-[6px] text-muted">
+          <span className="stat-num font-bold text-navy">12</span> produk
+          ditemukan
+        </p>
+        <span className="flex h-5 items-center gap-0.5 rounded-md border border-line bg-white px-1.5 text-[6px] font-semibold text-navy">
+          Urutkan: Unggulan <ChevronDown size={7} />
+        </span>
+      </div>
+
+      <div className="mx-2.5 mt-1.5 grid grid-cols-2 gap-1.5">
+        {PRODUK.map((p) => (
+          <ProdukMini key={p.nama} p={p} />
+        ))}
+      </div>
+    </AppMini>
+  );
+}
+
+function BarisKeranjang({
+  nama,
+  satuan,
+  harga,
+  jumlah,
+  gambar,
+}: {
+  nama: string;
+  satuan: string;
+  harga: number;
+  jumlah: number;
+  gambar: string;
+}) {
+  return (
+    <div className="flex gap-1.5 py-2">
+      <div className="relative h-9 w-9 flex-none overflow-hidden rounded-md border border-line bg-mist">
+        <Gambar
+          src={gambar}
+          alt={nama}
+          fill
+          sizes="36px"
+          className="object-cover"
+        />
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex items-start justify-between gap-1">
+          <div className="min-w-0">
+            <p className="truncate text-[7.5px] font-bold text-navy">{nama}</p>
+            <p className="text-[6px] text-muted">{satuan}</p>
+          </div>
+          <span className="flex h-4 w-4 flex-none items-center justify-center rounded text-muted">
+            <Trash2 size={8} />
+          </span>
+        </div>
+        <div className="mt-auto flex items-end justify-between gap-1 pt-1">
+          <span className="flex items-center gap-0.5 rounded-md border border-brand/35 bg-mist p-0.5">
+            <span className="flex h-4 w-4 items-center justify-center text-brand">
+              <Minus size={7} strokeWidth={2.6} />
+            </span>
+            <span className="stat-num min-w-3 text-center text-[7px] font-extrabold text-navy">
+              {jumlah}
+            </span>
+            <span className="flex h-4 w-4 items-center justify-center text-brand">
+              <Plus size={7} strokeWidth={2.6} />
+            </span>
+          </span>
+          <span className="stat-num text-[7.5px] font-extrabold text-navy">
+            {rupiah(harga * jumlah)}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LayarKeranjang() {
+  return (
+    <AppMini aktif={2} isi={2}>
+      <JudulHalaman
+        judul="Keranjang belanja"
+        teks="Periksa jumlah produk sebelum melanjutkan ke checkout."
+      />
+
+      <div className="mx-2.5 mt-1.5 overflow-hidden rounded-lg border border-line bg-white">
+        <div className="flex items-center justify-between border-b border-line px-2 py-1.5">
+          <p className="text-[8px] font-extrabold text-navy">
+            Produk di keranjang{" "}
+            <span className="ml-0.5 rounded-full bg-mist px-1 py-px text-[6px] text-brand">
+              2
+            </span>
+          </p>
+          <span className="text-[6px] font-semibold text-muted">
+            Hapus semua
+          </span>
+        </div>
+        <div className="divide-y divide-line px-2">
+          <BarisKeranjang
+            nama="Chicken Nugget"
+            satuan="500 g"
+            harga={27900}
+            jumlah={1}
+            gambar="/produk/nugget.jpg"
+          />
+          <BarisKeranjang
+            nama="Bakso Sapi"
+            satuan="500 g"
+            harga={30000}
+            jumlah={1}
+            gambar="/produk/bakso.jpg"
+          />
+        </div>
+      </div>
+
+      <div className="mx-2.5 mt-1.5 rounded-lg border border-line bg-white p-2 shadow-card">
+        <p className="text-[8px] font-extrabold text-navy">Ringkasan</p>
+        <dl className="mt-1 space-y-1 text-[6.5px]">
+          <div className="flex justify-between">
+            <dt className="text-muted">Subtotal (2 produk)</dt>
+            <dd className="stat-num font-bold text-navy">{rupiah(57900)}</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="text-muted">Ongkir</dt>
+            <dd className="font-semibold text-muted">Dihitung saat checkout</dd>
+          </div>
+        </dl>
+        <div className="mt-1.5 rounded-md bg-paper p-1.5">
+          <p className="flex items-center gap-1 text-[6px] font-semibold text-navy">
+            <Truck size={8} className="flex-none text-brand" />
+            Tambah <span className="text-brand">{rupiah(92100)}</span> lagi
+            untuk gratis ongkir
+          </p>
+          <div className="mt-1 h-1 overflow-hidden rounded-full bg-[#DCE9F6]">
+            <div className="h-full w-[39%] rounded-full bg-brand" />
+          </div>
+        </div>
+        <div className="mt-1.5 flex items-baseline justify-between border-t border-line pt-1.5">
+          <span className="text-[6.5px] font-bold text-navy">
+            Total barang
+          </span>
+          <span className="stat-num text-[9.5px] font-extrabold text-navy">
+            {rupiah(57900)}
+          </span>
+        </div>
+        <div className="mt-1.5 flex min-h-[24px] items-center justify-center gap-1 rounded-md bg-brand text-[7px] font-bold text-white">
+          Lanjut ke checkout <ArrowRight size={7} />
+        </div>
+        <div className="mt-1 flex min-h-[22px] items-center justify-center text-[6.5px] font-semibold text-navy">
+          Lanjut belanja
+        </div>
+        <p className="mt-2 flex items-start gap-1 border-t border-line pt-1.5 text-[6px] leading-relaxed text-muted">
+          <PackageOpen size={7} className="mt-px flex-none" />
+          Keranjang tersimpan di perangkat ini. Harga final dicek ulang oleh
+          sistem saat pesanan dibuat.
+        </p>
+      </div>
+    </AppMini>
+  );
+}
+
+function LayarData() {
+  return (
+    <AppMini aktif={2} isi={2}>
+      <JudulHalaman
+        judul="Checkout"
+        teks="Satu halaman saja. Nama dan nomor HP dipakai admin untuk mengonfirmasi pesanan."
+      />
+
+      <div className="mx-2.5 mt-1.5 space-y-1.5">
+        <SectionMini n={1} judul="Data pembeli">
+          <div className="mt-1 grid grid-cols-2 gap-1.5">
+            <IsianMini
+              label="Nama lengkap"
+              nilai="Siti Aisyah"
+              placeholder="Contoh: Siti Aisyah"
+            />
+            <IsianMini
+              label="Nomor HP / WhatsApp"
+              nilai="0812 3456 7890"
+              placeholder="0812 3456 7890"
+            />
+          </div>
+          <p className="mt-1 text-[5.5px] leading-snug text-muted">
+            Nomor HP dipakai admin untuk mengonfirmasi pesanan.
+          </p>
+        </SectionMini>
+
+        <SectionMini n={2} judul="Cara menerima">
+          <div className="mt-1 grid grid-cols-2 gap-1.5">
+            <OpsiMini
+              Ikon={Truck}
+              judul="Antar ke rumah"
+              teks={`Ongkir ${rupiah(12000)} · gratis di atas ${rupiah(150000)} · wajib QRIS/transfer`}
+              aktif
+            />
+            <OpsiMini
+              Ikon={Store}
+              judul="Ambil di toko"
+              teks="Gratis · bisa bayar tunai di kasir"
+            />
+          </div>
+
+          <IsianMini
+            label="Detail alamat"
+            nilai="Pondok Pabean Indah Blok N No. 10, Dringu"
+            placeholder="Nama jalan, nomor rumah, patokan…"
+            area
+          />
+          <p className="mt-1 flex items-center gap-1 text-[5.5px] text-muted">
+            <MapPin size={7} className="flex-none text-brand" />
+            Kurir akan menghubungi nomor HP saat tiba.
+          </p>
+
+          <div className="mt-1.5 rounded-md border border-line bg-paper/60 p-1.5">
+            <p className="flex items-center gap-1 text-[5.5px] font-bold uppercase tracking-[0.08em] text-muted">
+              <MapPin size={7} className="text-brand" /> Titik lokasi antar ·
+              wajib
+            </p>
+            <p className="mt-0.5 text-[5.5px] leading-snug text-muted">
+              Tekan Pilih lokasi saya saat berada di rumah, lalu geser pin bila
+              titiknya meleset.
+            </p>
+            <div className="mt-1">
+              <PetaMini mode="pilih" />
+            </div>
+            <div className="mt-1 flex min-h-[24px] items-center justify-center gap-1 rounded-md bg-brand text-[7px] font-bold text-white">
+              <Crosshair size={8} /> Pilih lokasi saya
+            </div>
+          </div>
+        </SectionMini>
+      </div>
+    </AppMini>
+  );
+}
+
+function LayarTitik() {
+  return (
+    <AppMini aktif={2} isi={2}>
+      <JudulHalaman
+        judul="Checkout"
+        teks="Titik antar wajib diisi. Pembeli sendiri yang menentukan lokasi, bukan kurir."
+      />
+
+      <div className="mx-2.5 mt-1.5">
+        <SectionMini n={2} judul="Cara menerima">
+          <div className="mt-1 grid grid-cols-2 gap-1.5">
+            <OpsiMini
+              Ikon={Truck}
+              judul="Antar ke rumah"
+              teks={`Ongkir ${rupiah(12000)} · wajib QRIS/transfer`}
+              aktif
+            />
+            <OpsiMini
+              Ikon={Store}
+              judul="Ambil di toko"
+              teks="Gratis · bisa bayar tunai di kasir"
+            />
+          </div>
+
+          <IsianMini
+            label="Detail alamat"
+            nilai="Pondok Pabean Indah Blok N No. 10, Dringu, Kota Probolinggo"
+            placeholder="Nama jalan, nomor rumah, patokan…"
+            area
+          />
+
+          <div className="mt-1.5 rounded-md border border-line bg-paper/60 p-1.5">
+            <p className="flex items-center gap-1 text-[5.5px] font-bold uppercase tracking-[0.08em] text-muted">
+              <MapPin size={7} className="text-brand" /> Titik lokasi antar ·
+              wajib
+            </p>
+            <p className="mt-0.5 text-[5.5px] leading-snug text-muted">
+              Tekan Pilih lokasi saya saat berada di rumah. Kalau titiknya
+              belum tepat, ketuk atau geser pin di peta.
+            </p>
+            <div className="mt-1">
+              <PetaMini mode="pilih" />
+            </div>
+            <div className="mt-1 flex min-h-[24px] items-center justify-center gap-1 rounded-md bg-brand text-[7px] font-bold text-white">
+              <Crosshair size={8} /> Pilih lokasi saya
+            </div>
+            <p className="mt-1 text-[5.5px] leading-snug text-muted">
+              Titik dari GPS · akurasi ± 12 m. Geser pin bila perlu.
+            </p>
+          </div>
+
+          <div className="mt-1.5 rounded-md border border-line bg-white px-2 py-1.5">
+            <p className="text-[6px] font-bold text-navy">Jadwal (opsional)</p>
+            <div className="mt-0.5 flex h-6 items-center justify-between rounded-md border border-line px-1.5">
+              <span className="text-[6.5px] font-semibold text-navy">
+                Secepatnya
+              </span>
+              <ChevronDown size={8} className="text-muted" />
+            </div>
+          </div>
+        </SectionMini>
+      </div>
+    </AppMini>
+  );
+}
+
+function LayarBayar() {
+  return (
+    <AppMini aktif={2} isi={2}>
+      <JudulHalaman
+        judul="Checkout"
+        teks="Pilih pembayaran, lalu tekan Buat pesanan. Admin memverifikasi dulu."
+      />
+
+      <div className="mx-2.5 mt-1.5">
+        <SectionMini n={3} judul="Pembayaran">
+          <div className="mt-1 grid grid-cols-3 gap-1">
+            <BayarMini
+              Ikon={Banknote}
+              judul="Tunai"
+              teks="Hanya untuk ambil di toko"
+              mati
+            />
+            <BayarMini
+              Ikon={QrCode}
+              judul="QRIS"
+              teks="Scan, lalu bayar"
+              aktif
+            />
+            <BayarMini
+              Ikon={Landmark}
+              judul="Transfer"
+              teks="Transfer bank, lalu konfirmasi"
+            />
+          </div>
+
+          <p className="mt-1.5 rounded-md bg-mist px-1.5 py-1 text-[5.5px] leading-snug text-navy/80">
+            Pesanan antar wajib QRIS atau transfer. Admin memverifikasi
+            pembayaran dulu, baru pesanan disiapkan dan diantar kurir.
+          </p>
+
+          <div className="mt-1.5 rounded-md border border-line bg-white px-1.5 py-1.5 text-center">
+            <QrMini />
+            <p className="mt-0.5 text-[7px] font-extrabold text-navy">
+              Yanti Frozen
+            </p>
+            <p className="text-[5.5px] leading-snug text-muted">
+              Scan dengan aplikasi bank atau e-wallet, lalu bayar{" "}
+              <strong className="font-bold text-navy">{rupiah(69900)}</strong>.
+            </p>
+          </div>
+        </SectionMini>
+      </div>
+
+      <div className="mx-2.5 mt-1.5 rounded-lg border border-line bg-white p-2 shadow-card">
+        <p className="text-[8px] font-extrabold text-navy">
+          Ringkasan pesanan
+        </p>
+        <dl className="mt-1 space-y-0.5 text-[6.5px]">
+          <div className="flex justify-between">
+            <dt className="text-muted">Subtotal</dt>
+            <dd className="stat-num font-semibold text-navy">
+              {rupiah(57900)}
+            </dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="text-muted">Ongkir</dt>
+            <dd className="stat-num font-semibold text-navy">
+              {rupiah(12000)}
+            </dd>
+          </div>
+        </dl>
+        <div className="mt-1 flex items-baseline justify-between border-t border-line pt-1">
+          <span className="text-[6.5px] font-bold text-navy">Total bayar</span>
+          <span className="stat-num text-[9.5px] font-extrabold text-navy">
+            {rupiah(69900)}
+          </span>
+        </div>
+        <div className="mt-1.5 flex min-h-[24px] items-center justify-center gap-1 rounded-md bg-brand text-[7px] font-bold text-white">
+          <Lock size={8} /> Buat pesanan
+        </div>
+        <p className="mt-1 flex items-center justify-center gap-1 text-[5.5px] text-muted">
+          <Clock size={7} /> Dikonfirmasi admin pada jam operasional
+        </p>
+      </div>
+    </AppMini>
+  );
+}
+
+function BantuanMini() {
+  return (
+    <section className="mx-2.5 mt-1.5 rounded-lg bg-navy p-2 text-white">
+      <p className="text-[7.5px] font-extrabold">Butuh bantuan?</p>
+      <p className="mt-0.5 text-[5.5px] leading-snug text-white/65">
+        Admin siap membantu setiap hari 08.00 – 21.00.
+      </p>
+      <div className="mt-1.5 flex gap-1">
+        <span className="flex min-h-[22px] flex-1 items-center justify-center gap-0.5 rounded-md bg-white text-[6px] font-bold text-navy">
+          <WhatsAppIcon size={7} /> WhatsApp
+        </span>
+        <span className="flex min-h-[22px] flex-1 items-center justify-center gap-0.5 rounded-md border border-white/20 bg-white/10 text-[6px] font-bold text-white">
+          Riwayat pesanan <ArrowRight size={7} />
+        </span>
+      </div>
+    </section>
+  );
+}
+
+function LayarKurir() {
+  return (
+    <AppMini aktif={4} isi={2}>
+      <div className="flex items-start justify-between gap-2 px-2.5 pt-1.5">
+        <div className="min-w-0">
+          <p className="text-[5.5px] font-bold uppercase tracking-[0.1em] text-muted">
+            Status pesanan
+          </p>
+          <h3 className="text-[11px] font-extrabold leading-tight text-navy">
+            YF261114-4821
+          </h3>
+          <p className="text-[5px] text-muted">
+            Dibuat 14 Nov, 08.40 · atas nama Siti Aisyah
+          </p>
+        </div>
+        <span className="rounded-full border border-[#C9E1F7] bg-mist px-1.5 py-0.5 text-[6px] font-bold text-brand">
+          Diantar
+        </span>
+      </div>
+
+      <section className="mx-2.5 mt-1.5 rounded-lg border border-line bg-white p-2">
+        <div className="flex items-center justify-between">
+          <p className="text-[8px] font-extrabold text-navy">Pelacakan kurir</p>
+          <span className="flex items-center gap-0.5 text-[5.5px] font-bold text-leaf">
+            <span className="live-dot h-1 w-1 rounded-full bg-leaf" /> GPS aktif
+          </span>
+        </div>
+
+        <div className="mt-1">
+          <PetaMini mode="kurir" />
+        </div>
+
+        <div className="mt-1 flex items-center gap-1.5 rounded-md border border-line p-1.5">
+          <AvatarPeran peran="kurir" ukuran={22} className="ring-1 ring-line" />
+          <div className="min-w-0 flex-1">
+            <p className="flex items-center gap-1 text-[7px] font-bold text-navy">
+              Ahmad Fauzi
+              <span className="inline-flex items-center gap-0.5 text-[5.5px] font-semibold text-[#8A520B]">
+                <Star size={5} fill="currentColor" /> 4.9
+              </span>
+            </p>
+            <p className="flex items-center gap-1 text-[5.5px] text-muted">
+              <Bike size={6} /> Honda Vario · N 1234 AB
+            </p>
+            <p className="text-[5px] text-muted">
+              Lokasi GPS aktif · baru saja
+            </p>
+          </div>
+          <span className="flex h-5 flex-none items-center gap-0.5 rounded-md border border-line px-1 text-[5.5px] font-bold text-brand">
+            <Phone size={6} /> Hubungi
+          </span>
+        </div>
+
+        <div className="mt-1 flex items-start gap-1 rounded-md bg-paper px-1.5 py-1">
+          <MapPin size={7} className="mt-0.5 flex-none text-brand" />
+          <p className="text-[5.5px] leading-snug text-muted">
+            Pondok Pabean Indah Blok N No. 10, Dringu, Kota Probolinggo
+          </p>
+        </div>
+      </section>
+
+      <section className="mx-2.5 mt-1.5">
+        <TimelineMini aktif={3} />
+      </section>
+
+      <section className="mx-2.5 mt-1.5 rounded-lg border border-line bg-white p-2">
+        <p className="text-[8px] font-extrabold text-navy">Rincian pesanan</p>
+        {[
+          { nama: "Chicken Nugget", satuan: "500 g", harga: 27900, gambar: "/produk/nugget.jpg" },
+          { nama: "Bakso Sapi", satuan: "500 g", harga: 30000, gambar: "/produk/bakso.jpg" },
+        ].map((p) => (
+          <div key={p.nama} className="mt-1 flex items-center gap-1.5">
+            <span className="relative h-5 w-5 flex-none overflow-hidden rounded border border-line bg-mist">
+              <Gambar src={p.gambar} alt="" fill sizes="20px" className="object-cover" />
+              <span className="absolute bottom-0 right-0 rounded-tl bg-navy/85 px-0.5 text-[4.5px] font-bold leading-[1.4] text-white">
+                1×
+              </span>
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[6.5px] font-semibold leading-tight text-navy">
+                {p.nama}
+              </p>
+              <p className="text-[5px] leading-tight text-muted">
+                1 × {rupiah(p.harga)} · {p.satuan}
+              </p>
+            </div>
+            <p className="text-[6.5px] font-bold text-navy">{rupiah(p.harga)}</p>
+          </div>
+        ))}
+        <dl className="mt-1 space-y-0.5 border-t border-line pt-1 text-[5.5px]">
+          <div className="flex justify-between">
+            <dt className="text-muted">Subtotal</dt>
+            <dd className="font-semibold text-navy">{rupiah(57900)}</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="text-muted">Ongkir (antar kurir)</dt>
+            <dd className="font-semibold text-navy">{rupiah(12000)}</dd>
+          </div>
+        </dl>
+        <div className="mt-1 flex items-baseline justify-between border-t border-line pt-1">
+          <span className="text-[6.5px] font-bold text-navy">Total bayar</span>
+          <span className="stat-num text-[8px] font-extrabold text-navy">
+            {rupiah(69900)}
+          </span>
+        </div>
+      </section>
+    </AppMini>
+  );
+}
+
+function LayarSelesai() {
+  return (
+    <AppMini aktif={4} isi={0}>
+      <div className="flex items-start justify-between gap-2 px-2.5 pt-1.5">
+        <div className="min-w-0">
+          <p className="text-[5.5px] font-bold uppercase tracking-[0.1em] text-muted">
+            Status pesanan
+          </p>
+          <h3 className="text-[11px] font-extrabold leading-tight text-navy">
+            YF261114-4821
+          </h3>
+          <p className="text-[5px] text-muted">
+            Dibuat 14 Nov, 08.40 · atas nama Siti Aisyah
+          </p>
+        </div>
+        <span className="rounded-full border border-[#C6E7DA] bg-leaf-soft px-1.5 py-0.5 text-[6px] font-bold text-leaf">
+          Selesai
+        </span>
+      </div>
+
+      <section className="mx-2.5 mt-1.5">
+        <TimelineMini aktif={4} selesai />
+      </section>
+
+      <section className="mx-2.5 mt-1.5 rounded-lg border border-line bg-white p-2">
+        <p className="text-[8px] font-extrabold text-navy">
+          Terima kasih atas ulasan Anda
+        </p>
+        <p className="mt-0.5 text-[5.5px] leading-snug text-muted">
+          Bintang dan ulasan Anda sudah masuk ke laporan admin toko.
+        </p>
+        <div className="mt-1.5 flex items-center gap-0.5">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <Star
+              key={n}
+              size={12}
+              className="text-[#F2A03A]"
+              fill="currentColor"
+            />
+          ))}
+          <span className="ml-1 text-[6.5px] font-bold text-navy">
+            5 dari 5
+          </span>
+        </div>
+        <p className="mt-1 rounded-md bg-paper px-1.5 py-1 text-[6px] leading-snug text-navy/80">
+          Barang masih beku, kurir cepat dan ramah.
+        </p>
+      </section>
+
+      <section className="mx-2.5 mt-1.5 rounded-lg border border-line bg-white p-2">
+        <div className="flex items-center justify-between">
+          <p className="text-[8px] font-extrabold text-navy">Pembayaran</p>
+          <span className="rounded-full border border-[#C6E7DA] bg-leaf-soft px-1.5 py-0.5 text-[5.5px] font-bold text-leaf">
+            Lunas
+          </span>
+        </div>
+        <div className="mt-1 flex items-center gap-1.5 rounded-md bg-paper px-1.5 py-1">
+          <QrCode size={9} className="text-brand" />
+          <span className="text-[6.5px] font-semibold text-navy">QRIS</span>
+        </div>
+        <div className="mt-1 flex items-baseline justify-between">
+          <span className="text-[5.5px] font-bold uppercase tracking-wide text-muted">
+            Total tagihan
+          </span>
+          <span className="stat-num text-[9px] font-extrabold text-navy">
+            {rupiah(69900)}
+          </span>
+        </div>
+        <p className="mt-1 flex items-start gap-1 rounded-md bg-leaf-soft px-1.5 py-1 text-[5.5px] leading-snug text-leaf">
+          <Check size={7} className="mt-0.5 flex-none" />
+          Pembayaran sudah dikonfirmasi admin. Terima kasih.
+        </p>
+      </section>
+
+      <div className="mx-2.5 mt-1.5 rounded-lg border border-line bg-white p-2">
+        <p className="flex items-center gap-1 text-[5.5px] font-bold uppercase tracking-[0.08em] text-muted">
+          <Camera size={7} /> Foto bukti penerimaan
+        </p>
+        <div className="mt-1 flex h-10 items-center justify-center gap-1 rounded-md border border-dashed border-[#B9D6EE] bg-mist/60 text-[6px] font-semibold text-muted">
+          <Camera size={9} className="text-brand/60" /> Foto dari kurir tampil
+          di sini
+        </div>
+      </div>
+
+      <BantuanMini />
+    </AppMini>
+  );
+}
+
+const LAYAR: ComponentType[] = [
+  LayarBeranda,
+  LayarKatalog,
+  LayarKeranjang,
+  LayarData,
+  LayarTitik,
+  LayarBayar,
+  LayarKurir,
+  LayarSelesai,
+];
+
 export function CaraPesanDemo() {
   const [tahap, setTahap] = useState(0);
-  const [jalan, setJalan] = useState(true);
-  const [terlihat, setTerlihat] = useState(true);
-  const [tenang, setTenang] = useState(false);
-  const wadah = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setTenang(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  }, []);
-
-  useEffect(() => {
-    const el = wadah.current;
-    if (!el || !("IntersectionObserver" in window)) return;
-    const io = new IntersectionObserver(
-      ([entry]) => setTerlihat(entry.isIntersecting),
-      { threshold: 0.3 },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
-  const tampil = tenang ? 1 : tahap;
-
-  useEffect(() => {
-    if (!jalan || !terlihat || tenang) return;
-    const timer = setTimeout(
-      () => setTahap((t) => (t + 1) % TAHAP.length),
-      TAHAP[tahap].ms,
-    );
-    return () => clearTimeout(timer);
-  }, [tahap, jalan, terlihat, tenang]);
-
-  const anim = (nama: string) => (tenang ? undefined : { animation: nama });
+  const terakhir = tahap === TAHAP.length - 1;
+  const info = TAHAP[tahap];
+  const Layar = LAYAR[tahap];
 
   return (
-    <div ref={wadah} className="card overflow-hidden">
+    <div className="card overflow-hidden">
       <div className="flex items-center gap-2.5 px-4 pt-3.5 md:px-5">
         <span className="flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-mist text-brand">
-          <Play size={15} fill="currentColor" />
+          <BookOpenText size={16} />
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-[13.5px] font-extrabold text-navy">
             Contoh cara pesan
           </p>
-          <p className="text-[11.5px] text-muted">
-            Berjalan sendiri dan berulang. Data contoh, bukan pesanan asli.
+          <p className="text-[11.5px] leading-snug text-muted">
+            Ikuti dengan panah Kembali dan Selanjutnya. Tidak berjalan sendiri.
+            Data contoh, bukan pesanan asli.
           </p>
         </div>
-        {!tenang && (
-          <button
-            type="button"
-            onClick={() => setJalan((j) => !j)}
-            aria-label={jalan ? "Jeda contoh" : "Lanjutkan contoh"}
-            className="press flex h-11 w-11 flex-none items-center justify-center rounded-xl border border-line bg-white text-navy hover:bg-paper"
-          >
-            {jalan ? <Pause size={16} /> : <Play size={16} />}
-          </button>
-        )}
       </div>
 
       <div className="mt-3 bg-[linear-gradient(165deg,#123f6d,#0a1f36)] px-3 py-3 md:px-4">
-        <div className="mx-auto h-[460px] max-w-[400px] overflow-hidden rounded-2xl bg-paper text-navy shadow-[0_18px_40px_-24px_rgba(4,16,30,0.85)]">
-          {tampil === 0 && (
-            <div
-              key="intro"
-              className="flex h-full flex-col items-center justify-center bg-[linear-gradient(165deg,#123f6d,#0a1f36)] px-6 text-center text-white"
-              style={anim("demo-masuk .5s ease both")}
-            >
-              <span
-                className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-sky"
-                style={anim("logo-sway 3.2s ease-in-out infinite")}
-              >
-                <Snowflake size={26} />
-              </span>
-              <p className="mt-4 text-[10.5px] font-extrabold uppercase tracking-[0.18em] text-sky">
-                Yanti Frozen
-              </p>
-              <p className="mt-1.5 max-w-[270px] text-[21px] font-extrabold leading-[1.15]">
-                Dari katalog sampai diantar
-              </p>
-              <p className="mt-2 max-w-[260px] text-[12px] leading-relaxed text-white/70">
-                Ikuti satu pesanan antar, dari pilih produk sampai kurir tiba.
-              </p>
-            </div>
-          )}
-
-          {tampil === 1 && (
-            <div
-              key="katalog"
-              className="relative flex h-full flex-col"
-              style={anim("demo-masuk .45s ease both")}
-            >
-              <div className="flex-none border-b border-line bg-white px-2.5 pb-2 pt-2">
-                <div className="flex items-center gap-1.5">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-[linear-gradient(160deg,#3f95dc,#1f66a8)] text-white">
-                    <Snowflake size={12} />
-                  </span>
-                  <p className="text-[10.5px] font-extrabold leading-none text-navy">
-                    Yanti Frozen
-                  </p>
-                  <span
-                    className="ml-auto inline-flex flex-none items-center gap-1 rounded-full bg-mist px-1.5 py-1 text-[8px] font-extrabold text-brand"
-                    style={anim("cart-pop .5s 2.6s both")}
-                  >
-                    <ShoppingBag size={9} strokeWidth={2.6} /> 1
-                  </span>
-                </div>
-                <div className="mt-1.5 flex h-6 items-center gap-1 rounded-md border border-line bg-paper px-1.5 text-[8px] text-muted">
-                  <Search size={9} /> Cari nugget, bakso, sosis
-                </div>
-              </div>
-
-              <div className="flex flex-none gap-1 px-2.5 pt-2">
-                {["Semua", "Nugget", "Bakso", "Sosis"].map((c, i) => (
-                  <span
-                    key={c}
-                    className={`rounded-full px-1.5 py-0.5 text-[7.5px] font-bold ${
-                      i === 0
-                        ? "bg-brand text-white"
-                        : "border border-line bg-white text-muted"
-                    }`}
-                  >
-                    {c}
-                  </span>
-                ))}
-              </div>
-
-              <div className="grid flex-none grid-cols-2 gap-1.5 p-2.5">
-                <Produk
-                  nama="Nugget Ayam"
-                  satuan="500 gram"
-                  harga="Rp42.000"
-                  lama="Rp48.000"
-                  diskon="−13%"
-                  kategori="Nugget"
-                  tombol
-                  tenang={tenang}
-                />
-                <Produk
-                  nama="Bakso Sapi"
-                  satuan="500 gram"
-                  harga="Rp45.000"
-                  lama=""
-                  diskon=""
-                  kategori="Bakso"
-                  tenang={tenang}
-                />
-                <Produk
-                  nama="Sosis Ayam"
-                  satuan="500 gram"
-                  harga="Rp30.000"
-                  lama=""
-                  diskon=""
-                  kategori="Sosis"
-                  tenang={tenang}
-                />
-                <Produk
-                  nama="Kentang Goreng"
-                  satuan="1 kg"
-                  harga="Rp26.000"
-                  lama=""
-                  diskon=""
-                  kategori="Olahan"
-                  tenang={tenang}
-                />
-              </div>
-
-              <div className="flex items-center justify-between px-2.5">
-                <p className="text-[7.5px] text-muted">
-                  Tekan Tambah, produk langsung masuk keranjang.
-                </p>
-                <span className="flex flex-none items-center gap-0.5 text-[7.5px] font-bold text-brand">
-                  Lihat semua <ArrowRight size={8} />
-                </span>
-              </div>
-
-              {!tenang && (
-                <span
-                  aria-hidden="true"
-                  className="absolute z-20 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[linear-gradient(150deg,#e2eefb,#c6def4)] text-brand shadow-[0_8px_18px_-8px_rgba(16,43,80,0.7)]"
-                  style={anim(
-                    "demo-terbang 1.15s 1.4s cubic-bezier(.35,.7,.4,1) both",
-                  )}
-                >
-                  <Snowflake size={12} />
-                </span>
-              )}
-
-              <TabMini aktif={1} isi={1} />
-            </div>
-          )}
-
-          {tampil === 2 && (
-            <div
-              key="keranjang"
-              className="flex h-full flex-col"
-              style={anim("demo-masuk .45s ease both")}
-            >
-              <Bilah judul="Keranjang" isi={2} />
-              <div className="flex-1 space-y-1.5 overflow-hidden p-2.5">
-                <div className="overflow-hidden rounded-xl border border-line bg-white">
-                  <div className="flex items-center justify-between border-b border-line px-2.5 py-1.5">
-                    <p className="text-[9px] font-extrabold text-navy">
-                      Produk di keranjang{" "}
-                      <span className="ml-0.5 rounded-full bg-mist px-1 text-[7.5px] text-brand">
-                        2
-                      </span>
-                    </p>
-                    <span className="text-[7.5px] font-semibold text-muted">
-                      Hapus semua
-                    </span>
-                  </div>
-                  <div className="divide-y divide-line px-2.5">
-                    <BarisKeranjang
-                      nama="Nugget Ayam"
-                      satuan="500 gram"
-                      harga="Rp42.000"
-                      jumlah={1}
-                    />
-                    <BarisKeranjang
-                      nama="Bakso Sapi"
-                      satuan="500 gram"
-                      harga="Rp45.000"
-                      jumlah={1}
-                    />
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-line bg-white p-2.5">
-                  <p className="text-[9px] font-extrabold text-navy">
-                    Ringkasan
-                  </p>
-                  <div className="mt-1 flex justify-between text-[8px]">
-                    <span className="text-muted">Subtotal (2 produk)</span>
-                    <span className="font-bold text-navy">Rp87.000</span>
-                  </div>
-                  <div className="mt-0.5 flex justify-between text-[8px]">
-                    <span className="text-muted">Ongkir</span>
-                    <span className="text-muted">Dihitung saat checkout</span>
-                  </div>
-                  <div className="mt-1.5 flex items-center gap-1 rounded-md bg-paper px-1.5 py-1 text-[7.5px] font-semibold text-navy">
-                    <Truck size={9} className="flex-none text-brand" />
-                    Tambah belanja lagi untuk gratis ongkir
-                  </div>
-                  <div className="mt-1 h-1 overflow-hidden rounded-full bg-[#DCE9F6]">
-                    <div className="h-full w-[72%] rounded-full bg-brand" />
-                  </div>
-                  <div className="mt-1.5 flex items-baseline justify-between border-t border-line pt-1.5">
-                    <span className="text-[9px] font-bold text-navy">
-                      Total barang
-                    </span>
-                    <span className="text-[12px] font-extrabold text-navy">
-                      Rp87.000
-                    </span>
-                  </div>
-                  <div className="mt-1 flex h-7 items-center justify-center gap-1 rounded-lg bg-brand text-[9px] font-extrabold text-white">
-                    Lanjut ke checkout <ArrowRight size={9} />
-                  </div>
-                  <div className="mt-1 flex h-7 items-center justify-center rounded-lg border border-line bg-white text-[9px] font-bold text-navy">
-                    Lanjut belanja
-                  </div>
-                  <p className="mt-1.5 flex items-start gap-1 text-[7px] leading-relaxed text-muted">
-                    <Package size={8} className="mt-0.5 flex-none" />
-                    Keranjang tersimpan di perangkat ini.
-                  </p>
-                </div>
-              </div>
-              <TabMini aktif={2} isi={2} />
-            </div>
-          )}
-
-          {tampil === 3 && (
-            <div
-              key="data"
-              className="flex h-full flex-col"
-              style={anim("demo-masuk .45s ease both")}
-            >
-              <Bilah judul="Checkout" isi={2} />
-              <div className="flex flex-1 flex-col gap-1.5 p-2.5">
-                <p className="text-[7px] font-bold uppercase tracking-[0.1em] text-brand">
-                  Langkah 1 dari 3
-                </p>
-
-                <Bagian n={1} judul="Data pembeli">
-                  <div className="mt-1.5 grid grid-cols-2 gap-1.5">
-                    <Isian
-                      label="Nama lengkap"
-                      isi="Siti Aisyah"
-                      tunda=".2s"
-                      tenang={tenang}
-                    />
-                    <Isian
-                      label="HP / WhatsApp"
-                      isi="0812-0000-7788"
-                      tunda=".6s"
-                      tenang={tenang}
-                    />
-                  </div>
-                  <p className="mt-1 text-[7px] text-muted">
-                    Nomor HP dipakai admin untuk konfirmasi.
-                  </p>
-                </Bagian>
-
-                <Bagian n={2} judul="Cara menerima">
-                  <div className="mt-1.5 space-y-1">
-                    <Pilihan
-                      Ikon={Truck}
-                      judul="Antar ke rumah"
-                      teks="Ongkir Rp8.000 · kurir toko"
-                      aktif
-                    />
-                    <Pilihan
-                      Ikon={Store}
-                      judul="Ambil di toko"
-                      teks="Gratis · siap setelah dikonfirmasi"
-                    />
-                  </div>
-                </Bagian>
-
-                <div className="flex items-center gap-1.5 rounded-xl border border-line bg-white px-2.5 py-1.5">
-                  <ShoppingBag size={10} className="flex-none text-brand" />
-                  <p className="min-w-0 truncate text-[8px] font-semibold text-navy">
-                    2 produk · Nugget Ayam, Bakso Sapi
-                  </p>
-                  <span className="ml-auto flex-none text-[9px] font-extrabold text-navy">
-                    Rp87.000
-                  </span>
-                </div>
-
-                <div className="mt-auto flex h-8 items-center justify-center gap-1 rounded-lg bg-brand text-[9px] font-extrabold text-white">
-                  Lanjut ke alamat <ArrowRight size={9} />
-                </div>
-              </div>
-              <TabMini aktif={2} isi={2} />
-            </div>
-          )}
-
-          {tampil === 4 && (
-            <div
-              key="antar"
-              className="flex h-full flex-col"
-              style={anim("demo-masuk .45s ease both")}
-            >
-              <Bilah judul="Checkout" isi={2} />
-              <div className="flex flex-1 flex-col gap-1.5 p-2.5">
-                <p className="text-[7px] font-bold uppercase tracking-[0.1em] text-brand">
-                  Langkah 2 dari 3
-                </p>
-
-                <Bagian n={2} judul="Alamat pengantaran">
-                  <div className="mt-1.5 min-h-[42px] rounded-md border border-brand/40 bg-white px-1.5 py-1 text-[8px] font-semibold leading-snug text-navy">
-                    <span
-                      className="line-clamp-3"
-                      style={
-                        tenang
-                          ? undefined
-                          : { animation: "demo-ketik .9s .2s steps(12) both" }
-                      }
-                    >
-                      Jl. Contoh No. 12, Kel. Sukabumi, Probolinggo. Patokan:
-                      dekat masjid.
-                    </span>
-                  </div>
-                  <p className="mt-1 flex items-center gap-1 text-[7px] text-muted">
-                    <MapPin size={8} className="flex-none text-brand" />
-                    Kurir menghubungi nomor HP saat tiba.
-                  </p>
-                  <p className="mt-1.5 text-[7px] font-bold uppercase tracking-[0.08em] text-muted">
-                    Jadwal
-                  </p>
-                  <div className="mt-0.5 flex h-6 items-center justify-between rounded-md border border-line bg-white px-1.5 text-[8px] font-semibold text-navy">
-                    Secepatnya
-                    <ChevronDown size={9} className="text-navy/45" />
-                  </div>
-                </Bagian>
-
-                <div className="rounded-xl border border-line bg-white p-2.5">
-                  <p className="text-[9px] font-extrabold text-navy">
-                    Ringkasan pesanan
-                  </p>
-                  <BarisRingkas
-                    nama="Nugget Ayam · 500 gram"
-                    jumlah={1}
-                    harga="Rp42.000"
-                  />
-                  <BarisRingkas
-                    nama="Bakso Sapi · 500 gram"
-                    jumlah={1}
-                    harga="Rp45.000"
-                  />
-                  <div className="mt-1 flex justify-between border-t border-line pt-1 text-[8px]">
-                    <span className="text-muted">Subtotal</span>
-                    <span className="font-bold text-navy">Rp87.000</span>
-                  </div>
-                  <div className="mt-0.5 flex justify-between text-[8px]">
-                    <span className="text-muted">Ongkir (antar kurir)</span>
-                    <span className="font-bold text-navy">Rp8.000</span>
-                  </div>
-                  <div className="mt-1 flex items-baseline justify-between border-t border-line pt-1">
-                    <span className="text-[8.5px] font-bold text-navy">
-                      Total bayar
-                    </span>
-                    <span className="text-[11.5px] font-extrabold text-navy">
-                      Rp95.000
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-auto flex h-8 items-center justify-center gap-1 rounded-lg bg-brand text-[9px] font-extrabold text-white">
-                  Lanjut ke pembayaran <ArrowRight size={9} />
-                </div>
-              </div>
-              <TabMini aktif={2} isi={2} />
-            </div>
-          )}
-
-          {tampil === 5 && (
-            <div
-              key="bayar"
-              className="flex h-full flex-col"
-              style={anim("demo-masuk .45s ease both")}
-            >
-              <Bilah judul="Checkout" isi={2} />
-              <div className="flex flex-1 flex-col gap-1 p-2.5">
-                <p className="text-[7px] font-bold uppercase tracking-[0.1em] text-brand">
-                  Langkah 3 dari 3
-                </p>
-
-                <Bagian n={3} judul="Pembayaran">
-                  <div className="mt-1.5 space-y-1">
-                    <Bayar
-                      Ikon={Banknote}
-                      judul="Tunai"
-                      teks="Bayar saat pesanan diterima"
-                    />
-                    <Bayar
-                      Ikon={QrCode}
-                      judul="QRIS"
-                      teks="Scan kode QRIS dari admin"
-                      aktif
-                      sorot
-                      tenang={tenang}
-                    />
-                    <Bayar
-                      Ikon={Landmark}
-                      judul="Transfer"
-                      teks="Transfer bank, lalu konfirmasi"
-                    />
-                  </div>
-                </Bagian>
-
-                <div className="flex items-center gap-2 rounded-xl border border-line bg-white p-1.5">
-                  <span
-                    aria-hidden="true"
-                    className="grid h-10 w-10 flex-none grid-cols-7 gap-[1.5px] rounded-md border border-line bg-white p-1"
-                  >
-                    {POLA_QR.map((isi, i) => (
-                      <span
-                        key={`${i}-${isi ? 1 : 0}`}
-                        className={`rounded-[1px] ${isi ? "bg-navy" : "bg-transparent"}`}
-                      />
-                    ))}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-[8px] font-extrabold text-navy">
-                      Contoh kode QRIS
-                    </p>
-                    <p className="mt-0.5 text-[7px] leading-snug text-muted">
-                      Scan, lalu bayar Rp95.000. Kode asli dikirim admin.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-line bg-white p-2.5">
-                  <div className="flex justify-between text-[8px]">
-                    <span className="text-muted">Subtotal</span>
-                    <span className="font-bold text-navy">Rp87.000</span>
-                  </div>
-                  <div className="mt-0.5 flex justify-between text-[8px]">
-                    <span className="text-muted">Ongkir</span>
-                    <span className="font-bold text-navy">Rp8.000</span>
-                  </div>
-                  <div className="mt-1 flex items-baseline justify-between border-t border-line pt-1">
-                    <span className="text-[8.5px] font-bold text-navy">
-                      Total bayar
-                    </span>
-                    <span className="text-[12px] font-extrabold text-navy">
-                      Rp95.000
-                    </span>
-                  </div>
-                </div>
-
-                <div className="relative mt-auto flex h-8 items-center justify-center rounded-lg bg-brand text-[9px] font-extrabold text-white">
-                  Buat pesanan
-                  {!tenang && (
-                    <span
-                      aria-hidden="true"
-                      className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-paper bg-leaf text-white"
-                      style={anim("cart-pop .45s 1.6s both")}
-                    >
-                      <Check size={9} strokeWidth={3.5} />
-                    </span>
-                  )}
-                </div>
-              </div>
-              <TabMini aktif={2} isi={2} />
-            </div>
-          )}
-
-          {tampil === 6 && (
-            <div
-              key="kurir"
-              className="flex h-full flex-col"
-              style={anim("demo-masuk .45s ease both")}
-            >
-              <Bilah judul="Pesanan" isi={0} />
-              <div className="flex flex-1 flex-col gap-1.5 p-2.5">
-                <div className="flex items-center gap-1.5">
-                  <span className="rounded-full border border-[#C9E1F7] bg-mist px-1.5 py-0.5 text-[7px] font-bold text-brand">
-                    Diantar
-                  </span>
-                  <span className="text-[7px] font-semibold text-muted">
-                    Atas nama Siti
-                  </span>
-                  <span className="ml-auto text-[7.5px] font-extrabold text-navy">
-                    YF-0000-0001
-                  </span>
-                </div>
-
-                <PetaDemo tenang={tenang} />
-
-                <div className="flex items-center gap-1.5 rounded-lg border border-line bg-white p-1.5">
-                  <span className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-navy text-[8px] font-bold text-white">
-                    B
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="flex items-center gap-1 text-[8.5px] font-bold text-navy">
-                      Budi
-                      <span className="inline-flex items-center gap-0.5 text-[7px] font-semibold text-[#8A520B]">
-                        <Star size={7} fill="currentColor" /> 4.9
-                      </span>
-                    </p>
-                    <p className="flex items-center gap-1 text-[7px] text-muted">
-                      <Bike size={7} /> Motor · kurir toko
-                    </p>
-                    <p className="flex items-center gap-1 text-[6.5px] text-muted">
-                      <span className="live-dot h-1 w-1 rounded-full bg-leaf" />
-                      Lokasi GPS aktif
-                    </p>
-                  </div>
-                  <span className="flex h-6 flex-none items-center gap-0.5 rounded-md border border-line bg-white px-1.5 text-[7px] font-bold text-navy">
-                    <Truck size={8} /> Hubungi
-                  </span>
-                </div>
-
-                <div className="flex items-start gap-1 rounded-md bg-mist px-1.5 py-1 text-[7.5px] leading-snug text-navy/80">
-                  <MapPin size={8} className="mt-0.5 flex-none text-brand" />
-                  Jl. Contoh No. 12, Probolinggo
-                </div>
-
-                <div className="rounded-lg border border-line bg-white px-2 py-1.5">
-                  <div className="flex justify-between text-[7.5px]">
-                    <span className="text-muted">Isi pesanan</span>
-                    <span className="font-semibold text-navy">
-                      2 produk · Nugget, Bakso
-                    </span>
-                  </div>
-                  <div className="mt-0.5 flex justify-between text-[7.5px]">
-                    <span className="text-muted">Total bayar</span>
-                    <span className="font-bold text-navy">Rp95.000 · QRIS</span>
-                  </div>
-                </div>
-
-                <div className="mt-auto">
-                  <Timeline
-                    langkah={[
-                      "Pesanan diterima",
-                      "Dikonfirmasi",
-                      "Diantar kurir",
-                      "Selesai",
-                    ]}
-                    aktif={2}
-                  />
-                </div>
-              </div>
-              <TabMini aktif={4} isi={0} />
-            </div>
-          )}
-
-          {tampil === 7 && (
-            <div
-              key="selesai"
-              className="flex h-full flex-col"
-              style={anim("demo-masuk .45s ease both")}
-            >
-              <Bilah judul="Pesanan selesai" isi={0} />
-              <div className="flex flex-1 flex-col gap-1.5 p-2.5">
-                <div className="flex items-start gap-1.5 rounded-lg border border-[#C6E7DA] bg-leaf-soft px-2 py-2">
-                  <span
-                    className="flex h-6 w-6 flex-none items-center justify-center rounded-full bg-white text-leaf"
-                    style={anim("cart-pop .5s .2s both")}
-                  >
-                    <Check size={13} strokeWidth={3} />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-[9px] font-extrabold text-[#12563F]">
-                      Pesanan sudah diterima
-                    </p>
-                    <p className="mt-0.5 text-[7.5px] leading-relaxed text-[#1F7A5C]/85">
-                      Kode YF-0000-0001 · atas nama Siti Aisyah
-                    </p>
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-line bg-white p-2">
-                  <p className="text-[8.5px] font-extrabold text-navy">
-                    Foto bukti saat pesanan diterima
-                  </p>
-                  <div className="mt-1 flex h-[62px] flex-col items-center justify-center rounded-lg border border-dashed border-[#C9E1F7] bg-paper text-brand/60">
-                    <Package size={16} />
-                    <p className="mt-0.5 text-[7px] font-semibold text-muted">
-                      bukti-antar.jpg
-                    </p>
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-line bg-white p-2">
-                  <div className="flex justify-between text-[8px]">
-                    <span className="text-muted">Total dibayar</span>
-                    <span className="font-extrabold text-navy">Rp95.000</span>
-                  </div>
-                  <div className="mt-0.5 flex justify-between text-[8px]">
-                    <span className="text-muted">Pembayaran</span>
-                    <span className="font-semibold text-navy">QRIS</span>
-                  </div>
-                  <div className="mt-0.5 flex justify-between text-[8px]">
-                    <span className="text-muted">Pengantaran</span>
-                    <span className="font-semibold text-navy">Antar · Budi</span>
-                  </div>
-                </div>
-
-                <Timeline
-                  langkah={[
-                    "Pesanan diterima",
-                    "Dikonfirmasi",
-                    "Diantar kurir",
-                    "Selesai",
-                  ]}
-                  aktif={4}
-                />
-
-                <div className="mt-auto grid grid-cols-2 gap-1.5">
-                  <span className="flex h-7 items-center justify-center gap-1 rounded-lg bg-brand text-[8.5px] font-extrabold text-white">
-                    Pesan lagi
-                  </span>
-                  <span className="flex h-7 items-center justify-center gap-1 rounded-lg border border-line bg-white text-[8.5px] font-bold text-navy">
-                    <History size={9} /> Riwayat
-                  </span>
-                </div>
-              </div>
-              <TabMini aktif={4} isi={0} />
-            </div>
-          )}
+        <div className="mx-auto h-[560px] max-w-[400px] overflow-hidden rounded-[20px] bg-paper text-navy shadow-[0_18px_40px_-24px_rgba(4,16,30,0.85)]">
+          <div key={info.id} className="rise h-full">
+            <Layar />
+          </div>
         </div>
-      </div>
 
-      <div className="flex items-center gap-3 px-4 py-3 md:px-5">
-        <div className="min-w-0 flex-1">
-          <p className="text-[12.5px] font-extrabold text-navy">
-            {tampil === 0 ? "Perkenalan" : `${tampil}. ${TAHAP[tampil].judul}`}
+        <div className="mx-auto mt-3 max-w-[400px]">
+          <div className="flex items-baseline justify-between gap-2">
+            <p className="flex-none text-[10px] font-extrabold uppercase tracking-[0.12em] text-sky">
+              Langkah {tahap + 1} dari {TAHAP.length}
+            </p>
+            <p className="min-w-0 truncate text-right text-[12px] font-extrabold text-white">
+              {info.judul}
+            </p>
+          </div>
+          <p
+            aria-live="polite"
+            className="mt-0.5 min-h-[32px] text-[11px] leading-relaxed text-white/65"
+          >
+            {info.ket}
           </p>
-          <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-line/70">
-            {!tenang && (
-              <div
-                key={tampil}
-                className="h-full origin-left rounded-full bg-brand"
-                style={{
-                  animation: `demo-maju ${TAHAP[tampil].ms}ms linear both`,
-                  animationPlayState:
-                    jalan && terlihat ? "running" : "paused",
-                }}
+
+          <div className="mt-1 flex gap-1" aria-hidden="true">
+            {TAHAP.map((t, i) => (
+              <span
+                key={t.id}
+                className={`h-1 flex-1 rounded-full ${
+                  i <= tahap ? "bg-sky" : "bg-white/15"
+                }`}
               />
+            ))}
+          </div>
+
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              onClick={() => setTahap((t) => Math.max(0, t - 1))}
+              disabled={tahap === 0}
+              className="btn flex-1 border border-white/20 bg-white/10 px-3 text-[13px] text-white hover:bg-white/15 sm:flex-none"
+            >
+              <ArrowLeft size={15} /> Kembali
+            </button>
+
+            {terakhir ? (
+              <button
+                type="button"
+                onClick={() => setTahap(0)}
+                aria-label="Ulangi contoh dari awal"
+                className="btn btn-primary flex-1 px-3 text-[13px] sm:flex-none"
+              >
+                <RotateCcw size={15} /> Ulangi
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() =>
+                  setTahap((t) => Math.min(TAHAP.length - 1, t + 1))
+                }
+                className="btn btn-primary flex-1 px-3 text-[13px] sm:flex-none"
+              >
+                Selanjutnya <ArrowRight size={15} />
+              </button>
             )}
           </div>
         </div>
-        <p className="flex-none text-[11px] font-semibold text-muted">
-          {tampil === 0 ? "Mulai" : `${tampil} / ${TAHAP.length - 1}`}
-        </p>
       </div>
     </div>
   );

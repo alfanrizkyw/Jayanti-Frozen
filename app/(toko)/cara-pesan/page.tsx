@@ -15,29 +15,29 @@ import { CaraPesanDemo } from "@/components/cara-pesan-demo";
 export const metadata: Metadata = {
   title: "Cara pesan",
   description:
-    "Lima langkah memesan di Yanti Frozen: pilih produk, isi nama dan HP, atur pengantaran, pilih pembayaran, lalu terima pesanan. Tanpa daftar akun.",
+    "Lima langkah memesan di Yanti Frozen: pilih produk, isi nama dan HP, tandai titik antar, pilih pembayaran, lalu ikuti kurir sampai pesanan tiba. Tanpa daftar akun.",
 };
 
 const LANGKAH = [
   {
     judul: "Pilih produk",
-    teks: "Buka Katalog, lalu tekan Tambah pada produk yang diinginkan. Jumlah bisa diubah di keranjang.",
+    teks: "Buka Katalog, lalu tekan Tambah pada produk yang diinginkan. Produk langsung masuk keranjang tanpa daftar akun.",
   },
   {
     judul: "Isi nama dan HP",
-    teks: "Cukup nama dan nomor HP. Nomor ini dipakai admin untuk mengonfirmasi pesanan.",
+    teks: "Cukup nama dan nomor HP. Nomor ini dipakai admin untuk mengonfirmasi pesanan lewat WhatsApp.",
   },
   {
-    judul: "Atur pengantaran",
-    teks: "Pilih antar ke rumah atau ambil di toko. Untuk antar, isi alamat lengkap dan pilih jadwal; ongkir muncul di ringkasan.",
+    judul: "Tandai titik antar",
+    teks: "Pilih antar ke rumah atau ambil di toko. Untuk antar, tulis alamat lalu tekan Pilih lokasi saya dan geser pin bila titiknya meleset. Ongkir muncul di ringkasan.",
   },
   {
     judul: "Pilih pembayaran",
-    teks: "Tunai, QRIS, atau transfer. Pesanan masuk ke toko setelah dikonfirmasi admin.",
+    teks: "Pesanan antar memakai QRIS atau transfer; tunai hanya untuk ambil di toko. Pesanan masuk setelah dikonfirmasi admin.",
   },
   {
-    judul: "Terima pesanan",
-    teks: "Kurir mengantar sesuai alamat, atau ambil sendiri di toko. Posisi kurir dan status pesanan tampil di Riwayat.",
+    judul: "Ikuti kurir dan beri ulasan",
+    teks: "Status dan posisi kurir tampil di halaman pesanan. Setelah selesai, beri bintang dan ulasan untuk toko.",
   },
 ];
 
@@ -62,7 +62,8 @@ export default async function CaraPesanPage() {
           Cara pesan
         </h1>
         <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted md:text-[14px]">
-          Tanpa daftar akun. Contoh di bawah meniru tampilan toko dan berjalan
+          Tanpa daftar akun. Contoh di bawah meniru tampilan toko. Tekan
+          Selanjutnya atau Kembali untuk berpindah langkah; tidak berjalan
           sendiri, jadi bisa diikuti pelan-pelan.
         </p>
       </div>
@@ -120,7 +121,7 @@ export default async function CaraPesanPage() {
           <div className="min-w-0">
             <p className="text-[12.5px] font-extrabold text-navy">Pembayaran</p>
             <p className="mt-0.5 text-[11.5px] leading-relaxed text-muted">
-              Tunai, QRIS, atau transfer.
+              Tunai untuk ambil di toko, QRIS, atau transfer.
             </p>
           </div>
         </div>

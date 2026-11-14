@@ -176,11 +176,11 @@ export default async function BerandaPage() {
               },
               {
                 judul: "Isi data",
-                teks: "Nama dan nomor HP.",
+                teks: "Nama, HP, dan titik antar.",
               },
               {
                 judul: "Bayar",
-                teks: "Tunai, QRIS, atau transfer.",
+                teks: "QRIS, transfer, atau tunai di toko.",
               },
               {
                 judul: "Terima",
@@ -210,7 +210,7 @@ export default async function BerandaPage() {
             href="/cara-pesan"
             className="mt-3 inline-flex min-h-11 items-center gap-1 text-[12.5px] font-bold text-brand hover:text-brand-dark"
           >
-            Lihat contoh berjalan <ArrowRight size={14} />
+            Lihat contoh cara pesan <ArrowRight size={14} />
           </Link>
         </div>
       </section>
